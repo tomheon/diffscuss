@@ -92,7 +92,6 @@ def walk(fil):
                     cur_comment_lines = []
             cur_comment_lines.append(line)
         elif _is_not_diff_line(line):
-            print "MOVING OUT OF RANGE"
             # we've moved out of range where diffcourse is legal
             in_post_range_info = False
             if cur_comment_lines:
@@ -127,7 +126,7 @@ def _is_start_range_info(line):
 
 
 def _is_diffcourse_line(line):
-    return line.startswith('!')
+    return line.startswith('%')
 
 
 # legal starts to a unified diff line inside a hunk
@@ -139,25 +138,34 @@ def _is_not_diff_line(line):
 
 
 def _level(line):
-    level = 0
-    for c in line:
-        if c == '!':
-            level += 1
-        else:
-            return level
-    return level
+    header_match = _is_header(line)
+    if header_match:
+        return len(header_match.group(1)) - 1
+
+    body_match = _is_body(line)
+    if body_match:
+        return len(body_match.group(1)) - 1
+
+    return None
 
 
-HEADER_RE = re.compile(r'^[!]+\* ')
+HEADER_RE = re.compile(r'^(%[*]+) ')
 
 
 def _is_header(line):
     return HEADER_RE.match(line)
 
 
-AUTHOR_RE = re.compile(r'^[!]+\* author: ')
+AUTHOR_RE = re.compile(r'^(%[*]+) author: ')
 
 
 def _is_author_line(line):
     return AUTHOR_RE.match(line)
 
+
+
+BODY_RE = re.compile(r'^(%[-]+) ')
+
+
+def _is_body(line):
+    return BODY_RE.match(line)

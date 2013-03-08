@@ -7,7 +7,7 @@ It is still very much in the early stages, and participation in both
 defining the format and building tools around it are very welcome.
 
 Diffcourse adds a single beggining-of-line character to the unified
-diff format: !.  Since one example is worth a lot of explaining, take
+diff format: %.  Since one example is worth a lot of explaining, take
 /example.diffcourse/:
 
 ```
@@ -18,27 +18,27 @@ diff format: !.  Since one example is worth a lot of explaining, take
 
 -It's just a test
 +It's only just a test
-!* author: ejorgensen
-! I have grave doubts about this change.  To me it appears foolhardy
-! and dangerous.
-!!* author: bjones
-!! Well I have grave doubts about your judgement.  So there.
-!!* author: ssmith
-!! Why do you say "foolhardy"?
+%* author: ejorgensen
+%- I have grave doubts about this change.  To me it appears foolhardy
+%- and dangerous.
+%** author: bjones
+%-- Well I have grave doubts about your judgement.  So there.
+%** author: ssmith
+%-- Why do you say "foolhardy"?
 
  Only a test.
 +
 +Yup.
-!* author: ejorgensen
-! On the other hand, this might be fine, but is worth discussion.
-!!* author: bjones
-!! Thanks...I guess.
-!* author: ssmith
-! Should we maybe make this "yes"?  I'm on the fence.
-!!* author: ejorgensen
-!! That's a +1 from me.
-!!!* author: bjones
-!!! Yeah I'm on board, done.
+%* author: ejorgensen
+%- On the other hand, this might be fine, but is worth discussion.
+%** author: bjones
+%-- Thanks...I guess.
+%* author: ssmith
+%- Should we maybe make this "yes"?  I'm on the fence.
+%** author: ejorgensen
+%-- That's a +1 from me.
+%*** author: bjones
+%--- Yeah I'm on board, done.
 ```
 
 Take a look at the "Format Definition" section for more detail.
@@ -144,7 +144,7 @@ open code review systems.
 
 ### Beginning of Line Marker
 
-All Diffcourse lines begin with at least one '!'.
+All Diffcourse lines begin with one '%'.
 
 There's no limit to the length of a Diffcourse line, but keeping them
 80 chars or less when possible is probably good citizenship.
@@ -156,8 +156,8 @@ header lines, followed by at least one body line.
 
 ### Header Lines
 
-A header line is at least one '!' followed by a '*', followed by
-header of the format 'field-name: value'.
+A header line one '%' followed by at least one '*', followed by a
+space, followed by a header of the format 'field-name: value'.
 
 A header line must always begin a comment or follow another header
 line.
@@ -165,16 +165,16 @@ line.
 For example, both of these are valid header lines:
 
 ```
-!* commit: 334
+%* commit: 334
 ```
 
 and
 
 ```
-!!!* github-version: 1
+%*** github-version: 1
 ```
 
-The field name cannot contain spaces.  The value cannot contain a
+The field name cannot contain whitespace.  The value cannot contain a
 newline.
 
 #### Author Lines
@@ -183,38 +183,38 @@ An author line is a standard header line with a field of 'author' and
 a value indicating who authored the comment.  For example:
 
 ```
-!* author: ejorgensen
+%* author: ejorgensen
 ```
 
 Or
 
 ```
-!!* author: bsmith
+%** author: bsmith
 ```
 
 Every comment must begin with an author line.
 
 ### Body Lines
 
-A body line is one or more '!' characters followed by a space,
-followed by arbitrary text.
+A body line is one '%' character followed by at least one -, followed
+by a space, followed by arbitrary text.
 
-For an empty body line, the space is optional.
+Exception: for an empty body line, the space is optional.
 
 For example:
 
 ```
-! This is a body line.
+%- This is a body line.
 ```
 
 ```
-!!! And so is *this*.
+%-- And so is *this*.
 ```
 
 ```
-!! and this next body line
-!!
-!! is empty, so doesn't need a space.
+%- and this next body line
+%-
+%- is empty, so doesn't need a space.
 ```
 
 A body line must always follow a header line or another body line.
@@ -226,51 +226,53 @@ A thread is one or more adjacent comments, properly threaded.
 For example, this is a thread:
 
 ```
-!* author: ejorgensen
-! I'm a one comment thread.
+%* author: ejorgensen
+%- I'm a one comment thread.
 ```
 
 And so is this:
 
 ```
-!* author: ejorgensen
-! I'm a two comment thread.
-!* author: bsmith
-! With no replies.
+%* author: ejorgensen
+%- I'm a two comment thread.
+%* author: bsmith
+%- With no replies.
 ```
 
 And so is this:
 
 ```
-!* author: ejorgensen
-! I'm a two comment thread.
-!!* author: bsmith
-!! With a reply.
+%* author: ejorgensen
+%- I'm a two comment thread.
+%** author: bsmith
+%-- With a reply.
 ```
 
 #### Threading of Comments / Replies
 
 The nesting / reply level of a thread is determined by the number of
-'!' characters in each comment.
+'*' characters in each header line / '-' characters in each body line,
+which should remain constant for a given comment.
 
 A comment that is a reply to a previous comment should have one more
-'!' at the beginning of each line than its parent comment.  The parent
+'*' at the beginning of each header line and one more '-' at the
+beginning of each body line than its parent comment.  The parent
 comment is always the first previous comment with one less level of
 nesting.  For example:
 
 ```
-!* author: ejorgensen
-! I'm a top-level comment.
-!!* author: bsmith
-!! And I'm a reply.
-!!!* author: sjones
-!!! And I'm a reply to the reply.
-!!* author: jkidd
-!! And I'm a second reply to the original top-level comment.
-!* author: mdarks
-! And I'm another top-level comment.
-!!* author: lbutterman
-!! And I'm a reply to the second top-level comment.
+%* author: ejorgensen
+%- I'm a top-level comment.
+%** author: bsmith
+%-- And I'm a reply.
+%*** author: sjones
+%--- And I'm a reply to the reply.
+%** author: jkidd
+%-- And I'm a second reply to the original top-level comment.
+%* author: mdarks
+%- And I'm another top-level comment.
+%** author: lbutterman
+%-- And I'm a reply to the second top-level comment.
 ```
 
 #### Position / Target of Discourse Threads
@@ -280,9 +282,9 @@ them, so for example in this snippet:
 
 ```
 +It's only just a test
-!* author: ejorgensen
-! I have grave doubts about this change.  To me it appears foolhardy
-! and dangerous.
+%* author: ejorgensen
+%- I have grave doubts about this change.  To me it appears foolhardy
+%- and dangerous.
 ```
 
 The comment applies to the line
@@ -304,8 +306,8 @@ So this is legal:
 
 -It's just a test
 +It's only just a test
-!* author: ejorgensen
-! Hi there.
+%* author: ejorgensen
+%- Hi there.
 ```
 
 And this is not:
@@ -313,8 +315,8 @@ And this is not:
 ```
 --- 1.txt	2013-03-07 20:18:10.000000000 -0500
 +++ 2.txt	2013-03-07 20:18:35.000000000 -0500
-!* author: ejorgensen
-! Hi there.
+%* author: ejorgensen
+%- Hi there.
 @@ -1,5 +1,7 @@
  This is a test.
 
@@ -330,8 +332,8 @@ comment is assumed to be the entire hunk, for example:
 --- 1.txt	2013-03-07 20:18:10.000000000 -0500
 +++ 2.txt	2013-03-07 20:18:35.000000000 -0500
 @@ -1,5 +1,7 @@
-!* author: ejorgensen
-! I love this hunk.
+%* author: ejorgensen
+%- I love this hunk.
  This is a test.
 
 -It's just a test

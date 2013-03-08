@@ -134,7 +134,11 @@ DIFF_CHARS = [' ', '+', '-', '\\']
 
 
 def _is_not_diff_line(line):
-    return not any(line.startswith(diff_char) for diff_char in DIFF_CHARS)
+    """
+    Treat a totally blank line as a diff line to be flexible.
+    """
+    return (line.strip() and
+            not any(line.startswith(diff_char) for diff_char in DIFF_CHARS))
 
 
 def _level(line):

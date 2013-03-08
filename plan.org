@@ -3,6 +3,8 @@
 ** TODO add commands to insert / reply to / jump comments
 ** TODO try out compile mode trick from danmil
 
+http://www.visophyte.org/blog/2010/03/09/emacs-compilation-mode-support-for-reviewboard/
+
 * General Encoding
 ** TODO write tests with utf-8 etc.
 

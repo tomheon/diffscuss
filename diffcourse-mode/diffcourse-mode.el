@@ -1,8 +1,10 @@
-;; diffcourse-mode.el
-;;
-;; Major mode for diffcourse files.
+;;; diffcourse-mode.el --- Major mode for diffcourse files.
 
-;; to use diff-mode's font-locking as a base.
+;;; Commentary:
+
+
+;;; Code:
+
 (require 'diff-mode)
 
 ;; If your keymap will have very few entries, then you may want to
@@ -13,6 +15,7 @@
 ;;     (define-key map "\C-j" 'newline-and-indent)
 ;;     map)
 ;;   "Keymap for diffcourse mode")
+
 
 (add-to-list 'auto-mode-alist '("\\.diffcourse\\'" . diffcourse-mode))
 
@@ -41,7 +44,7 @@
 ;; in this mode?
 
 (defun diffcourse-mode ()
-  "Major mode for inter-diff code review"
+  "Major mode for inter-diff code review."
   (interactive)
   (kill-all-local-variables)
   ;; (set-syntax-table wpdl-mode-syntax-table)
@@ -52,3 +55,7 @@
   (run-hooks 'diffcourse-mode-hook))
 
 (provide 'diffcourse-mode)
+
+(provide 'diffcourse-mode)
+
+;;; diffcourse-mode.el ends here

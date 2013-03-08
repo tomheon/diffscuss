@@ -6,7 +6,7 @@ information--threads and all--inside unified diffs.
 It is still very much in the early stages, and participation in both
 defining the format and building tools around it are very welcome.
 
-Diffcourse adds a single beggining-of-line character to the unified
+Diffcourse adds a single beginning-of-line character to the unified
 diff format: %.  Since one example is worth a lot of explaining, take
 /example.diffcourse/:
 

@@ -1,4 +1,4 @@
-;;; diffcourse-mode.el --- Major mode for diffcourse files.
+;;; diffscuss-mode.el --- Major mode for diffscuss files.
 
 ;;; Commentary:
 
@@ -10,19 +10,19 @@
 ;; If your keymap will have very few entries, then you may want to
 ;; consider ‘make-sparse-keymap’ rather than ‘make-keymap’.
 
-;; (defvar diffcourse-mode-map
+;; (defvar diffscuss-mode-map
 ;;   (let ((map (make-keymap)))
 ;;     (define-key map "\C-j" 'newline-and-indent)
 ;;     map)
-;;   "Keymap for diffcourse mode")
+;;   "Keymap for diffscuss mode")
 
 
-(add-to-list 'auto-mode-alist '("\\.diffcourse\\'" . diffcourse-mode))
+(add-to-list 'auto-mode-alist '("\\.diffscuss\\'" . diffscuss-mode))
 
 ;; font-lock support
 ;;
 ;; TODO: Need to investigate whether I can just front-load the
-;; diffcourse font lock rules and then append the diff ones like this,
+;; diffscuss font lock rules and then append the diff ones like this,
 ;; and have that work in some of the weirder circumstances
 ;; (e.g. leading %'s in header material) or whether that even matters.
 ;; Alternatively, could duplicate all the definitions here.  But that
@@ -30,7 +30,7 @@
 ;;
 ;; TODO: real faces, support up to--say--5 without recylcing, 10 with?
 
-(defvar diffcourse-font-lock-keywords
+(defvar diffscuss-font-lock-keywords
   (append
    (list
      '("^%\\*\\([ ].*\n\\|\n\\)" . diff-added-face) ;; level 1 header
@@ -43,19 +43,19 @@
 ;; TODO: figure out how not to have emacs strip trailing spaces *ever*
 ;; in this mode?
 
-(defun diffcourse-mode ()
+(defun diffscuss-mode ()
   "Major mode for inter-diff code review."
   (interactive)
   (kill-all-local-variables)
   ;; (set-syntax-table wpdl-mode-syntax-table)
-  ;; (use-local-map diffcourse-mode-map)
-  (set (make-local-variable 'font-lock-defaults) '(diffcourse-font-lock-keywords))
-  (setq major-mode 'diffcourse-mode)
-  (setq mode-name "Diffcourse")
-  (run-hooks 'diffcourse-mode-hook))
+  ;; (use-local-map diffscuss-mode-map)
+  (set (make-local-variable 'font-lock-defaults) '(diffscuss-font-lock-keywords))
+  (setq major-mode 'diffscuss-mode)
+  (setq mode-name "Diffscuss")
+  (run-hooks 'diffscuss-mode-hook))
 
-(provide 'diffcourse-mode)
+(provide 'diffscuss-mode)
 
-(provide 'diffcourse-mode)
+(provide 'diffscuss-mode)
 
-;;; diffcourse-mode.el ends here
+;;; diffscuss-mode.el ends here

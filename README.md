@@ -1,14 +1,14 @@
-# Diffcourse: An Inter-Diff Code Review Format
+# Diffscuss: An Inter-Diff Code Review Format
 
-Diffcourse is a simple textual standard for embedding code review
+Diffscuss is a simple textual standard for embedding code review
 information--threads and all--inside unified diffs.
 
 It is still very much in the early stages, and participation in both
 defining the format and building tools around it are very welcome.
 
-Diffcourse adds a single beginning-of-line character to the unified
+Diffscuss adds a single beginning-of-line character to the unified
 diff format: %.  Since one example is worth a lot of explaining, take
-/example.diffcourse/:
+/example.diffscuss/:
 
 ```
 --- 1.txt	2013-03-07 20:18:10.000000000 -0500
@@ -45,7 +45,7 @@ Take a look at the "Format Definition" section for more detail.
 
 ## Project Goals
 
-Diffcourse has two main goals.
+Diffscuss has two main goals.
 
 ### Provide a Format and Tools for Offline, Versionable Code Reviews
 
@@ -78,7 +78,7 @@ props to them for it--provided an API to get all the information about
 your pull requests, but it's non-trivial to reconstruct it all,
 requiring a bunch of calls and a bunch of reconstructed json.
 
-Now imagine you could hit the pull request url with a .diffcourse
+Now imagine you could hit the pull request url with a .diffscuss
 extension (as you can already do with a .diff extension) and pull in
 the diff--**with** the contextualized comments, right inline, for
 viewing in your editor or whatever.  That would be pretty cool, no?
@@ -91,7 +91,7 @@ format, for offline reading, and potentially--with some push
 magic--even offline code reviews.
 
 This is an aspirational goal--after all, Github would have to create
-the .diffcourse endpoint etc.--but a simple, standard format helps
+the .diffscuss endpoint etc.--but a simple, standard format helps
 pave the way.
 
 ## Implementation Goals
@@ -99,59 +99,59 @@ pave the way.
 ### Work with Established Formats
 
 Unified diffs are already used for informal email code reviews all the
-time.  Diffcourse starts from there, and provides a format that can
+time.  Diffscuss starts from there, and provides a format that can
 always degrade back to a simple diff.
 
 ### Remain Sensibly Loose and Extensible
 
 Code reviews already contain subtly different kinds of information in
-each system.  If Diffcourse is ever going to serve as a kind of
+each system.  If Diffscuss is ever going to serve as a kind of
 interchange format for code reviews, it needs to leave room for extra
 information in a sensible, non-ambiguous fashion.
 
-Diffcourse attempts to do this through a simple, extensible header
+Diffscuss attempts to do this through a simple, extensible header
 format.
 
 ## Tools
 
-### Diffcourse to Diff
+### Diffscuss to Diff
 
-diffcourse2diff.py strips out Diffcourse information, leaving a normal
+diffscuss2diff.py strips out Diffscuss information, leaving a normal
 diff file.
 
 ### Library (In Progress)
 
-A reference Python library for parsing Diffcourse files.
+A reference Python library for parsing Diffscuss files.
 
 ### Emacs Mode (In Progress)
 
-Navigate and create Diffcourse code reviews in Emacs.
+Navigate and create Diffscuss code reviews in Emacs.
 
 ### Vim Integration (Future)
 
-Navigate and create Diffcourse code reviews in Vim.
+Navigate and create Diffscuss code reviews in Vim.
 
 ### Github Pull Request Import / Export (Future)
 
-Convert a pull request to a Diffcourse file, and vice-versa.
+Convert a pull request to a Diffscuss file, and vice-versa.
 
 ### Other Code Review Systems Export / Import (Future)
 
-Import and export Diffcourse files to / from Reviewboard and other
+Import and export Diffscuss files to / from Reviewboard and other
 open code review systems.
 
 ## Format Definition
 
 ### Beginning of Line Marker
 
-All Diffcourse lines begin with one '%'.
+All Diffscuss lines begin with one '%'.
 
-There's no limit to the length of a Diffcourse line, but keeping them
+There's no limit to the length of a Diffscuss line, but keeping them
 80 chars or less when possible is probably good citizenship.
 
-### Diffcourse Comment Format
+### Diffscuss Comment Format
 
-A Diffcourse comment begins with an author line, and possibly other
+A Diffscuss comment begins with an author line, and possibly other
 header lines, followed by at least one body line.
 
 ### Header Lines
@@ -277,7 +277,7 @@ nesting.  For example:
 
 #### Position / Target of Discourse Threads
 
-Diffcourse threads are taken to apply to the line immediately above
+Diffscuss threads are taken to apply to the line immediately above
 them, so for example in this snippet:
 
 ```
@@ -293,7 +293,7 @@ The comment applies to the line
 +It's only just a test
 ```
 
-A Diffcourse line should always appears after the range information of
+A Diffscuss line should always appears after the range information of
 a hunk in a unified diff (that is, after the @@ line).
 
 So this is legal:
@@ -324,7 +324,7 @@ And this is not:
 +It's only just a test
 ```
 
-It is legal, however, to position a Diffcourse comment directly after
+It is legal, however, to position a Diffscuss comment directly after
 the range information in a hunk, in which case the target of the
 comment is assumed to be the entire hunk, for example:
 

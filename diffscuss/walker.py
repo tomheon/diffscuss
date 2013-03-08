@@ -23,19 +23,19 @@ Comment = namedtuple('Comment', ['header_lines', 'body_lines'])
 
 def walk(fil):
     """
-    Walk a Diffcourse file, yielding either:
+    Walk a Diffscuss file, yielding either:
 
     (DIFF, line)
 
-    For each line that is not Diffcourse comment, or:
+    For each line that is not Diffscuss comment, or:
 
     (COMMENT, level, comment)
 
-    for each Diffcourse comment, where level is an integer indicating
+    for each Diffscuss comment, where level is an integer indicating
     how deeply nested the comment is (1 for a top-level comment), and
     comment is a Comment named tuple.
 
-    @fil: a file-like object containing Diffcourse.
+    @fil: a file-like object containing Diffscuss.
 
     The default error handler raises the following exceptions:
 
@@ -55,10 +55,10 @@ def walk(fil):
         if not in_post_range_info:
             # if we haven't yet hit a @@ line...
             if _is_start_range_info(line):
-                # if this is one, start allowing Diffcourse.
+                # if this is one, start allowing Diffscuss.
                 in_post_range_info = True
             yield (DIFF, line)
-        elif _is_diffcourse_line(line):
+        elif _is_diffscuss_line(line):
             line_level = _level(line)
             is_header = _is_header(line)
 
@@ -92,7 +92,7 @@ def walk(fil):
                     cur_comment_lines = []
             cur_comment_lines.append(line)
         elif _is_not_diff_line(line):
-            # we've moved out of range where diffcourse is legal
+            # we've moved out of range where diffscuss is legal
             in_post_range_info = False
             if cur_comment_lines:
                 yield _process_comment(cur_comment_lines)
@@ -125,7 +125,7 @@ def _is_start_range_info(line):
     return line.startswith('@@')
 
 
-def _is_diffcourse_line(line):
+def _is_diffscuss_line(line):
     return line.startswith('%')
 
 

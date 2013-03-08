@@ -4,10 +4,10 @@ from optparse import OptionParser
 import sys
 from textwrap import dedent
 
-from diffcourse.walker import walk, DIFF
+from diffscuss.walker import walk, DIFF
 
 
-def strip_diffcourse(fil, outfil):
+def strip_diffscuss(fil, outfil):
     for (elem_type, elem) in walk(fil):
         if elem_type == DIFF:
             outfil.write(elem)
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     usage="""\
           %prog [options] [FILE]
 
-          Strip all diffcourse markers out of FILE and print the results
+          Strip all diffscuss markers out of FILE and print the results
           to standard out.
 
           If FILE is -, or not provided, read from standard in."""
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         using_stdin = False
 
     try:
-        strip_diffcourse(fil, sys.stdout)
+        strip_diffscuss(fil, sys.stdout)
     finally:
         if not using_stdin:
             fil.close()

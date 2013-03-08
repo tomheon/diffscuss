@@ -1,0 +1,7 @@
+* General Encoding
+** TODO write tests with utf-8 etc.
+
+* Walker
+** Error Handling
+*** TODO allow users to pass in their own error handlers to walk?
+

@@ -1,3 +1,8 @@
+* Emacs mode
+** TODO add faces
+** TODO add commands to insert / reply to / jump comments
+** TODO try out compile mode trick from danmil
+
 * General Encoding
 ** TODO write tests with utf-8 etc.
 

@@ -119,11 +119,11 @@ format.
 diffcourse2diff.py strips out Diffcourse information, leaving a normal
 diff file.
 
-### Library (Planned)
+### Library (In Progress)
 
 A reference Python library for parsing Diffcourse files.
 
-### Emacs Mode (Future)
+### Emacs Mode (In Progress)
 
 Navigate and create Diffcourse code reviews in Emacs.
 

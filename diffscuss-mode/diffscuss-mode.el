@@ -20,8 +20,9 @@
 
 (defvar diffscuss-mode-map
   (let ((map (make-keymap)))
-    (define-key map "\C-cr" 'diffscuss-reply-to-comment)
-    (define-key map "\C-ci" 'diffscuss-insert-comment)
+    (define-key map "\C-c\C-r" 'diffscuss-reply-to-comment)
+    (define-key map "\C-c\C-i" 'diffscuss-insert-comment)
+    (define-key map "\C-c\C-c" 'diffscuss-comment-or-reply)
     map)
   "Keymap for diffscuss mode.")
 
@@ -303,6 +304,13 @@
   (end-of-line)
   (newline)
   (insert (diffscuss-make-comment "%*")))
+
+(defun diffscuss-comment-or-reply ()
+  "Insert a comment or reply based on context."
+  (interactive)
+  (if (diffscuss-parse-leader)
+      (diffscuss-reply-to-comment)
+    (diffscuss-insert-comment)))
 
 (defun diffscuss-mode ()
   "Major mode for inter-diff code review."

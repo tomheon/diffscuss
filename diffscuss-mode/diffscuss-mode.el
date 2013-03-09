@@ -2,6 +2,11 @@
 
 ;;; Commentary:
 
+;;; Config variables
+
+;; By default, diffscuss will use your login name for new comments.
+;; You can override that here.
+(defvar diffscuss-author nil)
 
 ;;; Code:
 
@@ -13,12 +18,12 @@
 ;; If your keymap will have very few entries, then you may want to
 ;; consider ‘make-sparse-keymap’ rather than ‘make-keymap’.
 
-;; (defvar diffscuss-mode-map
-;;   (let ((map (make-keymap)))
-;;     (define-key map "\C-j" 'newline-and-indent)
-;;     map)
-;;   "Keymap for diffscuss mode")
-
+(defvar diffscuss-mode-map
+  (let ((map (make-keymap)))
+    (define-key map "\C-cr" 'diffscuss-reply-to-comment)
+    (define-key map "\C-ci" 'diffscuss-insert-comment)
+    map)
+  "Keymap for diffscuss mode.")
 
 (add-to-list 'auto-mode-alist '("\\.diffscuss\\'" . diffscuss-mode))
 
@@ -145,7 +150,7 @@
      '("^%[-]\\{8\\}\\([ ]\\|\n\\)" . diffscuss-level-8)) ;; level 8 body
    diff-font-lock-keywords))
 
-;; Positioning utilities
+;; Utility functions
 
 (defun diffscuss-parse-leader ()
   "Parse the leading %[*-]+ from the current line"
@@ -219,6 +224,20 @@
       (end-of-line)
       (point))))
 
+(defun diffscuss-force-header (leader)
+  "Return leader as a header."
+  (replace-regexp-in-string "-" "*" leader))
+
+(defun diffscuss-force-body (leader)
+  "Return leader as a body."
+  (replace-regexp-in-string "*" "-" leader))
+
+(defun diffscuss-get-author ()
+  "Get the author name to user for new comments."
+  (if diffscuss-author
+      diffscuss-author
+    (user-login-name)))
+
 ;; Fill logic.
 
 (defun diffscuss-fill-comment ()
@@ -227,7 +246,7 @@
     (save-restriction 
       (narrow-to-region (diffscuss-find-body-start)
                         (diffscuss-find-body-end))
-      (let ((fill-prefix (concat (replace-regexp-in-string "*" "-" (diffscuss-parse-leader))
+      (let ((fill-prefix (concat (diffscuss-force-body (diffscuss-parse-leader))
                                  " ")))
         (fill-region (point-min) (point-max))
         ))))
@@ -241,11 +260,55 @@
     ;; diff after all
     t))
 
+;; navigation 
+
+(defun diffscuss-jump-to-end-of-thread ()
+  "Jump to the end of the current thread."
+  (interactive)
+  (if (diffscuss-parse-leader)
+      (progn (beginning-of-line)
+             (while (and (diffscuss-parse-leader)
+                         (zerop (forward-line 1))))
+             (or (diffscuss-parse-leader)
+                 (forward-line -1))
+             (end-of-line))
+    (message "%s" "Not in a diffscuss thread")))
+
+;; insert / reply to comment commands
+
+(defun diffscuss-make-comment (leader)
+  "Return a new comment."
+  (concat (diffscuss-force-header leader)
+          " author: "
+          (diffscuss-get-author)
+          "\n"
+          (diffscuss-force-body leader)
+          " "))
+
+(defun diffscuss-reply-to-comment ()
+  "Reply to the current comment"
+  (interactive)
+  (let ((leader (diffscuss-parse-leader)))
+    (if leader
+        (progn (goto-char (diffscuss-find-body-end))
+               (newline)
+               (insert (diffscuss-make-comment (concat leader "*"))))
+      (message "%s" "Not on a diffscuss comment."))))
+
+(defun diffscuss-insert-comment ()
+  "Insert a new top-level comment."
+  (interactive)
+  (beginning-of-line)
+  (diffscuss-jump-to-end-of-thread)
+  (end-of-line)
+  (newline)
+  (insert (diffscuss-make-comment "%*")))
+
 (defun diffscuss-mode ()
   "Major mode for inter-diff code review."
   (interactive)
   (kill-all-local-variables)
-  ;; (use-local-map diffscuss-mode-map)
+  (use-local-map diffscuss-mode-map)
   (set (make-local-variable 'font-lock-defaults) '(diffscuss-font-lock-keywords))
   (set (make-local-variable 'fill-paragraph-function) 'diffscuss-fill-paragraph)
   (setq major-mode 'diffscuss-mode)

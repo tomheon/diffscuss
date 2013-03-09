@@ -4,13 +4,15 @@
 ** DONE add commands to insert / reply to comments
 ** DONE make "newline and indent" work
 ** DONE make fill break at emtpy body lines
-** TODO commands to navigate threads
-** TODO try out compile mode trick from danmil
+** DONE try out compile mode trick from danmil
 
 http://www.visophyte.org/blog/2010/03/09/emacs-compilation-mode-support-for-reviewboard/
-
+** DONE make a goto source work for basic situations (git repo, right root)
+** TODO make a goto source fail intelligently for a /dev/null situation.
+** TODO make next-error work as well as goto-source
 ** TODO handle fill region intelligently?
 ** TODO handle open line?
+** TODO commands to navigate threads
 * General Encoding
 ** TODO write tests with utf-8 etc.
 

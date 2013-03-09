@@ -145,12 +145,113 @@
      '("^%[-]\\{8\\}\\([ ]\\|\n\\)" . diffscuss-level-8)) ;; level 8 body
    diff-font-lock-keywords))
 
+;; Fill logic.
+
+(defun diffscuss-parse-leader ()
+  "Parse the leading %[*-]+ from the current line"
+  (save-excursion
+    (beginning-of-line)
+    (if (looking-at "^%\\([*]+\\|[-]+\\)")
+        (buffer-substring (match-beginning 0)
+                          (match-end 0))
+        nil)))
+
+(defun diffscuss-comment-part-regexp (parse-leader from-string to-string)
+  "Utility function to help make header / body regexps"
+  (concat "^"
+          (regexp-quote (replace-regexp-in-string from-string to-string parse-leader))
+          "\\([ ]\\|\n\\)"))
+
+(defun diffscuss-comment-body-regexp (parse-leader)
+  "Return a regexp matching the begging of a body line leading with parse-leader"
+  (diffscuss-comment-part-regexp parse-leader "*" "-"))
+
+(defun diffscuss-comment-header-regexp (parse-leader)
+  "Return a regexp matching the begging of a body line leading with parse-leader"
+  (diffscuss-comment-part-regexp parse-leader "-" "*"))
+
+(defun diffscuss-find-body-start ()
+  "Return the start position of the current comment."
+  (let ((comment-body-regexp 
+         (diffscuss-comment-body-regexp (diffscuss-parse-leader)))
+        (comment-header-regexp 
+         (diffscuss-comment-header-regexp (diffscuss-parse-leader))))
+    (save-excursion 
+      ;; if we're at a header, move past it
+      (beginning-of-line)
+      (while (and (looking-at comment-header-regexp)
+                  (zerop (forward-line 1))))
+
+      ;; move to the beginning of the first body line of the comment
+      (while (and (looking-at comment-body-regexp)
+                  (zerop (forward-line -1))))
+      ;; in case we've moved one too far, come back.
+      (or (looking-at comment-body-regexp)
+          (forward-line 1))
+      (point))))
+
+(defun diffscuss-find-body-end ()
+  "Return the end position of the current comment."
+  (let ((comment-body-regexp 
+         (diffscuss-comment-body-regexp (diffscuss-parse-leader)))
+        (comment-header-regexp 
+         (diffscuss-comment-header-regexp (diffscuss-parse-leader))))
+    (save-excursion 
+
+      ;; if we're at a header, move past it
+      (beginning-of-line)
+      (while (and (looking-at comment-header-regexp)
+                  (zerop (forward-line 1))))
+
+      ;; move to the beginning of the last body line of the comment.
+      ;; First move to the beginning of the line in case forward-line
+      ;; took us to the end of the last line in the buffer.
+      (beginning-of-line)
+      (while (and (looking-at comment-body-regexp)
+                  (zerop (forward-line 1))))
+
+      ;; in case we've moved one too far, come back.  First move to
+      ;; the beginning of the line in case forward-line took us to the
+      ;; end of the last line in the buffer.
+      (beginning-of-line)
+      (or (looking-at comment-body-regexp)
+          (forward-line -1))
+      (end-of-line)
+      (point))))
+
+(defun diffscuss-fill-comment ()
+  "Fill the body of the current comment."
+  (save-excursion 
+    (save-restriction 
+      (narrow-to-region (diffscuss-find-body-start)
+                        (diffscuss-find-body-end))
+      (let ((fill-prefix (concat (replace-regexp-in-string "*" "-" (diffscuss-parse-leader))
+                                 " ")))
+        (fill-region (point-min) (point-max))
+        ))))
+
+(defun diffscuss-on-df-line ()
+  "Non nil if on a diffscuss line, else nil."
+  (save-excursion 
+    (beginning-of-line)
+    (looking-at "^%[*-]+\\([ ]\\|\n\\)")))
+
+(defun diffscuss-fill-paragraph (&optional justify)
+  "Diffscuss sensitive replacement for fill paragraph."
+  (interactive "P")
+  (if (diffscuss-on-df-line)
+      (diffscuss-fill-comment)
+    ;; don't let people accidentally fill on other lines--this is a
+    ;; diff after all
+    t))
+
 (defun diffscuss-mode ()
   "Major mode for inter-diff code review."
   (interactive)
   (kill-all-local-variables)
   ;; (use-local-map diffscuss-mode-map)
   (set (make-local-variable 'font-lock-defaults) '(diffscuss-font-lock-keywords))
+  (set (make-local-variable 'fill-paragraph-function) 'diffscuss-fill-paragraph)
   (setq major-mode 'diffscuss-mode)
   (setq mode-name "Diffscuss")
   (run-hooks 'diffscuss-mode-hook))

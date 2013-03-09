@@ -1,5 +1,6 @@
 * Emacs mode
-** TODO add faces
+** DONE add faces
+** DONE fill support
 ** TODO add commands to insert / reply to / jump comments
 ** TODO try out compile mode trick from danmil
 

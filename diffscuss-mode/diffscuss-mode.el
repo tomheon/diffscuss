@@ -145,7 +145,7 @@
      '("^%[-]\\{8\\}\\([ ]\\|\n\\)" . diffscuss-level-8)) ;; level 8 body
    diff-font-lock-keywords))
 
-;; Fill logic.
+;; Positioning utilities
 
 (defun diffscuss-parse-leader ()
   "Parse the leading %[*-]+ from the current line"
@@ -219,6 +219,8 @@
       (end-of-line)
       (point))))
 
+;; Fill logic.
+
 (defun diffscuss-fill-comment ()
   "Fill the body of the current comment."
   (save-excursion 
@@ -230,16 +232,10 @@
         (fill-region (point-min) (point-max))
         ))))
 
-(defun diffscuss-on-df-line ()
-  "Non nil if on a diffscuss line, else nil."
-  (save-excursion 
-    (beginning-of-line)
-    (looking-at "^%[*-]+\\([ ]\\|\n\\)")))
-
 (defun diffscuss-fill-paragraph (&optional justify)
   "Diffscuss sensitive replacement for fill paragraph."
   (interactive "P")
-  (if (diffscuss-on-df-line)
+  (if (diffscuss-parse-leader)
       (diffscuss-fill-comment)
     ;; don't let people accidentally fill on other lines--this is a
     ;; diff after all

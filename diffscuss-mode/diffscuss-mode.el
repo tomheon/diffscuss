@@ -15,14 +15,13 @@
 
 (require 'diff-mode)
 
-;; If your keymap will have very few entries, then you may want to
-;; consider ‘make-sparse-keymap’ rather than ‘make-keymap’.
-
 (defvar diffscuss-mode-map
-  (let ((map (make-keymap)))
+  (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-r" 'diffscuss-reply-to-comment)
     (define-key map "\C-c\C-i" 'diffscuss-insert-comment)
     (define-key map "\C-c\C-c" 'diffscuss-comment-or-reply)
+    (define-key map [(control j)] 'diffscuss-newline-and-indent)
+    (define-key map (kbd "RET") 'diffscuss-newline-and-indent)
     map)
   "Keymap for diffscuss mode.")
 
@@ -311,6 +310,17 @@
   (if (diffscuss-parse-leader)
       (diffscuss-reply-to-comment)
     (diffscuss-insert-comment)))
+
+;; intelligent newline
+
+(defun diffscuss-newline-and-indent ()
+  "Open up a new body or header line in context."
+  (interactive)
+  (let ((leader (diffscuss-parse-leader)))
+    (if leader
+        (progn (newline)
+               (insert (concat leader " ")))
+      (newline))))
 
 (defun diffscuss-mode ()
   "Major mode for inter-diff code review."

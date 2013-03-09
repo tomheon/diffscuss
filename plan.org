@@ -2,7 +2,7 @@
 ** DONE add faces
 ** DONE fill support
 ** DONE add commands to insert / reply to comments
-** TODO make "newline and indent" work
+** DONE make "newline and indent" work
 ** TODO make fill break at emtpy body lines
 ** TODO handle fill region intelligently?
 ** TODO commands to navigate threads

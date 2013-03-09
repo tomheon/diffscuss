@@ -224,6 +224,41 @@
       (end-of-line)
       (point))))
 
+(defun diffscuss-find-paragraph-start ()
+  "Return the beginning of the current comment paragraph"
+  (let ((leader (diffscuss-parse-leader)))
+    (if (diffscuss-is-body-leader leader)
+        (save-excursion 
+          (beginning-of-line)
+          ;; move to the beginning of the paragraph, that being the
+          ;; first empty body line (just spaces counts as empty) or
+          ;; the top of the comment body, whichever comes first.
+          (let ((leader-not-para-regexp 
+                 (concat (regexp-quote leader) "[ ]+" "[^ \n]+")))
+            (while (and (looking-at leader-not-para-regexp)
+                        (zerop (forward-line -1))))
+            ;; we're either on a blank line or a header line now, so
+            ;; move to the next line and we're there.
+            (forward-line 1)
+            (point)))
+      nil)))
+
+(defun diffscuss-find-paragraph-end ()
+  "Return the beginning of the current comment paragraph"
+  (let ((leader (diffscuss-parse-leader)))
+    (if (diffscuss-is-body-leader leader)
+        (save-excursion 
+          (beginning-of-line)
+          ;; move to the end of the paragraph, that being the first
+          ;; empty body line (just spaces counts as empty) or the
+          ;; bottom of the comment body, whichever comes first.
+          (let ((leader-not-para-regexp 
+                 (concat (regexp-quote leader) "[ ]+" "[^ \n]+")))
+            (while (and (looking-at leader-not-para-regexp)
+                        (zerop (forward-line 1))))
+            (point)))
+      nil)))
+
 (defun diffscuss-force-header (leader)
   "Return leader as a header."
   (replace-regexp-in-string "-" "*" leader))
@@ -238,10 +273,16 @@
       diffscuss-author
     (user-login-name)))
 
+(defun diffscuss-is-body-leader (leader)
+  "Non-nil if leader is a body leader."
+  (if leader
+      (string-prefix-p "%-" leader)
+    nil))
+
 ;; Fill logic.
 
 (defun diffscuss-fill-comment ()
-  "Fill the body of the current comment."
+  "Fill the body of the entire current comment."
   (save-excursion 
     (save-restriction 
       (narrow-to-region (diffscuss-find-body-start)
@@ -251,11 +292,24 @@
         (fill-region (point-min) (point-max))
         ))))
 
+(defun diffscuss-fill-comment-paragraph ()
+  "Fill the current paragraph of the current comment."
+  (interactive)
+  (let ((leader (diffscuss-parse-leader)))
+    (if (diffscuss-is-body-leader leader)
+        (progn (save-excursion 
+                 (save-restriction 
+                   (narrow-to-region (diffscuss-find-paragraph-start)
+                                     (diffscuss-find-paragraph-end))
+                   (let ((fill-prefix (concat leader " ")))
+                     (fill-region (point-min) (point-max))))))
+      (message "%s" "Not in a comment paragraph."))))
+
 (defun diffscuss-fill-paragraph (&optional justify)
   "Diffscuss sensitive replacement for fill paragraph."
   (interactive "P")
-  (if (diffscuss-parse-leader)
-      (diffscuss-fill-comment)
+  (if (diffscuss-is-body-leader (diffscuss-parse-leader))
+      (diffscuss-fill-comment-paragraph)
     ;; don't let people accidentally fill on other lines--this is a
     ;; diff after all
     t))

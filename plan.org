@@ -3,13 +3,14 @@
 ** DONE fill support
 ** DONE add commands to insert / reply to comments
 ** DONE make "newline and indent" work
-** TODO make fill break at emtpy body lines
-** TODO handle fill region intelligently?
+** DONE make fill break at emtpy body lines
 ** TODO commands to navigate threads
 ** TODO try out compile mode trick from danmil
 
 http://www.visophyte.org/blog/2010/03/09/emacs-compilation-mode-support-for-reviewboard/
 
+** TODO handle fill region intelligently?
+** TODO handle open line?
 * General Encoding
 ** TODO write tests with utf-8 etc.
 

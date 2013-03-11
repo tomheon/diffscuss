@@ -23,6 +23,7 @@
     (define-key map "\C-c\C-s" 'diffscuss-goto-source)
     (define-key map [(control j)] 'diffscuss-newline-and-indent)
     (define-key map (kbd "RET") 'diffscuss-newline-and-indent)
+    (define-key map "\C-o" 'diffscuss-open-line)
     map)
   "Keymap for diffscuss mode.")
 
@@ -374,13 +375,23 @@
 ;; intelligent newline
 
 (defun diffscuss-newline-and-indent ()
-  "Open up a new body or header line in context."
+  "Create a new body or header line in context."
   (interactive)
   (let ((leader (diffscuss-parse-leader)))
     (if leader
         (progn (newline)
                (insert (concat leader " ")))
       (newline))))
+
+(defun diffscuss-open-line ()
+  "Open up a new body or header line in context."
+  (interactive)
+  (let ((leader (diffscuss-parse-leader)))
+    (if leader
+        (save-excursion
+          (newline)
+          (beginning-of-line)
+          (insert (concat leader " "))))))
 
 ;; Support for jumping to source.
 ;;

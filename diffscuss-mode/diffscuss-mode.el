@@ -333,12 +333,17 @@
 
 (defun diffscuss-make-comment (leader)
   "Return a new comment."
-  (concat (diffscuss-force-header leader)
-          " author: "
-          (diffscuss-get-author)
-          "\n"
-          (diffscuss-force-body leader)
-          " "))
+  (let ((header (diffscuss-force-header leader)))
+    (concat header
+            "\n"
+            header
+            " author: "
+            (diffscuss-get-author)
+            "\n"
+            header
+            "\n"
+            (diffscuss-force-body leader)
+            " ")))
 
 (defun diffscuss-reply-to-comment ()
   "Reply to the current comment"

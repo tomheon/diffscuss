@@ -490,7 +490,7 @@ already in the header, in which case, use below."
   (interactive)
   (kill-all-local-variables)
   (use-local-map diffscuss-mode-map)
-  (set (make-local-variable 'font-lock-defaults) '(diffscuss-font-lock-keywords))
+  (set (make-local-variable 'font-lock-defaults) '(diffscuss-font-lock-keywords t))
   (set (make-local-variable 'fill-paragraph-function) 'diffscuss-fill-paragraph)
   (setq major-mode 'diffscuss-mode)
   (setq mode-name "Diffscuss")

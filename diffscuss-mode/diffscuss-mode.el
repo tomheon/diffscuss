@@ -20,8 +20,10 @@
     (define-key map "\C-c\C-r" 'diffscuss-reply-to-comment)
     (define-key map "\C-c\C-i" 'diffscuss-insert-comment)
     (define-key map "\C-c\C-c" 'diffscuss-comment-or-reply)
-    (define-key map "\C-c\C-s" 'diffscuss-goto-source)
-    (define-key map [(control j)] 'diffscuss-newline-and-indent)
+    (define-key map "\C-c\C-s" 'diffscuss-goto-local-source)
+    (define-key map "\C-c+" 'diffscuss-show-new-source)
+    (define-key map "\C-c-" 'diffscuss-show-old-source)
+    (define-key map "\C-j" 'diffscuss-newline-and-indent)
     (define-key map (kbd "RET") 'diffscuss-newline-and-indent)
     (define-key map "\C-o" 'diffscuss-open-line)
     map)
@@ -179,11 +181,11 @@
 
 (defun diffscuss-find-body-start ()
   "Return the start position of the current comment."
-  (let ((comment-body-regexp 
+  (let ((comment-body-regexp
          (diffscuss-comment-body-regexp (diffscuss-parse-leader)))
-        (comment-header-regexp 
+        (comment-header-regexp
          (diffscuss-comment-header-regexp (diffscuss-parse-leader))))
-    (save-excursion 
+    (save-excursion
       ;; if we're at a header, move past it
       (beginning-of-line)
       (while (and (looking-at comment-header-regexp)
@@ -199,11 +201,11 @@
 
 (defun diffscuss-find-body-end ()
   "Return the end position of the current comment."
-  (let ((comment-body-regexp 
+  (let ((comment-body-regexp
          (diffscuss-comment-body-regexp (diffscuss-parse-leader)))
-        (comment-header-regexp 
+        (comment-header-regexp
          (diffscuss-comment-header-regexp (diffscuss-parse-leader))))
-    (save-excursion 
+    (save-excursion
 
       ;; if we're at a header, move past it
       (beginning-of-line)
@@ -230,12 +232,12 @@
   "Return the beginning of the current comment paragraph"
   (let ((leader (diffscuss-parse-leader)))
     (if (diffscuss-is-body-leader leader)
-        (save-excursion 
+        (save-excursion
           (beginning-of-line)
           ;; move to the beginning of the paragraph, that being the
           ;; first empty body line (just spaces counts as empty) or
           ;; the top of the comment body, whichever comes first.
-          (let ((leader-not-para-regexp 
+          (let ((leader-not-para-regexp
                  (concat (regexp-quote leader) "[ ]+" "[^ \n]+")))
             (while (and (looking-at leader-not-para-regexp)
                         (zerop (forward-line -1))))
@@ -249,12 +251,12 @@
   "Return the beginning of the current comment paragraph"
   (let ((leader (diffscuss-parse-leader)))
     (if (diffscuss-is-body-leader leader)
-        (save-excursion 
+        (save-excursion
           (beginning-of-line)
           ;; move to the end of the paragraph, that being the first
           ;; empty body line (just spaces counts as empty) or the
           ;; bottom of the comment body, whichever comes first.
-          (let ((leader-not-para-regexp 
+          (let ((leader-not-para-regexp
                  (concat (regexp-quote leader) "[ ]+" "[^ \n]+")))
             (while (and (looking-at leader-not-para-regexp)
                         (zerop (forward-line 1))))
@@ -285,8 +287,8 @@
 
 (defun diffscuss-fill-comment ()
   "Fill the body of the entire current comment."
-  (save-excursion 
-    (save-restriction 
+  (save-excursion
+    (save-restriction
       (narrow-to-region (diffscuss-find-body-start)
                         (diffscuss-find-body-end))
       (let ((fill-prefix (concat (diffscuss-force-body (diffscuss-parse-leader))
@@ -299,8 +301,8 @@
   (interactive)
   (let ((leader (diffscuss-parse-leader)))
     (if (diffscuss-is-body-leader leader)
-        (progn (save-excursion 
-                 (save-restriction 
+        (progn (save-excursion
+                 (save-restriction
                    (narrow-to-region (diffscuss-find-paragraph-start)
                                      (diffscuss-find-paragraph-end))
                    (let ((fill-prefix (concat leader " ")))
@@ -316,7 +318,7 @@
     ;; diff after all
     t))
 
-;; navigation 
+;; navigation
 
 (defun diffscuss-jump-to-end-of-thread ()
   "Jump to the end of the current thread."
@@ -405,7 +407,7 @@
 
 (defun diffscuss-get-above-source-file ()
   "Get the first source file mentioned above point."
-  (save-excursion 
+  (save-excursion
     (beginning-of-line)
     (while (and (not (looking-at "^---"))
                 (zerop (forward-line -1))))
@@ -415,7 +417,7 @@
 
 (defun diffscuss-get-below-source-file ()
   "Get the first source file mentioned below point."
-  (save-excursion 
+  (save-excursion
     (beginning-of-line)
     (while (and (not (looking-at "^---"))
                 (zerop (forward-line 1))))
@@ -423,11 +425,11 @@
         (buffer-substring (match-beginning 1) (match-end 1))
       nil)))
 
-(defun diffscussion-line-is-diff-index ()
-  "Non nil if the current line is part of a diff index."
+(defun diffscuss-meta-line-p ()
+  "Non nil if the current line is part of hunk's meta data."
   (save-excursion
       (beginning-of-line)
-      (not (looking-at "^[% +<>\n-]"))))
+      (not (looking-at "^[% +<>\n\\-]"))))
 
 (defun diffscuss-get-source-file ()
   "Prefer the above source file, accept a below, unless we're
@@ -435,8 +437,8 @@ already in the header, in which case, use below."
   (let ((above-file (diffscuss-get-above-source-file))
         (below-file (diffscuss-get-below-source-file)))
       ;; if we're not looking at a diff char, we're already in the
-      ;; header.  Assume that file is what the user wants.x
-      (if (diffscussion-line-is-diff-index)
+      ;; header.  Assume that file is what the user wants.
+      (if (diffscuss-meta-line-p)
           below-file
         (if above-file
             above-file
@@ -473,16 +475,75 @@ already in the header, in which case, use below."
     (looking-at "^@@ -\\([[:digit:]]+\\)")
     (string-to-number (buffer-substring (match-beginning 1) (match-end 1)))))
 
-(defun diffscuss-goto-source ()
+(defun diffscuss-goto-local-source ()
   "Attempt to jump to the appropriate source."
+  ;; TODO this needs a ton of work to tell whether the new version is
+  ;; present, or the old, and which line we should land on, etc.
+  ;; Right now the line guessing is terrible.
   (interactive)
   (let ((source-file (diffscuss-get-source-file))
         (line-num (diffscuss-calibrate-source-line)))
     (if (find-file-noselect source-file)
         (if (pop-to-buffer (get-file-buffer source-file))
             (goto-line line-num))
-      (message "Couldn't find file %s" source-file))))
-        
+      (progn (message "Couldn't find file %s" source-file) nil))))
+
+(defun diffscuss-show-source-rev (source-file rev line-num)
+  "Show the old version of the source from git, and jump to the right line."
+  (interactive)
+  (let ((source-buffer (get-buffer-create (concat "*"
+                                                  (diffscuss-get-source-file)
+                                                  "*"
+                                                  rev
+                                                  "*"
+                                                  )))
+        (got-source nil))
+    (with-current-buffer source-buffer
+      (setq buffer-read-only nil)
+      (erase-buffer)
+      (setq got-source (process-file "git" nil source-buffer nil "show" rev))
+      (setq buffer-read-only t))
+    (if (and (= got-source 0)
+             (pop-to-buffer source-buffer))
+        (goto-line line-num)
+      (progn (message "Couldn't find source at revision %s" rev) nil))))
+
+(defun diffscuss-show-old-source ()
+  "Show the old version of the source from git, and jump to the right line."
+  (interactive)
+  (let ((source-file (diffscuss-get-source-file))
+        (line-num (diffscuss-calibrate-source-line))
+        (rev (diffscuss-get-old-rev)))
+    (diffscuss-show-source-rev source-file rev line-num)))
+
+(defun diffscuss-show-new-source ()
+  "Show the new version of the source from git, and jump to the right line."
+  (interactive)
+  (let ((source-file (diffscuss-get-source-file))
+        (line-num (diffscuss-calibrate-source-line))
+        (rev (diffscuss-get-new-rev)))
+    (diffscuss-show-source-rev source-file rev line-num)))
+
+(defun diffscuss-get-rev (rev-regexp)
+  "Get the closest revision moving up matching the rev-regexp."
+  (save-excursion
+    (beginning-of-line)
+    (while (and (diffscuss-meta-line-p)
+                (zerop (forward-line 1))))
+    ;; at this point we know we're below the index line, and can start
+    ;; looking up.
+    (while (and (not (looking-at "^index "))
+                (zerop (forward-line -1))))
+    (if (looking-at rev-regexp)
+        (buffer-substring (match-beginning 1) (match-end 1))
+      nil)))
+
+(defun diffscuss-get-old-rev ()
+  (diffscuss-get-rev "^index \\([^.]+\\)\\.\\."))
+
+(defun diffscuss-get-new-rev ()
+    (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. ]+\\)"))
+
 ;; Define the mode.
 
 (defun diffscuss-mode ()

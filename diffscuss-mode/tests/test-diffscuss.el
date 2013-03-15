@@ -41,4 +41,24 @@ diffscuss-parse-leader against it."
           ("%** *something: else" . "%**")
           ))
 
+
+(defun test-get-revs (text-and-expected-revs)
+  ""
+  (let ((text (nth 0 text-and-expected-revs))
+        (old-rev (nth 1 text-and-expected-revs))
+        (new-rev (nth 2 text-and-expected-revs)))
+    (assert-equal old-rev (with-temp-buffer 
+                        (insert text)
+                        (end-of-buffer)
+                        (diffscuss-get-old-rev)))
+    (assert-equal new-rev (with-temp-buffer 
+                            (insert text)
+                            (end-of-buffer)
+                            (diffscuss-get-new-rev)))))
+
+
+(mapcar 'test-get-revs
+        '(("diff --git a/diffscuss-mode/diffscuss-mode.el b/diffscuss-mode/diffscuss-mode.el\nindex eb23955..bac296b 100644\n--- a/diffscuss-mode/diffscuss-mode.el\n+++ b/diffscuss-mode/diffscuss-mode.el\n@@ -224,41 +224,6 @@\n       (end-of-line)\n       (point))))\n \n-(defun diffscuss-find-paragraph-start ()\n-  \"Return the beginning of the current comment paragraph\"\n" "eb23955" "bac296b")))
+
+
 (end-tests) ;; Stop the clock and print a summary

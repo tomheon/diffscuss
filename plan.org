@@ -8,10 +8,11 @@
 
 http://www.visophyte.org/blog/2010/03/09/emacs-compilation-mode-support-for-reviewboard/
 ** DONE make a goto source work for basic situations (git repo, right root)
-** TODO make a goto source fail intelligently for a /dev/null situation.
-** TODO make next-error work as well as goto-source
+** DONE handle open line?
+** DONE make goto-source just work for git, but be smarter...
+*** DONE "find" source if in git (in ro buffer)
+** TODO make next-error work as well as goto-source?
 ** TODO handle fill region intelligently?
-** TODO handle open line?
 ** TODO commands to navigate threads
 * General Encoding
 ** TODO write tests with utf-8 etc.
@@ -19,4 +20,3 @@ http://www.visophyte.org/blog/2010/03/09/emacs-compilation-mode-support-for-revi
 * Walker
 ** Error Handling
 *** TODO allow users to pass in their own error handlers to walk?
-

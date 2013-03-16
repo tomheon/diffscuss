@@ -283,6 +283,17 @@
       (string-prefix-p "%-" leader)
     nil))
 
+;; string-prefix-p isn't defined in Emacs 22.3.2, found this snippet online,
+;; had to hack it a bit: https://github.com/magnars/s.el/issues/18
+
+(defun backport-string-prefix-p (prefix str &optional ignore-case)
+  (let ((case-fold-search ignore-case))
+    (string-match (format "^%s" (regexp-quote prefix)) str)))
+
+(unless (fboundp 'string-prefix-p)      ; not defined in Emacs 23.1
+  (fset 'string-prefix-p (symbol-function 'backport-string-prefix-p)))
+
+
 ;; Fill logic.
 
 (defun diffscuss-fill-comment ()

@@ -405,25 +405,21 @@
 ;;
 ;; * the local source corresponds to the old version on the diff
 
-(defun diffscuss-get-above-source-file ()
-  "Get the first source file mentioned above point."
-  (save-excursion
-    (beginning-of-line)
-    (while (and (not (looking-at "^---"))
-                (zerop (forward-line -1))))
-    (if (looking-at "^--- a/\\(.*\\)")
-        (buffer-substring (match-beginning 1) (match-end 1))
-      nil)))
-
-(defun diffscuss-get-below-source-file ()
-  "Get the first source file mentioned below point."
-  (save-excursion
-    (beginning-of-line)
-    (while (and (not (looking-at "^---"))
-                (zerop (forward-line 1))))
-    (if (looking-at "^--- a/\\(.*\\)")
-        (buffer-substring (match-beginning 1) (match-end 1))
-      nil)))
+(defun diffscuss-source-file-impl (old-or-new)
+  (let ((line-stop-pattern nil)
+        (source-name-pattern nil))
+    (if (string= old-or-new "new")
+        (progn (setq line-stop-pattern "^\\+\\+\\+ ")
+               (setq source-name-pattern "^\\+\\+\\+ b/\\(.*\\)"))
+      (progn (setq line-stop-pattern "^--- ")
+             (setq source-name-pattern "^--- a/\\(.*\\)")))
+    (save-excursion
+      (beginning-of-line)
+      (while (and (not (looking-at line-stop-pattern))
+                  (zerop (forward-line -1))))
+      (if (looking-at source-name-pattern)
+          (buffer-substring (match-beginning 1) (match-end 1))
+        nil))))
 
 (defun diffscuss-meta-line-p ()
   "Non nil if the current line is part of hunk's meta data."
@@ -431,18 +427,15 @@
       (beginning-of-line)
       (not (looking-at "^[% +<>\n\\-]"))))
 
-(defun diffscuss-get-source-file ()
-  "Prefer the above source file, accept a below, unless we're
-already in the header, in which case, use below."
-  (let ((above-file (diffscuss-get-above-source-file))
-        (below-file (diffscuss-get-below-source-file)))
-      ;; if we're not looking at a diff char, we're already in the
-      ;; header.  Assume that file is what the user wants.
-      (if (diffscuss-meta-line-p)
-          below-file
-        (if above-file
-            above-file
-          below-file))))
+(defun diffscuss-get-source-file (old-or-new)
+  "Get the name of the source file."
+  (save-excursion 
+    (diffscuss-move-past-meta-lines)
+    (diffscuss-source-file-impl old-or-new)))
+
+(defun diffscuss-get-any-source-file (first-choice second-choice)
+  (or (diffscuss-get-source-file first-choice)
+      (diffscuss-get-source-file second-choice)))
 
 (defun diffscuss-is-range-line ()
   "Non nil if line begins with @@."
@@ -481,55 +474,73 @@ already in the header, in which case, use below."
   ;; present, or the old, and which line we should land on, etc.
   ;; Right now the line guessing is terrible.
   (interactive)
-  (let ((source-file (diffscuss-get-source-file))
+  (let ((source-file (diffscuss-get-source-file "new"))
         (line-num (diffscuss-calibrate-source-line)))
     (if (find-file-noselect source-file)
         (if (pop-to-buffer (get-file-buffer source-file))
             (goto-line line-num))
       (progn (message "Couldn't find file %s" source-file) nil))))
 
-(defun diffscuss-show-source-rev (source-file rev line-num)
+(defun diffscuss-show-source-rev (source-file rev line-num old-or-new)
   "Show the old version of the source from git, and jump to the right line."
   (interactive)
-  (let ((source-buffer (get-buffer-create (concat "*"
-                                                  (diffscuss-get-source-file)
-                                                  "*"
-                                                  rev
-                                                  "*"
-                                                  )))
-        (got-source nil))
-    (with-current-buffer source-buffer
-      (setq buffer-read-only nil)
-      (erase-buffer)
-      (setq got-source (process-file "git" nil source-buffer nil "show" rev))
-      (setq buffer-read-only t))
-    (if (and (= got-source 0)
-             (pop-to-buffer source-buffer))
-        (goto-line line-num)
+  (let ((source-file-name (diffscuss-get-source-file old-or-new))
+        (found-file-and-source nil))
+    ;; if we can't find the source file name, it's because it's
+    ;; /dev/null or some such, so don't bother looking further.
+    (if source-file-name
+        (progn
+          (let ((source-buffer-name (concat "*" source-file-name "*" rev "*")))
+            (let ((source-buffer (get-buffer source-buffer-name)))
+              (if source-buffer
+                  ;; we assume that if the buffer already exists, we
+                  ;; had a successful run earlier.
+                  (setq found-file-and-source t)
+                  (progn (setq source-buffer (get-buffer-create source-buffer-name))
+                         (with-current-buffer source-buffer
+                           ;; this is a terrible hack to get the auto-mode-alist to work
+                           ;; its magic on the buffer--it consults the file name, not the
+                           ;; buffer name.
+                           (setq buffer-file-name source-file-name)
+                           (set-auto-mode)
+                           (setq buffer-file-name nil)
+                           (erase-buffer)
+                           (setq got-source (process-file "git" nil source-buffer nil "show" rev))
+                           (setq buffer-read-only t))
+                         (if (= got-source 0)
+                             (setq found-file-and-source t)
+                           (kill-buffer source-buffer-name))))
+              (if source-buffer
+                  (progn (pop-to-buffer source-buffer)
+                         (goto-line line-num)))))))
+  (if (not found-file-and-source)
       (progn (message "Couldn't find source at revision %s" rev) nil))))
 
 (defun diffscuss-show-old-source ()
   "Show the old version of the source from git, and jump to the right line."
   (interactive)
-  (let ((source-file (diffscuss-get-source-file))
+  (let ((source-file (diffscuss-get-any-source-file "old" "new"))
         (line-num (diffscuss-calibrate-source-line))
         (rev (diffscuss-get-old-rev)))
-    (diffscuss-show-source-rev source-file rev line-num)))
+    (diffscuss-show-source-rev source-file rev line-num "old")))
 
 (defun diffscuss-show-new-source ()
   "Show the new version of the source from git, and jump to the right line."
   (interactive)
-  (let ((source-file (diffscuss-get-source-file))
+  (let ((source-file (diffscuss-get-any-source-file "new" "old"))
         (line-num (diffscuss-calibrate-source-line))
         (rev (diffscuss-get-new-rev)))
-    (diffscuss-show-source-rev source-file rev line-num)))
+    (diffscuss-show-source-rev source-file rev line-num "new")))
+
+(defun diffscuss-move-past-meta-lines ()
+  (beginning-of-line)
+  (while (and (diffscuss-meta-line-p)
+              (zerop (forward-line 1)))))
 
 (defun diffscuss-get-rev (rev-regexp)
   "Get the closest revision moving up matching the rev-regexp."
   (save-excursion
-    (beginning-of-line)
-    (while (and (diffscuss-meta-line-p)
-                (zerop (forward-line 1))))
+    (diffscuss-move-past-meta-lines)
     ;; at this point we know we're below the index line, and can start
     ;; looking up.
     (while (and (not (looking-at "^index "))
@@ -542,7 +553,7 @@ already in the header, in which case, use below."
   (diffscuss-get-rev "^index \\([^.]+\\)\\.\\."))
 
 (defun diffscuss-get-new-rev ()
-    (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. ]+\\)"))
+    (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. \n\r]+\\)"))
 
 ;; Define the mode.
 

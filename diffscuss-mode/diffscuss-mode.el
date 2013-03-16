@@ -448,36 +448,65 @@
   (or (diffscuss-get-source-file first-choice)
       (diffscuss-get-source-file second-choice)))
 
-(defun diffscuss-is-range-line ()
+(defun diffscuss-range-line-p ()
   "Non nil if line begins with @@."
   (save-excursion
     (beginning-of-line)
     (looking-at "^@@")))
 
-(defun diffscuss-count-orig-source ()
+(defun diffscuss-source-line-p (old-or-new)
   "Non nil if current line is part of the original source."
+  (let ((line-pattern nil))
+    (if (string= old-or-new "old")
+        (setq line-pattern "^[ -]")
+      (setq line-pattern "^[ +]"))
+    (save-excursion
+      (beginning-of-line)
+      (looking-at line-pattern))))
+
+(defun diffscuss-line-type-mismatch (old-or-new)
+  "True if the line starts with + and old-or-new is 'old', or line starts with - 
+and old or new is 'new'."
+  (let ((line-pattern nil))
+    (if (string= old-or-new "old")
+        (setq line-pattern "^\\+")
+      (setq line-pattern "^-"))
   (save-excursion
     (beginning-of-line)
-    (looking-at "^[ -]")))
+    (looking-at line-pattern))))
+  
 
-(defun diffscuss-calibrate-source-line ()
-  "Deduce what line in the original source file the point is on."
+(defun diffscuss-calibrate-source-line (old-or-new)
+  "Deduce what line in the source file the point is on."
+  ;; TODO: this won't work if you're above the hunk line, in the
+  ;; metadata stuff.
   (save-excursion
-    (let ((source-lines 1))
-      (while (and (not (diffscuss-is-range-line))
+    ;; if we're looking for old, roll before +'s, if we're looking for
+    ;; new, roll before -'s.
+    (while (and (diffscuss-line-type-mismatch old-or-new)
+                (zerop (forward-line -1))))
+    (let ((source-lines 0))
+      (while (and (not (diffscuss-range-line-p))
                   (zerop (forward-line -1)))
-        (if (diffscuss-count-orig-source)
+        (if (diffscuss-source-line-p old-or-new)
             (setq source-lines (+ 1 source-lines))))
-      (if (diffscuss-is-range-line)
-          (+ source-lines (diffscuss-parse-orig-line))
+      (if (diffscuss-range-line-p)
+          (+ source-lines (diffscuss-parse-orig-line old-or-new))
         nil))))
 
-(defun diffscuss-parse-orig-line ()
+(defun diffscuss-parse-orig-line (old-or-new)
   "Parse the original line out of a range header."
-  (save-excursion
-    (beginning-of-line)
-    (looking-at "^@@ -\\([[:digit:]]+\\)")
-    (string-to-number (buffer-substring (match-beginning 1) (match-end 1)))))
+  (let ((line-pattern nil)
+        (group-num nil))
+    (if (string= old-or-new "old")
+        (progn (setq line-pattern "^@@ -\\([[:digit:]]+\\)")
+               (setq group-num 1))
+      (progn (setq line-pattern "^@@ -[[:digit:]]+\\(,[[:digit:]]+\\)? \\+\\([[:digit:]]+\\)")
+             (setq group-num 2)))
+    (save-excursion
+      (beginning-of-line)
+      (looking-at line-pattern)
+      (string-to-number (buffer-substring (match-beginning group-num) (match-end group-num))))))
 
 (defun diffscuss-goto-local-source ()
   "Attempt to jump to the appropriate source."
@@ -486,7 +515,7 @@
   ;; Right now the line guessing is terrible.
   (interactive)
   (let ((source-file (diffscuss-get-source-file "new"))
-        (line-num (diffscuss-calibrate-source-line)))
+        (line-num (diffscuss-calibrate-source-line "new")))
     (if (find-file-noselect source-file)
         (if (pop-to-buffer (get-file-buffer source-file))
             (goto-line line-num))
@@ -531,7 +560,7 @@
   "Show the old version of the source from git, and jump to the right line."
   (interactive)
   (let ((source-file (diffscuss-get-any-source-file "old" "new"))
-        (line-num (diffscuss-calibrate-source-line))
+        (line-num (diffscuss-calibrate-source-line "old"))
         (rev (diffscuss-get-old-rev)))
     (diffscuss-show-source-rev source-file rev line-num "old")))
 
@@ -539,7 +568,7 @@
   "Show the new version of the source from git, and jump to the right line."
   (interactive)
   (let ((source-file (diffscuss-get-any-source-file "new" "old"))
-        (line-num (diffscuss-calibrate-source-line))
+        (line-num (diffscuss-calibrate-source-line "new"))
         (rev (diffscuss-get-new-rev)))
     (diffscuss-show-source-rev source-file rev line-num "new")))
 

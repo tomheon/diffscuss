@@ -25,12 +25,18 @@
 
 (defvar diffscuss-mode-map
   (let ((map (make-sparse-keymap)))
+    ;; insert comments
     (define-key map "\C-c\C-r" 'diffscuss-reply-to-comment)
     (define-key map "\C-c\C-i" 'diffscuss-insert-comment)
-    (define-key map "\C-c\C-c" 'diffscuss-comment-or-reply)
-    (define-key map "\C-c\C-s" 'diffscuss-goto-local-source)
+    (define-key map "\C-c\C-f" 'diffscuss-insert-file-comment)
+    (define-key map "\C-c\C-c" 'diffscuss-insert-contextual-comment)
+
+    ;; showing source
+    (define-key map "\C-cs" 'diffscuss-goto-local-source)
     (define-key map "\C-c+" 'diffscuss-show-new-source)
     (define-key map "\C-c-" 'diffscuss-show-old-source)
+
+    ;; newline stuff
     (define-key map "\C-j" 'diffscuss-newline-and-indent)
     (define-key map (kbd "RET") 'diffscuss-newline-and-indent)
     (define-key map "\C-o" 'diffscuss-open-line)
@@ -434,10 +440,20 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
   "Insert a file-level comment."
   (interactive)
   (beginning-of-buffer)
-  (insert (diffscuss-make-comment "%*"))
-  (newline)
-  (forward-line -2)
-  (end-of-line))
+  ;; either there's already a file level comment, in which case we
+  ;; want to jump in at the bottom of the thread, or not.
+  (let ((existing-comment (diffscuss-parse-leader)))
+    (if existing-comment
+        (progn (diffscuss-jump-to-end-of-thread)
+               (newline)))
+    (insert (diffscuss-make-comment "%*"))
+    (if existing-comment
+        ;; we're already positioned at the end of the comment, we only
+        ;; need to move back 1.
+        (forward-line -1)
+        (progn (newline)
+               (forward-line -2)))
+    (end-of-line)))
 
 (defun diffscuss-in-header-p ()
   "True if we're in the header material."
@@ -449,7 +465,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
                 (zerop (forward-line -1))))
     (not (diffscuss-range-line-p))))
 
-(defun diffscuss-comment-or-reply ()
+(defun diffscuss-insert-contextual-comment ()
   "Insert a comment or reply based on context."
   (interactive)
   ;; if at the very top of the file, insert a comment for the entire

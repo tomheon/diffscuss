@@ -368,7 +368,9 @@
     (if leader
         (progn (goto-char (diffscuss-find-body-end))
                (newline)
-               (insert (diffscuss-make-comment (concat leader "*"))))
+               (insert (diffscuss-make-comment (concat leader "*")))
+               (forward-line -1)
+               (end-of-line))
       (message "%s" "Not on a diffscuss comment."))))
 
 (defun diffscuss-insert-comment ()

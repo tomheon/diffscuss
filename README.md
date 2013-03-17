@@ -103,18 +103,18 @@ The main command you need to know is ```C-c C-c```, which generally
 "does the right thing" based on the position of the cursor.  To wit:
 
 * If the cursor is at the very top of the buffer, it will insert a new
-  review-level comment (this is available anywhere in the buffer with
-  ```C-c C-f```.
+  review-level comment (this function is available anywhere in the
+  buffer with ```C-c C-f```).
 
 * If the cursor is inside another comment, it will create a reply to
-  that comment (this can also be invoked with ```C-c C-r```.
+  that comment (this can also be invoked with ```C-c C-r```).
 
 * If the cursor is inside the diff index information for a file /
   hunk, it will insert a comment after the "range line" (the line
   beginning with @@).
 
 * If the cursor is on a diff line, it will create a comment directly
-  below that line (this is also available with ```C-c C-i```.
+  below that line (this is also available with ```C-c C-i```).
 
 ### Showing the Source
 
@@ -220,9 +220,7 @@ optional.
 #### The date Header
 
 Dates should be specified in the full ISO 8601 standard, including
-time zone offset, e.g.:
-
-```2013-03-16T19:00:45-0400```
+time zone offset, e.g. 2013-11-22T23:11:21-0400.
 
 ### Body Lines
 

@@ -452,7 +452,8 @@
         (save-excursion
           (newline)
           (beginning-of-line)
-          (insert (concat leader " "))))))
+          (insert (concat leader " ")))
+      (open-line 1))))
 
 ;; Support for jumping to source.
 ;;

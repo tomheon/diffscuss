@@ -8,6 +8,10 @@
 ;; You can override that here.
 (defvar diffscuss-author nil)
 
+;; Where to find git, by default assume it's whatever version is in
+;; the path.
+(defvar diffscuss-git-exe "git")
+
 ;;; Code:
 
 ;; we need to make sure diff mode is present and loaded so we can get
@@ -589,7 +593,7 @@ and old or new is 'new'."
                            (set-auto-mode)
                            (setq buffer-file-name nil)
                            (erase-buffer)
-                           (setq got-source (process-file "git" nil source-buffer nil "show" rev))
+                           (setq got-source (process-file diffscuss-git-exe nil source-buffer nil "show" rev))
                            (setq buffer-read-only t))
                          (if (= got-source 0)
                              (setq found-file-and-source t)

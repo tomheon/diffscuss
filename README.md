@@ -1,68 +1,352 @@
-# Diffscuss: An Inter-Diff Code Review Format
+# Diffscuss: Code Reviews.  In Plain Text.
 
-Diffscuss is a simple textual standard for embedding code review
-information--threads and all--inside unified diffs.
+## What is Diffscuss?
 
-It is still very much in the early stages, and participation in both
-defining the format and building tools around it are very welcome.
+* A format for embedding code reviews into unified diff files.
+
+* An Emacs mode for creating / reading / responding to reviews in that
+  format, with git integration.
+
+* gen-diffscuss.py, a tool for generating code reviews from git repos.
+
+There are also plans for: a Vim mode, some command line tools, and
+tools to allow diffscuss files to serve as a code-review interchange
+format.
+
+## Why Use Diffscuss?
+
+If you like:
+
+* Plain text formats that play nicely with the *nix toolchain
+
+* Lightweight, flexible code-review processes
+
+* The idea of being able to work with / keep your reviews close to
+  your source, even in the same repository
+
+Then you might want to give Diffscuss a look.
+
+## The Format in a Nutshell
 
 Diffscuss adds a single beginning-of-line character to the unified
-diff format: %.  Since one example is worth a lot of explaining, take
-/example.diffscuss/:
+diff format: %, which marks the beginning of a comment line.  Lines
+beginning with %* are comment headers, and lines beginning with %- are
+comment bodies.  The number of * or - characters indicates reply
+threading.
+
+Since one example is worth a lot of explaining, here's an example
+diffscuss file:
+
+```
+%*
+%* author: Bob Jones
+%* email: bjones@example.com
+%* date: 2013-03-15T19:00:21-0400
+%*
+%- This change set accomplishes two purposes:
+%-
+%- * Add a version of the world greeting for our Spanish-speaking users.
+%-
+%- * Indicate that it's only a test.
+%-
+%**
+%** author: Edmund Jorgensen
+%** email: edmund@example.com
+%** date: 2013-03-16T19:00:45-0400
+%**
+%-- Looks good, one question about internationalization.
+%--
+diff --git a/example.txt b/example.txt
+index f75ba05..01632d8 100644
+--- a/example.txt
++++ b/example.txt
+@@ -1 +1,7 @@
+ Hello, world.
++
++Hola, mundo.
+%*
+%* author: Edmund Jorgensen
+%* email: edmund@example.com
+%* date: 2013-03-16T19:00:37-0400
+%*
+%- I'm not sure we want to go international just yet.
+%-
+%**
+%** author: Bob Jones
+%** email: bjones@example.com
+%** date: 2013-03-17T18:12:49-0400
+%**
+%-- What are your specific concerns?
+%--
++
++This is a test.
++
++It is only a test.
+```
+
+The comments at the top of the file apply to the entire review in
+general.
+
+The other two comments address the ```+Hola, mundo.``` line (that is,
+the line directly above the first comment in the thread).
+
+Take a look at the "Format Definition" section for much more detail.
+
+## The Emacs Mode
+
+The Emacs mode colorizes diffscuss files to make for easier reading.
+In addition it helps with:
+
+### Inserting Comments
+
+The main command you need to know is ```C-c C-c```, which generally
+"does the right thing" based on the position of the cursor.  To wit:
+
+* If the cursor is at the very top of the buffer, it will insert a new
+  review-level comment (this is available anywhere in the buffer with
+  ```C-c C-f```.
+
+* If the cursor is inside another comment, it will create a reply to
+  that comment (this can also be invoked with ```C-c C-r```.
+
+* If the cursor is inside the diff index information for a file /
+  hunk, it will insert a comment after the "range line" (the line
+  beginning with @@).
+
+* If the cursor is on a diff line, it will create a comment directly
+  below that line (this is also available with ```C-c C-i```.
+
+### Showing the Source
+
+If you position the cursor on one of the diff lines in a Diffscuss
+file, then:
+
+* ```C-c -``` will open up a temporary buffer containing the old
+  version of the source (if it's available locally), with the cursor
+  positioned on the same line.
+
+* ```C-c +``` will open up a temporary buffer containing the new
+  version of the source (if it's available locally), with the cursor
+  positioned on the same line.
+
+Both of these require that the Diffscuss file you're visiting is
+located inside the git repo directory.
+
+## gen-diffscuss.py
+
+gen-diffscuss.py is a helper script for creating a new Diffscuss file
+with diffs and log messages from a set of changes in git.
+
+For example,
+
+```gen-diffscuss.py HEAD~3..HEAD > some_code_review.diffscuss```
+
+Makes a Diffscuss file containing the diffs from the last three
+commits in a local git repo, introduced with a comment at the top
+containing all the log messages for those three commits.
+
+## Format Definition
+
+### Beginning of Line Marker
+
+All Diffscuss lines begin with one '%'.
+
+There's no limit to the length of a Diffscuss line, but keeping them
+80 chars or less when possible is probably good citizenship, since
+they're meant to be read and edited inside editors.
+
+### Diffscuss Comment Format
+
+A Diffscuss comment begins with an author line, and possibly other
+header lines, followed by at least one body line.
+
+### Header Lines
+
+A header line one '%' followed by at least one '*', followed by a
+space, followed by a header of the format 'field-name: value'.
+
+Header lines may also be empty, containing no 'field-name: value', in
+which case the space after the * is also optional.
+
+A header line must always begin a comment or follow another header
+line.
+
+For example, all three of these are valid header lines:
+
+```
+%* author: Bob Jones
+```
+
+```
+%**
+```
+
+```
+%*** x-github-version: 1
+```
+
+The field name cannot contain whitespace.  The value cannot contain a
+newline.
+
+The current Diffscuss headers are:
+
+* author
+
+* email
+
+* date
+
+Non-standard headers should begin with an 'x-', to keep compatible
+with future additions to the Diffscuss format.
+
+#### The author Header
+
+An author line is a standard header line with a field of 'author' and
+a value indicating who authored the comment.  For example:
+
+```
+%* author: ejorgensen
+```
+
+Or
+
+```
+%** author: bsmith
+```
+
+Every comment must begin with an author line.  All other headers are
+optional.
+
+#### The date Header
+
+Dates should be specified in the full ISO 8601 standard, including
+time zone offset, e.g.:
+
+```2013-03-16T19:00:45-0400```
+
+### Body Lines
+
+A body line is one '%' character followed by at least one -, followed
+by a space, followed by arbitrary text.
+
+Exception: for an empty body line, the space is optional.
+
+For example:
+
+```
+%- This is a body line.
+```
+
+```
+%-- And so is *this*.
+```
+
+```
+%- and this next body line
+%-
+%- is empty, so doesn't need a space, but could have one.
+```
+
+A body line must always follow a header line or another body line.
+
+### Threads
+
+A thread is one or more adjacent comments, properly threaded.
+
+For example, this is a thread:
+
+```
+%* author: ejorgensen
+%- I'm a one comment thread.
+```
+
+And so is this:
+
+```
+%* author: ejorgensen
+%- I'm a two comment thread.
+%* author: bsmith
+%- With no replies, just two top level comments.
+```
+
+And so is this:
+
+```
+%* author: ejorgensen
+%- I'm a two comment thread.
+%** author: bsmith
+%-- With a reply.
+```
+
+To be explicit: the nesting / reply level of a thread is determined by
+the number of '*' characters in each header line / '-' characters in
+each body line, which should remain constant for a given comment.
+
+A comment that is a reply to a previous comment should have one more
+'*' at the beginning of each header line and one more '-' at the
+beginning of each body line than its parent comment.
+
+The parent comment for any reply can always be determined by finding
+the closest previous comment with one less level of nesting.  For
+example:
+
+```
+%* author: ejorgensen
+%- I'm a top-level comment.
+%** author: bsmith
+%-- And I'm a reply.
+%*** author: sjones
+%--- And I'm a reply to the reply.
+%** author: jkidd
+%-- And I'm a second reply to the original top-level comment.
+%* author: mdarks
+%- And I'm another top-level comment.
+%** author: lbutterman
+%-- And I'm a reply to the second top-level comment.
+```
+#### Position / Target of Threads
+
+Diffscuss threads are generally taken to apply to the line immediately
+above them, so for example in this snippet:
+
+```
++It's only just a test
+%* author: ejorgensen
+%- I have grave doubts about this change.  To me it appears foolhardy
+%- and dangerous.
+```
+
+The comment applies to the line
+
+```
++It's only just a test
+```
+
+A Diffscuss thread can also appear directly after the range
+information in a hunk, in which case the target of the comment is
+assumed to be the entire hunk, for example:
 
 ```
 --- 1.txt	2013-03-07 20:18:10.000000000 -0500
 +++ 2.txt	2013-03-07 20:18:35.000000000 -0500
 @@ -1,5 +1,7 @@
+%* author: ejorgensen
+%- I love this hunk.
  This is a test.
 
 -It's just a test
 +It's only just a test
-%* author: ejorgensen
-%- I have grave doubts about this change.  To me it appears foolhardy
-%- and dangerous.
-%** author: bjones
-%-- Well I have grave doubts about your judgement.  So there.
-%** author: ssmith
-%-- Why do you say "foolhardy"?
-
- Only a test.
-+
-+Yup.
-%* author: ejorgensen
-%- On the other hand, this might be fine, but is worth discussion.
-%** author: bjones
-%-- Thanks...I guess.
-%* author: ssmith
-%- Should we maybe make this "yes"?  I'm on the fence.
-%** author: ejorgensen
-%-- That's a +1 from me.
-%*** author: bjones
-%--- Yeah I'm on board, done.
 ```
 
-Take a look at the "Format Definition" section for more detail.
+Finally, if a thread appears at the very top of the Diffscuss file,
+the thread applies to the whole changeset (where it should generally
+act as a thread discussing the review as a whole--for example,
+introductory remarks about what the changes are attempting to achieve,
+"ship it" remarks, etc.).
 
-## Project Goals
+## What the Future Might Hold
 
-Diffscuss has two main goals.
-
-### Provide a Format and Tools for Offline, Versionable Code Reviews
-
-Sometimes you just want to send a diff over email and mark it
-up--maybe your company hasn't seen the light on code reviews yet, or
-your review system is down, or only accessible from within the office.
-It should still be easy to do a code review, even from the comfort of
-your text editor.
-
-And there's no reason that code reviews shouldn't be versionable
-themselves, so they can go right into a repo too.
-
-(Or maybe you're just a textual format zealot, like myself and some of
-my friends, and you like to be able to use the standard unix text
-processing tools on everything.)
-
-### Provide for the Liberation of Code Reviews (Aspirational)
+### Providing for the Liberation of Code Reviews (Aspirational)
 
 Right now, if you use Github (for example), you can stop using Github
 at any moment without losing any of your code and history--it's all in
@@ -90,252 +374,6 @@ a git repo of all your project's pull requests, in a simple textual
 format, for offline reading, and potentially--with some push
 magic--even offline code reviews.
 
-This is an aspirational goal--after all, Github would have to create
-the .diffscuss endpoint etc.--but a simple, standard format helps
-pave the way.
-
-## Implementation Goals
-
-### Work with Established Formats
-
-Unified diffs are already used for informal email code reviews all the
-time.  Diffscuss starts from there, and provides a format that can
-always degrade back to a simple diff.
-
-### Remain Sensibly Loose and Extensible
-
-Code reviews already contain subtly different kinds of information in
-each system.  If Diffscuss is ever going to serve as a kind of
-interchange format for code reviews, it needs to leave room for extra
-information in a sensible, non-ambiguous fashion.
-
-Diffscuss attempts to do this through a simple, extensible header
-format.
-
-## Tools
-
-### Diffscuss to Diff
-
-diffscuss2diff.py strips out Diffscuss information, leaving a normal
-diff file.
-
-### Library (In Progress)
-
-A reference Python library for parsing Diffscuss files.
-
-### Emacs Mode (In Progress)
-
-Navigate and create Diffscuss code reviews in Emacs.
-
-### Vim Integration (Future)
-
-Navigate and create Diffscuss code reviews in Vim.
-
-### Github Pull Request Import / Export (Future)
-
-Convert a pull request to a Diffscuss file, and vice-versa.
-
-### Other Code Review Systems Export / Import (Future)
-
-Import and export Diffscuss files to / from Reviewboard and other
-open code review systems.
-
-## Format Definition
-
-### Beginning of Line Marker
-
-All Diffscuss lines begin with one '%'.
-
-There's no limit to the length of a Diffscuss line, but keeping them
-80 chars or less when possible is probably good citizenship.
-
-### Diffscuss Comment Format
-
-A Diffscuss comment begins with an author line, and possibly other
-header lines, followed by at least one body line.
-
-### Header Lines
-
-A header line one '%' followed by at least one '*', followed by a
-space, followed by a header of the format 'field-name: value'.
-
-A header line must always begin a comment or follow another header
-line.
-
-For example, both of these are valid header lines:
-
-```
-%* commit: 334
-```
-
-and
-
-```
-%*** github-version: 1
-```
-
-The field name cannot contain whitespace.  The value cannot contain a
-newline.
-
-#### Author Lines
-
-An author line is a standard header line with a field of 'author' and
-a value indicating who authored the comment.  For example:
-
-```
-%* author: ejorgensen
-```
-
-Or
-
-```
-%** author: bsmith
-```
-
-Every comment must begin with an author line.
-
-### Body Lines
-
-A body line is one '%' character followed by at least one -, followed
-by a space, followed by arbitrary text.
-
-Exception: for an empty body line, the space is optional.
-
-For example:
-
-```
-%- This is a body line.
-```
-
-```
-%-- And so is *this*.
-```
-
-```
-%- and this next body line
-%-
-%- is empty, so doesn't need a space.
-```
-
-A body line must always follow a header line or another body line.
-
-### Threads
-
-A thread is one or more adjacent comments, properly threaded.
-
-For example, this is a thread:
-
-```
-%* author: ejorgensen
-%- I'm a one comment thread.
-```
-
-And so is this:
-
-```
-%* author: ejorgensen
-%- I'm a two comment thread.
-%* author: bsmith
-%- With no replies.
-```
-
-And so is this:
-
-```
-%* author: ejorgensen
-%- I'm a two comment thread.
-%** author: bsmith
-%-- With a reply.
-```
-
-#### Threading of Comments / Replies
-
-The nesting / reply level of a thread is determined by the number of
-'*' characters in each header line / '-' characters in each body line,
-which should remain constant for a given comment.
-
-A comment that is a reply to a previous comment should have one more
-'*' at the beginning of each header line and one more '-' at the
-beginning of each body line than its parent comment.  The parent
-comment is always the first previous comment with one less level of
-nesting.  For example:
-
-```
-%* author: ejorgensen
-%- I'm a top-level comment.
-%** author: bsmith
-%-- And I'm a reply.
-%*** author: sjones
-%--- And I'm a reply to the reply.
-%** author: jkidd
-%-- And I'm a second reply to the original top-level comment.
-%* author: mdarks
-%- And I'm another top-level comment.
-%** author: lbutterman
-%-- And I'm a reply to the second top-level comment.
-```
-
-#### Position / Target of Discourse Threads
-
-Diffscuss threads are taken to apply to the line immediately above
-them, so for example in this snippet:
-
-```
-+It's only just a test
-%* author: ejorgensen
-%- I have grave doubts about this change.  To me it appears foolhardy
-%- and dangerous.
-```
-
-The comment applies to the line
-
-```
-+It's only just a test
-```
-
-A Diffscuss line should always appears after the range information of
-a hunk in a unified diff (that is, after the @@ line).
-
-So this is legal:
-
-```
---- 1.txt	2013-03-07 20:18:10.000000000 -0500
-+++ 2.txt	2013-03-07 20:18:35.000000000 -0500
-@@ -1,5 +1,7 @@
- This is a test.
-
--It's just a test
-+It's only just a test
-%* author: ejorgensen
-%- Hi there.
-```
-
-And this is not:
-
-```
---- 1.txt	2013-03-07 20:18:10.000000000 -0500
-+++ 2.txt	2013-03-07 20:18:35.000000000 -0500
-%* author: ejorgensen
-%- Hi there.
-@@ -1,5 +1,7 @@
- This is a test.
-
--It's just a test
-+It's only just a test
-```
-
-It is legal, however, to position a Diffscuss comment directly after
-the range information in a hunk, in which case the target of the
-comment is assumed to be the entire hunk, for example:
-
-```
---- 1.txt	2013-03-07 20:18:10.000000000 -0500
-+++ 2.txt	2013-03-07 20:18:35.000000000 -0500
-@@ -1,5 +1,7 @@
-%* author: ejorgensen
-%- I love this hunk.
- This is a test.
-
--It's just a test
-+It's only just a test
-```
+This is an aspirational in the extreme goal--after all, Github would
+have to create the .diffscuss endpoint etc.--but a simple, standard
+format helps pave the way.

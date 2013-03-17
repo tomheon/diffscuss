@@ -393,6 +393,16 @@
   (forward-line -2)
   (end-of-line))
 
+(defun diffscuss-in-header-p ()
+  "True if we're in the header material."
+  ;; if we travel up until we hit a meta line, we'll hit a range line
+  ;; first if we're not in a header, otherwise we'll hit a different
+  ;; meta line.
+  (save-excursion
+    (while (and (not (diffscuss-meta-line-p))
+                (zerop (forward-line -1))))
+    (not (diffscuss-range-line-p))))
+
 (defun diffscuss-comment-or-reply ()
   "Insert a comment or reply based on context."
   (interactive)
@@ -400,9 +410,16 @@
   ;; file (meaning before any of the diff headers or lines)
   (if (= (point) 1)
       (diffscuss-insert-file-comment)
+    ;; otherwise, if we're already in a comment, reply to it.
     (if (diffscuss-parse-leader)
         (diffscuss-reply-to-comment)
-      (diffscuss-insert-comment))))
+      ;; if we're on a meta piece, go just past it
+      (if (diffscuss-in-header-p)
+          (progn (while (and (not (diffscuss-range-line-p))
+                             (zerop (forward-line 1))))
+                 (diffscuss-insert-comment))
+        ;; otherwise, new top-level comment.
+        (diffscuss-insert-comment)))))
 
 ;; intelligent newline
 
@@ -455,7 +472,7 @@
   "Non nil if the current line is part of hunk's meta data."
   (save-excursion
       (beginning-of-line)
-      (not (looking-at "^[% +<>\n\\-]"))))
+      (not (looking-at "^[% +\n\\-]"))))
 
 (defun diffscuss-get-source-file (old-or-new)
   "Get the name of the source file."

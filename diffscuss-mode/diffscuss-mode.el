@@ -279,7 +279,23 @@
   "Get the author name to user for new comments."
   (if diffscuss-author
       diffscuss-author
-    (user-login-name)))
+    (diffscuss-git-user-name)))
+
+(defun diffscuss-git-user-name ()
+  "Get the git user name"
+  (diffscuss-get-git-config "user.name"))
+
+(defun diffscuss-get-git-config (config-name)
+  (with-temp-buffer
+    (call-process diffscuss-git-exe nil t nil "config" "--get" config-name)
+    (trim-string (buffer-string))))
+
+(defun trim-string (string)
+  "Remove white spaces in beginning and ending of STRING.
+White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
+(replace-regexp-in-string "\\`[ \t\n]*" ""
+                          (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
+
 
 (defun diffscuss-is-body-leader (leader)
   "Non-nil if leader is a body leader."

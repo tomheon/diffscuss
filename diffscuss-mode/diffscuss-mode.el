@@ -4,9 +4,13 @@
 
 ;;; Config variables
 
-;; By default, diffscuss will use your login name for new comments.
-;; You can override that here.
+;; By default, diffscuss will use your git config user.name for new
+;; comments.  You can override that here.
 (defvar diffscuss-author nil)
+
+;; By default, diffscuss will use your git config user.email for new
+;; comments.  You can override that here.
+(defvar diffscuss-email nil)
 
 ;; Where to find git, by default assume it's whatever version is in
 ;; the path.
@@ -281,9 +285,19 @@
       diffscuss-author
     (diffscuss-git-user-name)))
 
+(defun diffscuss-get-email ()
+  "Get the author email to user for new comments."
+  (if diffscuss-email
+      diffscuss-email
+    (diffscuss-git-user-email)))
+
 (defun diffscuss-git-user-name ()
-  "Get the git user name"
+  "Get the git user name."
   (diffscuss-get-git-config "user.name"))
+
+(defun diffscuss-git-user-email ()
+  "Get the git user email."
+  (diffscuss-get-git-config "user.email"))
 
 (defun diffscuss-get-git-config (config-name)
   (with-temp-buffer
@@ -377,6 +391,10 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
             header
             " author: "
             (diffscuss-get-author)
+            "\n"
+            header
+            " email: "
+            (diffscuss-get-email)
             "\n"
             header
             " date: "

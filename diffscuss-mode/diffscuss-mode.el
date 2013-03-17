@@ -357,6 +357,8 @@
             header
             "\n"
             (diffscuss-force-body leader)
+            " \n"
+            (diffscuss-force-body leader)
             " ")))
 
 (defun diffscuss-reply-to-comment ()
@@ -376,7 +378,9 @@
   (diffscuss-jump-to-end-of-thread)
   (end-of-line)
   (newline)
-  (insert (diffscuss-make-comment "%*")))
+  (insert (diffscuss-make-comment "%*"))
+  (forward-line -1)
+  (end-of-line))
 
 (defun diffscuss-comment-or-reply ()
   "Insert a comment or reply based on context."
@@ -440,7 +444,7 @@
 
 (defun diffscuss-get-source-file (old-or-new)
   "Get the name of the source file."
-  (save-excursion 
+  (save-excursion
     (diffscuss-move-past-meta-lines)
     (diffscuss-source-file-impl old-or-new)))
 
@@ -465,7 +469,7 @@
       (looking-at line-pattern))))
 
 (defun diffscuss-line-type-mismatch (old-or-new)
-  "True if the line starts with + and old-or-new is 'old', or line starts with - 
+  "True if the line starts with + and old-or-new is 'old', or line starts with -
 and old or new is 'new'."
   (let ((line-pattern nil))
     (if (string= old-or-new "old")
@@ -474,7 +478,7 @@ and old or new is 'new'."
   (save-excursion
     (beginning-of-line)
     (looking-at line-pattern))))
-  
+
 
 (defun diffscuss-calibrate-source-line (old-or-new)
   "Deduce what line in the source file the point is on."

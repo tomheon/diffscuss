@@ -384,12 +384,25 @@
   (forward-line -1)
   (end-of-line))
 
+(defun diffscuss-insert-file-comment ()
+  "Insert a file-level comment."
+  (interactive)
+  (beginning-of-buffer)
+  (insert (diffscuss-make-comment "%*"))
+  (newline)
+  (forward-line -2)
+  (end-of-line))
+
 (defun diffscuss-comment-or-reply ()
   "Insert a comment or reply based on context."
   (interactive)
-  (if (diffscuss-parse-leader)
-      (diffscuss-reply-to-comment)
-    (diffscuss-insert-comment)))
+  ;; if at the very top of the file, insert a comment for the entire
+  ;; file (meaning before any of the diff headers or lines)
+  (if (= (point) 1)
+      (diffscuss-insert-file-comment)
+    (if (diffscuss-parse-leader)
+        (diffscuss-reply-to-comment)
+      (diffscuss-insert-comment))))
 
 ;; intelligent newline
 

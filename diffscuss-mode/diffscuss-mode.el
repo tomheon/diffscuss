@@ -345,6 +345,10 @@
 
 ;; insert / reply to comment commands
 
+(defun diffscuss-get-date-time ()
+  "Get the current local date and time in ISO 8601."
+  (format-time-string "%Y-%m-%dT%T%z"))
+
 (defun diffscuss-make-comment (leader)
   "Return a new comment."
   (let ((header (diffscuss-force-header leader)))
@@ -353,6 +357,10 @@
             header
             " author: "
             (diffscuss-get-author)
+            "\n"
+            header
+            " date: "
+            (diffscuss-get-date-time)
             "\n"
             header
             "\n"

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Diffscuss : Code reviews.  In plain text." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Diffscuss</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/tomheon/diffscuss">View on GitHub</a>
+
+          <h1 id="project_title">Diffscuss</h1>
+          <h2 id="project_tagline">Code reviews.  In plain text.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/tomheon/diffscuss/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/tomheon/diffscuss/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Diffscuss: Code Reviews.  In Plain Text.</h1>
+
+<h2>What is Diffscuss?</h2>
+
+<ul>
+<li><p>A format for embedding code reviews into unified diff files.</p></li>
+<li><p>An Emacs mode for creating / reading / responding to reviews in that
+format, with git integration.</p></li>
+<li><p>gen-diffscuss.py, a tool for generating code reviews from git repos.</p></li>
+</ul><p>There are also plans for: a Vim mode, some command line tools, and
+tools to allow diffscuss files to serve as a code-review interchange
+format.</p>
+
+<h2>Why Use Diffscuss?</h2>
+
+<p>If you like:</p>
+
+<ul>
+<li><p>Plain text formats that play nicely with the *nix toolchain</p></li>
+<li><p>Lightweight, flexible code-review processes</p></li>
+<li><p>The idea of being able to work with / keep your reviews close to
+your source, even in the same repository</p></li>
+</ul><p>Then you might want to give Diffscuss a look.</p>
+
+<h2>The Format in a Nutshell</h2>
+
+<p>Diffscuss adds a single beginning-of-line character to the unified
+diff format: %, which marks the beginning of a comment line.  Lines
+beginning with %* are comment headers, and lines beginning with %- are
+comment bodies.  The number of * or - characters indicates reply
+threading.</p>
+
+<p>Since one example is worth a lot of explaining, here's an example
+diffscuss file:</p>
+
+<pre><code>%*
+%* author: Bob Jones
+%* email: bjones@example.com
+%* date: 2013-03-15T19:00:21-0400
+%*
+%- This change set accomplishes two purposes:
+%-
+%- * Add a version of the world greeting for our Spanish-speaking users.
+%-
+%- * Indicate that it's only a test.
+%-
+%**
+%** author: Edmund Jorgensen
+%** email: edmund@example.com
+%** date: 2013-03-16T19:00:45-0400
+%**
+%-- Looks good, one question about internationalization.
+%--
+diff --git a/example.txt b/example.txt
+index f75ba05..01632d8 100644
+--- a/example.txt
++++ b/example.txt
+@@ -1 +1,7 @@
+ Hello, world.
++
++Hola, mundo.
+%*
+%* author: Edmund Jorgensen
+%* email: edmund@example.com
+%* date: 2013-03-16T19:00:37-0400
+%*
+%- I'm not sure we want to go international just yet.
+%-
+%**
+%** author: Bob Jones
+%** email: bjones@example.com
+%** date: 2013-03-17T18:12:49-0400
+%**
+%-- What are your specific concerns?
+%--
++
++This is a test.
++
++It is only a test.
+</code></pre>
+
+<p>The comments at the top of the file apply to the entire review in
+general.</p>
+
+<p>The other two comments address the <code>+Hola, mundo.</code> line (that is,
+the line directly above the first comment in the thread).</p>
+
+<p>Take a look at the "Format Definition" section for much more detail.</p>
+
+<h2>The Emacs Mode</h2>
+
+<p>The Emacs mode colorizes diffscuss files to make for easier reading.
+In addition it helps with:</p>
+
+<h3>Inserting Comments</h3>
+
+<p>The main command you need to know is <code>C-c C-c</code>, which generally
+"does the right thing" based on the position of the cursor.  To wit:</p>
+
+<ul>
+<li><p>If the cursor is at the very top of the buffer, it will insert a new
+review-level comment (this function is available anywhere in the
+buffer with <code>C-c C-f</code>).</p></li>
+<li><p>If the cursor is inside another comment, it will create a reply to
+that comment (this can also be invoked with <code>C-c C-r</code>).</p></li>
+<li><p>If the cursor is inside the diff index information for a file /
+hunk, it will insert a comment after the "range line" (the line
+beginning with @@).</p></li>
+<li><p>If the cursor is on a diff line, it will create a comment directly
+below that line (this is also available with <code>C-c C-i</code>).</p></li>
+</ul><h3>Showing the Source</h3>
+
+<p>If you position the cursor on one of the diff lines in a Diffscuss
+file, then:</p>
+
+<ul>
+<li><p><code>C-c -</code> will open up a temporary buffer containing the old
+version of the source (if it's available locally), with the cursor
+positioned on the same line.</p></li>
+<li><p><code>C-c +</code> will open up a temporary buffer containing the new
+version of the source (if it's available locally), with the cursor
+positioned on the same line.</p></li>
+</ul><p>Both of these require that the Diffscuss file you're visiting is
+located inside the git repo directory.</p>
+
+<h2>gen-diffscuss.py</h2>
+
+<p>gen-diffscuss.py is a helper script for creating a new Diffscuss file
+with diffs and log messages from a set of changes in git.</p>
+
+<p>For example,</p>
+
+<p><code>gen-diffscuss.py HEAD~3..HEAD &gt; some_code_review.diffscuss</code></p>
+
+<p>Makes a Diffscuss file containing the diffs from the last three
+commits in a local git repo, introduced with a comment at the top
+containing all the log messages for those three commits.</p>
+
+<h2>Format Definition</h2>
+
+<h3>Beginning of Line Marker</h3>
+
+<p>All Diffscuss lines begin with one '%'.</p>
+
+<p>There's no limit to the length of a Diffscuss line, but keeping them
+80 chars or less when possible is probably good citizenship, since
+they're meant to be read and edited inside editors.</p>
+
+<h3>Diffscuss Comment Format</h3>
+
+<p>A Diffscuss comment begins with an author line, and possibly other
+header lines, followed by at least one body line.</p>
+
+<h3>Header Lines</h3>
+
+<p>A header line one '%' followed by at least one '*', followed by a
+space, followed by a header of the format 'field-name: value'.</p>
+
+<p>Header lines may also be empty, containing no 'field-name: value', in
+which case the space after the * is also optional.</p>
+
+<p>A header line must always begin a comment or follow another header
+line.</p>
+
+<p>For example, all three of these are valid header lines:</p>
+
+<pre><code>%* author: Bob Jones
+</code></pre>
+
+<pre><code>%**
+</code></pre>
+
+<pre><code>%*** x-github-version: 1
+</code></pre>
+
+<p>The field name cannot contain whitespace.  The value cannot contain a
+newline.</p>
+
+<p>The current Diffscuss headers are:</p>
+
+<ul>
+<li><p>author</p></li>
+<li><p>email</p></li>
+<li><p>date</p></li>
+</ul><p>Non-standard headers should begin with an 'x-', to keep compatible
+with future additions to the Diffscuss format.</p>
+
+<h4>The author Header</h4>
+
+<p>An author line is a standard header line with a field of 'author' and
+a value indicating who authored the comment.  For example:</p>
+
+<pre><code>%* author: ejorgensen
+</code></pre>
+
+<p>Or</p>
+
+<pre><code>%** author: bsmith
+</code></pre>
+
+<p>Every comment must begin with an author line.  All other headers are
+optional.</p>
+
+<h4>The date Header</h4>
+
+<p>Dates should be specified in the full ISO 8601 standard, including
+time zone offset, e.g. 2013-11-22T23:11:21-0400.</p>
+
+<h3>Body Lines</h3>
+
+<p>A body line is one '%' character followed by at least one -, followed
+by a space, followed by arbitrary text.</p>
+
+<p>Exception: for an empty body line, the space is optional.</p>
+
+<p>For example:</p>
+
+<pre><code>%- This is a body line.
+</code></pre>
+
+<pre><code>%-- And so is *this*.
+</code></pre>
+
+<pre><code>%- and this next body line
+%-
+%- is empty, so doesn't need a space, but could have one.
+</code></pre>
+
+<p>A body line must always follow a header line or another body line.</p>
+
+<h3>Threads</h3>
+
+<p>A thread is one or more adjacent comments, properly threaded.</p>
+
+<p>For example, this is a thread:</p>
+
+<pre><code>%* author: ejorgensen
+%- I'm a one comment thread.
+</code></pre>
+
+<p>And so is this:</p>
+
+<pre><code>%* author: ejorgensen
+%- I'm a two comment thread.
+%* author: bsmith
+%- With no replies, just two top level comments.
+</code></pre>
+
+<p>And so is this:</p>
+
+<pre><code>%* author: ejorgensen
+%- I'm a two comment thread.
+%** author: bsmith
+%-- With a reply.
+</code></pre>
+
+<p>To be explicit: the nesting / reply level of a thread is determined by
+the number of '*' characters in each header line / '-' characters in
+each body line, which should remain constant for a given comment.</p>
+
+<p>A comment that is a reply to a previous comment should have one more
+'*' at the beginning of each header line and one more '-' at the
+beginning of each body line than its parent comment.</p>
+
+<p>The parent comment for any reply can always be determined by finding
+the closest previous comment with one less level of nesting.  For
+example:</p>
+
+<pre><code>%* author: ejorgensen
+%- I'm a top-level comment.
+%** author: bsmith
+%-- And I'm a reply.
+%*** author: sjones
+%--- And I'm a reply to the reply.
+%** author: jkidd
+%-- And I'm a second reply to the original top-level comment.
+%* author: mdarks
+%- And I'm another top-level comment.
+%** author: lbutterman
+%-- And I'm a reply to the second top-level comment.
+</code></pre>
+
+<h4>Position / Target of Threads</h4>
+
+<p>Diffscuss threads are generally taken to apply to the line immediately
+above them, so for example in this snippet:</p>
+
+<pre><code>+It's only just a test
+%* author: ejorgensen
+%- I have grave doubts about this change.  To me it appears foolhardy
+%- and dangerous.
+</code></pre>
+
+<p>The comment applies to the line</p>
+
+<pre><code>+It's only just a test
+</code></pre>
+
+<p>A Diffscuss thread can also appear directly after the range
+information in a hunk, in which case the target of the comment is
+assumed to be the entire hunk, for example:</p>
+
+<pre><code>--- 1.txt   2013-03-07 20:18:10.000000000 -0500
++++ 2.txt   2013-03-07 20:18:35.000000000 -0500
+@@ -1,5 +1,7 @@
+%* author: ejorgensen
+%- I love this hunk.
+ This is a test.
+
+-It's just a test
++It's only just a test
+</code></pre>
+
+<p>Finally, if a thread appears at the very top of the Diffscuss file,
+the thread applies to the whole changeset (where it should generally
+act as a thread discussing the review as a whole--for example,
+introductory remarks about what the changes are attempting to achieve,
+"ship it" remarks, etc.).</p>
+
+<h2>What the Future Might Hold</h2>
+
+<h3>Providing for the Liberation of Code Reviews (Aspirational)</h3>
+
+<p>Right now, if you use Github (for example), you can stop using Github
+at any moment without losing any of your code and history--it's all in
+your git repo.</p>
+
+<p>Github has done a fantastic job of making sure you can even take your
+wiki information with you--that's just another git repo.</p>
+
+<p>But the comments on your pull requests--all that amazing and rich
+history of problems being hammered out and nits picked--is harder to
+reconstruct.  Github has--in amazing non-lockin-y fashion, and mad
+props to them for it--provided an API to get all the information about
+your pull requests, but it's non-trivial to reconstruct it all,
+requiring a bunch of calls and a bunch of reconstructed json.</p>
+
+<p>Now imagine you could hit the pull request url with a .diffscuss
+extension (as you can already do with a .diff extension) and pull in
+the diff--**with** the contextualized comments, right inline, for
+viewing in your editor or whatever.  That would be pretty cool, no?
+Especially if you could then import into another code review system
+with relatively little effort.</p>
+
+<p>Or say that, just like you can with your Github wiki, you could clone
+a git repo of all your project's pull requests, in a simple textual
+format, for offline reading, and potentially--with some push
+magic--even offline code reviews.</p>
+
+<p>This is an aspirational in the extreme goal--after all, Github would
+have to create the .diffscuss endpoint etc.--but a simple, standard
+format helps pave the way.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Diffscuss maintained by <a href="https://github.com/tomheon">tomheon</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

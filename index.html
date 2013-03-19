@@ -156,6 +156,17 @@ positioned on the same line.</p></li>
 </ul><p>Both of these require that the Diffscuss file you're visiting is
 located inside the git repo directory.</p>
 
+<ul>
+<li>
+<code>C-c s</code> will attempt to find the local source file / line in
+that file that's the best candidate to match up with the diffscuss
+line the cursor is currently on.</li>
+</ul><p>This requires that the diffscuss file you are visiting is somewhere
+under a git checkout of the repo against which the diffscuss file was
+generated, and that you have set the <code>diffscuss-dir</code> Emacs
+variable to root directory of your diffscuss installation (where
+find-local-source.py is located).</p>
+
 <h2>gen-diffscuss.py</h2>
 
 <p>gen-diffscuss.py is a helper script for creating a new Diffscuss file

@@ -44,6 +44,11 @@
     (define-key map "\C-j" 'diffscuss-newline-and-indent)
     (define-key map (kbd "RET") 'diffscuss-newline-and-indent)
     (define-key map "\C-o" 'diffscuss-open-line)
+
+    ;; navigation
+    (define-key map "\C-cn" 'diffscuss-next-comment)
+    (define-key map "\C-cp" 'diffscuss-previous-comment)
+
     map)
   "Keymap for diffscuss mode.")
 
@@ -198,7 +203,7 @@
   (diffscuss-comment-part-regexp parse-leader "-" "*"))
 
 (defun diffscuss-find-body-start ()
-  "Return the start position of the current comment."
+  "Return the start position of the current comment's body."
   (let ((comment-body-regexp
          (diffscuss-comment-body-regexp (diffscuss-parse-leader)))
         (comment-header-regexp
@@ -216,6 +221,22 @@
       (or (looking-at comment-body-regexp)
           (forward-line 1))
       (point))))
+
+(defun diffscuss-find-comment-start ()
+  "Return the start position of the current comment."
+  (if (not (diffscuss-parse-leader))
+      nil
+    (save-excursion
+      (goto-char (diffscuss-find-body-start))
+      (let ((comment-header-regexp
+             (diffscuss-comment-header-regexp (diffscuss-parse-leader))))
+        (beginning-of-line)
+        (forward-line -1)
+        (while (and (looking-at comment-header-regexp)
+                    (zerop (forward-line -1))))
+        (if (not (looking-at comment-header-regexp))
+            (forward-line 1))
+        (point)))))
 
 (defun diffscuss-find-body-end ()
   "Return the end position of the current comment."
@@ -716,6 +737,30 @@ and old or new is 'new'."
 
 (defun diffscuss-get-new-rev ()
     (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. \n\r]+\\)"))
+
+;; navigation
+
+(defun diffscuss-next-comment ()
+  "Jump to the next comment."
+  (interactive)
+  (if (diffscuss-parse-leader)
+      (goto-char (diffscuss-find-body-end)))
+  (beginning-of-line)
+  (forward-line 1)
+  (while (and (not (diffscuss-parse-leader))
+              (zerop (forward-line 1)))))
+
+(defun diffscuss-previous-comment ()
+  "Jump to the previous comment."
+  (interactive)
+  (if (diffscuss-parse-leader)
+      (goto-char (diffscuss-find-comment-start)))
+  (beginning-of-line)
+  (forward-line -1)
+  (while (and (not (diffscuss-parse-leader))
+              (zerop (forward-line -1))))
+  (if (diffscuss-parse-leader)
+      (goto-char (diffscuss-find-comment-start))))
 
 ;; Define the mode.
 

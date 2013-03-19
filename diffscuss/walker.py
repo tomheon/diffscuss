@@ -18,6 +18,7 @@ class CommentInHeaderException(Exception):
     pass
 
 
+DIFF_HEADER = 'DIFF_HEADER'
 DIFF = 'DIFF'
 COMMENT = 'COMMENT'
 
@@ -55,11 +56,11 @@ def walk(fil):
     # for maintaing state
     cur_comment_level = 1
     cur_comment_lines = []
-    can_find_comment = True
+    in_diff_header = False
 
     for line in fil:
         if _is_diffscuss_line(line):
-            if not can_find_comment:
+            if in_diff_header:
                 raise CommentInHeaderException()
 
             line_level = _level(line)
@@ -98,24 +99,26 @@ def walk(fil):
                     yield _process_comment(cur_comment_lines)
                     cur_comment_lines = []
             cur_comment_lines.append(line)
+        elif _is_start_range_info(line):
+            # if this is one, start allowing Diffscuss.
+            in_diff_header = False
+            yield (DIFF_HEADER, line)
+        elif in_diff_header:
+            yield (DIFF_HEADER, line)
         elif _is_not_diff_line(line):
             # we've moved out of range where diffscuss is legal
-            can_find_comment = False
+            in_diff_header = True
             if cur_comment_lines:
                 yield _process_comment(cur_comment_lines)
                 cur_comment_lines = []
-            yield (DIFF, line)
+            yield (DIFF_HEADER, line)
         else:
             if cur_comment_lines:
                 yield _process_comment(cur_comment_lines)
                 cur_comment_lines = []
             yield (DIFF, line)
 
-        if _is_start_range_info(line):
-            # if this is one, start allowing Diffscuss.
-            can_find_comment = True
-            yield (DIFF, line)
-        is_first_line = False
+
 
 
     if cur_comment_lines:

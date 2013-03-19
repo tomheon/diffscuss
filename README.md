@@ -132,6 +132,16 @@ file, then:
 Both of these require that the Diffscuss file you're visiting is
 located inside the git repo directory.
 
+* ```C-c s``` will attempt to find the local source file / line in
+  that file that's the best candidate to match up with the diffscuss
+  line the cursor is currently on.
+
+This requires that the diffscuss file you are visiting is somewhere
+under a git checkout of the repo against which the diffscuss file was
+generated, and that you have set the ```diffscuss-dir``` Emacs
+variable to root directory of your diffscuss installation (where
+find-local-source.py is located).
+
 ## gen-diffscuss.py
 
 gen-diffscuss.py is a helper script for creating a new Diffscuss file

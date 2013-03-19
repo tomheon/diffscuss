@@ -16,6 +16,10 @@
 ;; the path.
 (defvar diffscuss-git-exe "git")
 
+;; Where to find the python installation of diffscuss (where
+;; find-local-source.py is for example)
+(defvar diffscuss-dir nil)
+
 ;;; Code:
 
 ;; we need to make sure diff mode is present and loaded so we can get
@@ -609,16 +613,35 @@ and old or new is 'new'."
 
 (defun diffscuss-goto-local-source ()
   "Attempt to jump to the appropriate source."
-  ;; TODO this needs a ton of work to tell whether the new version is
-  ;; present, or the old, and which line we should land on, etc.
-  ;; Right now the line guessing is terrible.
   (interactive)
-  (let ((source-file (diffscuss-get-source-file "new"))
-        (line-num (diffscuss-calibrate-source-line "new")))
-    (if (find-file-noselect source-file)
-        (if (pop-to-buffer (get-file-buffer source-file))
-            (goto-line line-num))
-      (progn (message "Couldn't find file %s" source-file) nil))))
+  (if (not diffscuss-dir)
+      (message "Must set diffscuss-dir before you can just to local source" "")
+    (progn
+      (let ((find-source-exe (concat (file-name-as-directory diffscuss-dir) "find-local-source.py"))
+            (outbuf-name (generate-new-buffer-name "diffscuss-local-source")))
+        (if (/= 0 (call-process-region (point-min)
+                                       (point-max)
+                                       find-source-exe
+                                       nil
+                                       outbuf-name
+                                       nil
+                                       (number-to-string (line-number-at-pos))))
+            (with-current-buffer outbuf-name
+              (message "%s" (buffer-string))
+              (message "Could not find local source"))
+          (progn
+            (let ((to-find-fname nil)
+                  (to-find-line nil))
+              (with-current-buffer outbuf-name
+                (setq to-find-fname (mapconcat
+                                     'identity
+                                     (butlast (split-string (buffer-string) " ") 1) " "))
+                (setq to-find-line (car (last (split-string (buffer-string) " ") 1))))
+              (pop-to-buffer (find-file-noselect to-find-fname))
+              (goto-line (string-to-number to-find-line))))
+          (with-current-buffer outbuf-name
+            (kill-buffer outbuf-name)))))))
+
 
 (defun diffscuss-show-source-rev (source-file rev line-num old-or-new)
   "Show the old version of the source from git, and jump to the right line."

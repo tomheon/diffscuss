@@ -14,6 +14,10 @@ class EmptyCommentException(Exception):
     pass
 
 
+class CommentInHeaderException(Exception):
+    pass
+
+
 DIFF = 'DIFF'
 COMMENT = 'COMMENT'
 
@@ -45,20 +49,19 @@ def walk(fil):
     BadNestingException: if a comment is improperly nested.
 
     EmptyCommentException: if a comment has no body.
+
+    CommentInHeaderException: if a comment appears in a diff header.
     """
     # for maintaing state
-    in_post_range_info = False
     cur_comment_level = 1
     cur_comment_lines = []
+    can_find_comment = True
 
     for line in fil:
-        if not in_post_range_info:
-            # if we haven't yet hit a @@ line...
-            if _is_start_range_info(line):
-                # if this is one, start allowing Diffscuss.
-                in_post_range_info = True
-            yield (DIFF, line)
-        elif _is_diffscuss_line(line):
+        if _is_diffscuss_line(line):
+            if not can_find_comment:
+                raise CommentInHeaderException()
+
             line_level = _level(line)
             is_header = _is_header(line)
 
@@ -73,10 +76,12 @@ def walk(fil):
                 raise BadNestingException()
 
             # or if this is a header line of a comment and it's not
-            # either following a header or is an author line...
+            # either following a header or is an author line or an empty line...
             if (is_header and
-                (not cur_comment_lines or not _is_header(cur_comment_lines[-1])) and
-                not _is_author_line(line)):
+                (not cur_comment_lines or
+                 not _is_header(cur_comment_lines[-1])) and
+                 not _is_author_line(line) and
+                 not _is_empty_header(line)):
                 raise MissingAuthorException()
 
             # or if it's not a header and it's the first line of a
@@ -86,14 +91,16 @@ def walk(fil):
 
             # if we're here, we're either in a new comment, or adding
             # a header / body line to an existing comment
-            if _is_author_line(line):
+            if _is_author_line(line) and not all(_is_empty_header(l)
+                                                 for l
+                                                 in cur_comment_lines):
                 if cur_comment_lines:
                     yield _process_comment(cur_comment_lines)
                     cur_comment_lines = []
             cur_comment_lines.append(line)
         elif _is_not_diff_line(line):
             # we've moved out of range where diffscuss is legal
-            in_post_range_info = False
+            can_find_comment = False
             if cur_comment_lines:
                 yield _process_comment(cur_comment_lines)
                 cur_comment_lines = []
@@ -103,6 +110,13 @@ def walk(fil):
                 yield _process_comment(cur_comment_lines)
                 cur_comment_lines = []
             yield (DIFF, line)
+
+        if _is_start_range_info(line):
+            # if this is one, start allowing Diffscuss.
+            can_find_comment = True
+            yield (DIFF, line)
+        is_first_line = False
+
 
     if cur_comment_lines:
         yield _process_comment(cur_comment_lines)
@@ -153,12 +167,16 @@ def _level(line):
     return None
 
 
-HEADER_RE = re.compile(r'^(%[*]+) ')
+HEADER_RE = re.compile(r'^(%[*]+)( |$)')
+EMPTY_HEADER_RE = re.compile(r'^(%[*]+)\s*$')
 
 
 def _is_header(line):
     return HEADER_RE.match(line)
 
+
+def _is_empty_header(line):
+    return EMPTY_HEADER_RE.match(line)
 
 AUTHOR_RE = re.compile(r'^(%[*]+) author: ')
 
@@ -168,7 +186,7 @@ def _is_author_line(line):
 
 
 
-BODY_RE = re.compile(r'^(%[-]+) ')
+BODY_RE = re.compile(r'^(%[-]+)( |$)')
 
 
 def _is_body(line):

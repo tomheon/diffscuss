@@ -11,9 +11,12 @@ http://www.visophyte.org/blog/2010/03/09/emacs-compilation-mode-support-for-revi
 ** DONE handle open line?
 ** DONE make goto-source just work for git, but be smarter...
 *** DONE "find" source if in git (in ro buffer)
-** TODO make next-error work as well as goto-source?
-** TODO handle fill region intelligently?
-** TODO commands to navigate threads
+** DONE commands to navigate threads
+* Inbox system
+** TODO bash completion
+
+http://www.linuxjournal.com/content/more-using-bash-complete-command
+
 * General Encoding
 ** TODO write tests with utf-8 etc.
 

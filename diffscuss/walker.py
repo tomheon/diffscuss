@@ -72,9 +72,15 @@ def walk(fil):
             # level can increase by more than one....
             if line_level - cur_comment_level > 1:
                 raise BadNestingException()
+
             # or if we've changed level mid-comment...
-            if line_level != cur_comment_level and not _is_author_line(line):
+            if (line_level != cur_comment_level
+                #and not _is_author_line(line)
+                and not _is_header(line)):
                 raise BadNestingException()
+
+            # At this point, we accept the new line_level
+            cur_comment_level = line_level
 
             # or if this is a header line of a comment and it's not
             # either following a header or is an author line or an empty line...

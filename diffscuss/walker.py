@@ -75,7 +75,6 @@ def walk(fil):
 
             # or if we've changed level mid-comment...
             if (line_level != cur_comment_level
-                #and not _is_author_line(line)
                 and not _is_header(line)):
                 raise BadNestingException()
 

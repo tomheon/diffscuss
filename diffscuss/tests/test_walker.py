@@ -169,9 +169,6 @@ def _comment_in_header_defaults():
             'COMMENT_IN_HEADER_8': ''}
 
 
-COMMENT_IN_HEADER_PARSED = []
-
-
 MISSING_AUTHOR_COMMENT = (dedent("""\
                                  %*
                                  %* email: test@example.com
@@ -189,14 +186,11 @@ AUTHOR_SECOND_COMMENT = (dedent("""\
                                 """),
                           MissingAuthorException)
 
-
-
 EMPTY_COMMENT = (dedent("""\
                         %*
                         %* author: test@example.com
                         %*"""),
                  EmptyCommentException)
-
 
 BAD_NESTING_COMMENT = (dedent("""\
                               %*
@@ -265,7 +259,7 @@ TEMPLATE_TESTS = [
          AUTHOR_SECOND_COMMENT,
      ]),
 
-     ('comment_in_header.diffscuss', _comment_in_header_defaults(), COMMENT_IN_HEADER_PARSED,
+     ('comment_in_header.diffscuss', _comment_in_header_defaults(), [],
       [
           (SIMPLE_COMMENT[0], CommentInHeaderException),
           (SIMPLE_THREAD[0], CommentInHeaderException),

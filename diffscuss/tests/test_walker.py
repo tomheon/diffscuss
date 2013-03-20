@@ -180,6 +180,16 @@ MISSING_AUTHOR_COMMENT = (dedent("""\
                                  """),
                           MissingAuthorException)
 
+AUTHOR_SECOND_COMMENT = (dedent("""\
+                                %*
+                                %* email: test@example.com
+                                %* author: oh hai
+                                %*
+                                %- yeah
+                                """),
+                          MissingAuthorException)
+
+
 
 EMPTY_COMMENT = (dedent("""\
                         %*
@@ -252,6 +262,7 @@ TEMPLATE_TESTS = [
          BAD_NESTING_COMMENT,
          SIMPLE_COMMENT,
          SIMPLE_THREAD,
+         AUTHOR_SECOND_COMMENT,
      ]),
 
      ('comment_in_header.diffscuss', _comment_in_header_defaults(), COMMENT_IN_HEADER_PARSED,

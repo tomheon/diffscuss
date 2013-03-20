@@ -636,7 +636,7 @@ and old or new is 'new'."
   "Attempt to jump to the appropriate source."
   (interactive)
   (if (not diffscuss-dir)
-      (message "Must set diffscuss-dir before you can just to local source" "")
+      (message "Must set diffscuss-dir before you can jump to local source" "")
     (progn
       (let ((find-source-exe (concat (file-name-as-directory diffscuss-dir) "find-local-source.py"))
             (outbuf-name (generate-new-buffer-name "diffscuss-local-source")))

@@ -32,13 +32,15 @@ def walk(fil):
 
     (DIFF, line)
 
-    For each line that is not Diffscuss comment, or:
+    For each line that is part of a diff,
 
-    (COMMENT, level, comment)
+    (DIFF_HEADER, line)
 
-    for each Diffscuss comment, where level is an integer indicating
-    how deeply nested the comment is (1 for a top-level comment), and
-    comment is a Comment named tuple.
+    For each diff header line (e.g. Index lines, range lines), or
+
+    (COMMENT, comment)
+
+    for each Diffscuss comment, where comment is a Comment named tuple.
 
     @fil: a file-like object containing Diffscuss.
 
@@ -53,114 +55,55 @@ def walk(fil):
 
     CommentInHeaderException: if a comment appears in a diff header.
     """
-    # for maintaing state
-    cur_comment_level = 1
-    cur_comment_lines = []
-    in_diff_header = False
+    line = fil.readline()
+    in_header = False
 
-    for line in fil:
+    while True:
+
+        if not line:
+            break
+
         if _is_diffscuss_line(line):
-            if in_diff_header:
+            if in_header:
                 raise CommentInHeaderException()
-
-            line_level = _level(line)
-            is_header = _is_header(line)
-
-            # TODO: line number etc. in exceptions
-
-            # various things can go wrong here...for example, the
-            # level can increase by more than one....
-            if line_level - cur_comment_level > 1:
-                raise BadNestingException()
-
-            # or if we've changed level mid-comment...
-            if (line_level != cur_comment_level
-                and not _is_header(line)):
-                raise BadNestingException()
-
-            # At this point, we accept the new line_level
-            cur_comment_level = line_level
-
-            # or if this is a header line of a comment and it's not
-            # either following a header or is an author line or an empty line...
-            if (is_header and
-                (not cur_comment_lines or
-                 not _is_header(cur_comment_lines[-1])) and
-                 not _is_author_line(line) and
-                 not _is_empty_header(line)):
-                raise MissingAuthorException()
-
-            # or if it's not a header and it's the first line of a
-            # comment
-            if not _is_header(line) and not cur_comment_lines:
-                raise MissingAuthorException()
-
-            # if we're here, we're either in a new comment, or adding
-            # a header / body line to an existing comment
-            if _is_author_line(line) and not all(_is_empty_header(l)
-                                                 for l
-                                                 in cur_comment_lines):
-                if cur_comment_lines:
-                    yield _process_comment(cur_comment_lines)
-                    cur_comment_lines = []
-            cur_comment_lines.append(line)
-        elif _is_start_range_info(line):
-            # if this is one, start allowing Diffscuss.
-            in_diff_header = False
+            comment, line = _read_comment(line, fil)
+            yield (COMMENT, comment)
+            # continue so we don't read another line at the bottom
+            continue
+        elif in_header or _is_not_diff_line(line):
+            # check for non-diff line has to come second, since the
+            # --- and +++ in the header will read as diff lines
+            # otherwise
             yield (DIFF_HEADER, line)
-        elif in_diff_header:
-            yield (DIFF_HEADER, line)
-        elif _is_not_diff_line(line):
-            # we've moved out of range where diffscuss is legal
-            in_diff_header = True
-            if cur_comment_lines:
-                yield _process_comment(cur_comment_lines)
-                cur_comment_lines = []
-            yield (DIFF_HEADER, line)
+            in_header = not _is_range_line(line)
         else:
-            if cur_comment_lines:
-                yield _process_comment(cur_comment_lines)
-                cur_comment_lines = []
             yield (DIFF, line)
 
+        line = fil.readline()
 
 
+def _read_comment(line, fil):
+    header_lines, line = _read_header(line, fil)
+    _check_header(header_lines)
+    body_lines, line = _read_body(line, fil)
+    _check_body(body_lines)
 
-    if cur_comment_lines:
-        yield _process_comment(cur_comment_lines)
-        cur_comment_lines = []
+    return Comment(header_lines=header_lines,
+                   body_lines=body_lines), line
 
 
-def _process_comment(comment_lines):
-    header_lines = [line for line in comment_lines if _is_header(line)]
-    body_lines = [line for line in comment_lines if not _is_header(line)]
-
+def _check_body(body_lines):
     if not body_lines:
         raise EmptyCommentException()
 
-    return (COMMENT,
-            Comment(header_lines=header_lines,
-                    body_lines=body_lines))
 
-
-def _is_start_range_info(line):
-    return line.startswith('@@')
-
-
-def _is_diffscuss_line(line):
-    return line.startswith('%')
-
-
-# legal starts to a unified diff line inside a hunk
-DIFF_CHARS = [' ', '+', '-', '\\']
-
-
-def _is_not_diff_line(line):
-    """
-    Treat a totally blank line as a diff line to be flexible.
-    """
-    return (line.strip() and
-            not any(line.startswith(diff_char) for diff_char in DIFF_CHARS))
+def _check_header(header_lines):
+    for line in header_lines:
+        if _is_author_line(line):
+            return
+        if not _is_empty_header(line):
+            raise MissingAuthorException()
+    raise MissingAuthorException()
 
 
 def _level(line):
@@ -175,6 +118,29 @@ def _level(line):
     return None
 
 
+def _read_header(line, fil):
+    return _read_comment_part(line, fil, _is_header)
+
+
+def _read_body(line, fil):
+    return _read_comment_part(line, fil, _is_body)
+
+
+def _read_comment_part(line, fil, pred):
+    part_lines = []
+    level = _level(line)
+
+    while True:
+        if not pred(line):
+            break
+        if _level(line) != level:
+            raise BadNestingException()
+        part_lines.append(line)
+        line = fil.readline()
+
+    return part_lines, line
+
+
 HEADER_RE = re.compile(r'^(%[*]+)( |$)')
 EMPTY_HEADER_RE = re.compile(r'^(%[*]+)\s*$')
 
@@ -186,6 +152,7 @@ def _is_header(line):
 def _is_empty_header(line):
     return EMPTY_HEADER_RE.match(line)
 
+
 AUTHOR_RE = re.compile(r'^(%[*]+) author: ')
 
 
@@ -193,9 +160,28 @@ def _is_author_line(line):
     return AUTHOR_RE.match(line)
 
 
-
 BODY_RE = re.compile(r'^(%[-]+)( |$)')
 
 
 def _is_body(line):
     return BODY_RE.match(line)
+
+
+def _is_range_line(line):
+    return line.startswith('@@')
+
+
+def _is_diffscuss_line(line):
+    return line.startswith('%')
+
+
+# legal starts to a unified diff line inside a hunk
+DIFF_CHARS = (' ', '+', '-', '\\')
+
+
+def _is_not_diff_line(line):
+    """
+    Treat a totally blank line as a diff line to be flexible, since emacs
+    can strip trailing spaces.
+    """
+    return line.strip() and not line.startswith(DIFF_CHARS)

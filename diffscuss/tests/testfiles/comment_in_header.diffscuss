@@ -1,0 +1,37 @@
+diff --git a/diffscuss-mode/diffscuss-mode.el b/diffscuss-mode/diffscuss-mode.el{COMMENT_IN_HEADER_1}
+index e95bace..404b745 100644{COMMENT_IN_HEADER_2}
+--- a/diffscuss-mode/diffscuss-mode.el{COMMENT_IN_HEADER_3}
++++ b/diffscuss-mode/diffscuss-mode.el{COMMENT_IN_HEADER_4}
+@@ -345,6 +345,10 @@
+
+ ;; insert / reply to comment commands
+
++(defun diffscuss-get-date-time ()
++  "Get the current local date and time in ISO 8601."
++  (format-time-string "%Y-%m-%dT%T%z"))
++
+ (defun diffscuss-make-comment (leader)
+   "Return a new comment."
+   (let ((header (diffscuss-force-header leader)))
+diff --git a/diffscuss/walker.py b/diffscuss/walker.py{COMMENT_IN_HEADER_5}
+index 74384c1..5852f4a 100644{COMMENT_IN_HEADER_6}
+--- a/diffscuss/walker.py{COMMENT_IN_HEADER_7}
++++ b/diffscuss/walker.py{COMMENT_IN_HEADER_8}
+@@ -72,10 +72,16 @@ def walk(fil):
+             # level can increase by more than one....
+             if line_level - cur_comment_level > 1:
+                 raise BadNestingException()
++
+             # or if we've changed level mid-comment...
+-            if line_level != cur_comment_level and not _is_author_line(line):
++            if (line_level != cur_comment_level
++                #and not _is_author_line(line)
++                and not _is_header(line)):
+                 raise BadNestingException()
+
++            # At this point, we accept the new line_level
++            cur_comment_level = line_level
++
+             # or if this is a header line of a comment and it's not
+             # either following a header or is an author line or an empty line...
+             if (is_header and

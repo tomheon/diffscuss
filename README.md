@@ -142,6 +142,22 @@ generated, and that you have set the ```diffscuss-dir``` Emacs
 variable to root directory of your diffscuss installation (where
 find-local-source.py is located).
 
+### Navigation
+
+You can move around the diffscussion quickly using:
+
+* ```C-c f``` to move forward one comment.
+
+* ```C-c b``` to move back one comment.
+
+* ```C-c n``` to move to the next thread.
+
+* ```C-c p``` to move to the previous thread.
+
+* ```C-c a``` to move to the beginning of the current thread.
+
+* ```C-c e``` to move to the end of the current thread.
+
 ## gen-diffscuss.py
 
 gen-diffscuss.py is a helper script for creating a new Diffscuss file

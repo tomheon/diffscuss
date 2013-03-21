@@ -46,8 +46,12 @@
     (define-key map "\C-o" 'diffscuss-open-line)
 
     ;; navigation
-    (define-key map "\C-cn" 'diffscuss-next-comment)
-    (define-key map "\C-cp" 'diffscuss-previous-comment)
+    (define-key map "\C-cf" 'diffscuss-next-comment)
+    (define-key map "\C-cb" 'diffscuss-previous-comment)
+    (define-key map "\C-cn" 'diffscuss-next-thread)
+    (define-key map "\C-cp" 'diffscuss-previous-thread)
+    (define-key map "\C-ca" 'diffscuss-jump-to-beginning-of-thread)
+    (define-key map "\C-ce" 'diffscuss-jump-to-end-of-thread)
 
     map)
   "Keymap for diffscuss mode.")
@@ -394,20 +398,6 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
     ;; diff after all
     t))
 
-;; navigation
-
-(defun diffscuss-jump-to-end-of-thread ()
-  "Jump to the end of the current thread."
-  (interactive)
-  (if (diffscuss-parse-leader)
-      (progn (beginning-of-line)
-             (while (and (diffscuss-parse-leader)
-                         (zerop (forward-line 1))))
-             (or (diffscuss-parse-leader)
-                 (forward-line -1))
-             (end-of-line))
-    (message "%s" "Not in a diffscuss thread")))
-
 ;; insert / reply to comment commands
 
 (defun diffscuss-get-date-time ()
@@ -739,6 +729,40 @@ and old or new is 'new'."
     (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. \n\r]+\\)"))
 
 ;; navigation
+
+(defun diffscuss-jump-to-end-of-thread ()
+  "Jump to the end of the current thread."
+  (interactive)
+  (if (diffscuss-parse-leader)
+      (progn (beginning-of-line)
+             (while (and (diffscuss-parse-leader)
+                         (zerop (forward-line 1))))
+             (or (diffscuss-parse-leader)
+                 (forward-line -1))
+             (end-of-line))))
+
+(defun diffscuss-jump-to-beginning-of-thread ()
+  "Jump to the beginning of the current thread."
+  (interactive)
+  (if (diffscuss-parse-leader)
+      (progn (beginning-of-line)
+             (while (and (diffscuss-parse-leader)
+                         (zerop (forward-line -1))))
+             (or (diffscuss-parse-leader)
+                 (forward-line 1)))))
+
+(defun diffscuss-next-thread ()
+  "Jump to the beginning of the next thread."
+  (interactive)
+  (diffscuss-jump-to-end-of-thread)
+  (diffscuss-next-comment))
+
+(defun diffscuss-previous-thread ()
+  "Jump to the beginning of the previous thread."
+  (interactive)
+  (diffscuss-jump-to-beginning-of-thread)
+  (diffscuss-previous-comment)
+  (diffscuss-jump-to-beginning-of-thread))
 
 (defun diffscuss-next-comment ()
   "Jump to the next comment."

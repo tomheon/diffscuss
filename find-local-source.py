@@ -54,12 +54,18 @@ def _update_line_num(item, line_num):
         return line_num + 1
 
 
-FNAME_RE = re.compile(r'^(---|\+\+\+) (a|b)/(.*)')
+FNAME_RE = re.compile(r'^(---|\+\+\+) (.*)')
+REL_FNAME_RE = re.compile(r'^(a|b)/(.*)')
 
 
 def _parse_fname(line):
     line = line.strip()
-    return FNAME_RE.match(line).group(3)
+    fname = FNAME_RE.match(line).group(2)
+    rel_match = REL_FNAME_RE.match(fname)
+    if rel_match:
+        return rel_match.group(2)
+    else:
+        return fname
 
 
 def _maybe_update_fname(item, prefix, cur_fname):
@@ -166,6 +172,10 @@ def _find_candidates(input_f, line_number):
 
 
 def _candidate_exists(candidate_fname, git_repo):
+    # this is how git diffs represent a file that didn't exist in an
+    # earlier revision
+    if candidate_fname == '/dev/null':
+        return False
     try:
         with open(os.path.join(git_repo, candidate_fname), 'rb'):
             return True

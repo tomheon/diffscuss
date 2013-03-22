@@ -755,14 +755,16 @@ and old or new is 'new'."
   "Jump to the beginning of the next thread."
   (interactive)
   (diffscuss-jump-to-end-of-thread)
-  (diffscuss-next-comment))
+  (diffscuss-next-comment)
+  (recenter))
 
 (defun diffscuss-previous-thread ()
   "Jump to the beginning of the previous thread."
   (interactive)
   (diffscuss-jump-to-beginning-of-thread)
   (diffscuss-previous-comment)
-  (diffscuss-jump-to-beginning-of-thread))
+  (diffscuss-jump-to-beginning-of-thread)
+  (recenter))
 
 (defun diffscuss-next-comment ()
   "Jump to the next comment."
@@ -772,7 +774,8 @@ and old or new is 'new'."
   (beginning-of-line)
   (forward-line 1)
   (while (and (not (diffscuss-parse-leader))
-              (zerop (forward-line 1)))))
+              (zerop (forward-line 1))))
+  (recenter))
 
 (defun diffscuss-previous-comment ()
   "Jump to the previous comment."
@@ -784,7 +787,8 @@ and old or new is 'new'."
   (while (and (not (diffscuss-parse-leader))
               (zerop (forward-line -1))))
   (if (diffscuss-parse-leader)
-      (goto-char (diffscuss-find-comment-start))))
+      (goto-char (diffscuss-find-comment-start)))
+  (recenter))
 
 ;; Define the mode.
 

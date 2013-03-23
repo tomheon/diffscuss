@@ -510,8 +510,13 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
   (interactive)
   (let ((leader (diffscuss-parse-leader)))
     (if leader
-        (progn (newline)
-               (insert (concat leader " ")))
+        (progn
+          (if (< (current-column) (length leader))
+              (move-to-column (length leader)))
+          (newline)
+          (insert leader)
+          (if (not (looking-at " "))
+              (insert " ")))
       (newline))))
 
 (defun diffscuss-open-line ()
@@ -520,9 +525,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
   (let ((leader (diffscuss-parse-leader)))
     (if leader
         (save-excursion
-          (newline)
-          (beginning-of-line)
-          (insert (concat leader " ")))
+          (diffscuss-newline-and-indent))
       (open-line 1))))
 
 ;; Support for jumping to source.

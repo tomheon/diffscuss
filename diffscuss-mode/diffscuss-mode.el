@@ -54,7 +54,6 @@
     (define-key map "\C-ce" 'diffscuss-jump-to-end-of-thread)
 
     ;; diffscuss mailbox integration
-    (define-key map "\C-cmc" 'diffscuss-mb-check)
     (define-key map "\C-cmp" 'diffscuss-mb-post)
     (define-key map "\C-cmb" 'diffscuss-mb-bounce)
     (define-key map "\C-cmd" 'diffscuss-mb-done)

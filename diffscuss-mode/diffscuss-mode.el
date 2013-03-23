@@ -53,6 +53,12 @@
     (define-key map "\C-ca" 'diffscuss-jump-to-beginning-of-thread)
     (define-key map "\C-ce" 'diffscuss-jump-to-end-of-thread)
 
+    ;; diffscuss mailbox integration
+    (define-key map "\C-cmc" 'diffscuss-mb-check)
+    (define-key map "\C-cmp" 'diffscuss-mb-post)
+    (define-key map "\C-cmb" 'diffscuss-mb-bounce)
+    (define-key map "\C-cmd" 'diffscuss-mb-done)
+
     map)
   "Keymap for diffscuss mode.")
 
@@ -789,6 +795,64 @@ and old or new is 'new'."
   (if (diffscuss-parse-leader)
       (goto-char (diffscuss-find-comment-start)))
   (recenter))
+
+;; mailbox
+
+(defun diffscuss-mb-check ()
+  (interactive)
+  (if (not diffscuss-dir)
+      (message "Must set diffscuss-dir before you can check mailboxes" "")
+    (let ((mb-check-exe (concat (file-name-as-directory diffscuss-dir)
+                                (file-name-as-directory "diffscuss-mb")
+                                "dmb-check.py"))
+          (outbuf (get-buffer-create "*diffscuss-mb-check*")))
+      (with-current-buffer outbuf
+        (setq buffer-read-only nil)
+        (text-mode)
+        (erase-buffer))
+      (call-process mb-check-exe nil outbuf nil "-e")
+      (with-current-buffer outbuf
+        (beginning-of-buffer)
+        (compilation-mode))
+      (pop-to-buffer outbuf))))
+
+(defun diffscuss-mb-cmd-impl (recips verb dmb-cmd)
+  (if (not diffscuss-dir)
+      (message "Must set diffscuss-dir before you can %s reviews." verb)
+    (let ((mb-exe (concat (file-name-as-directory diffscuss-dir)
+                               (file-name-as-directory "diffscuss-mb")
+                               dmb-cmd))
+          (orig-file buffer-file-name)
+          (new-file buffer-file-name))
+      (with-temp-buffer
+        (let ((exe-res nil))
+          (if (string= "" recips)
+              (setq exe-res (call-process mb-exe nil t nil
+                                          "--print-review-path"
+                                          orig-file))
+            (setq exe-res (apply 'call-process mb-exe nil t nil
+                                 "--print-review-path"
+                                 orig-file
+                                 (split-string recips " "))))
+          (if (= 0 exe-res)
+              (progn (setq new-file (trim-string (buffer-string)))
+                     (message "%s successful" verb))
+            (message "Could not %s, got error: %s" verb (buffer-string)))))
+      (if (not (string= buffer-file-name new-file))
+          (progn (set-visited-file-name new-file)
+                 (message "Visiting new review file." ""))))))
+
+(defun diffscuss-mb-post (recips)
+  (interactive "sEnter post recipients separated by space: ")
+  (diffscuss-mb-cmd-impl recips "post" "dmb-post.py"))
+
+(defun diffscuss-mb-bounce (recips)
+  (interactive "sEnter bounce recipients separated by space: ")
+  (diffscuss-mb-cmd-impl recips "bounce" "dmb-bounce.py"))
+
+(defun diffscuss-mb-done ()
+  (interactive)
+  (diffscuss-mb-cmd-impl "" "mark done" "dmb-done.py"))
 
 ;; Define the mode.
 

@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from subprocess import check_output, check_call
 
 
@@ -19,8 +20,7 @@ def get_inbox_name(git_exe):
     return check_output([git_exe,
                          "config",
                          "--get",
-                         "diffscuss-mb.inbox"]).strip()
-
+                        "diffscuss-mb.inbox"]).strip()
 
 def set_inbox_name(inbox_name, git_exe):
     return check_call([git_exe,
@@ -88,6 +88,8 @@ def dmb_done(diffscuss_fname, inbox, git_exe):
         if target == diffscuss_fpath:
             os.remove(fpath)
 
+    return diffscuss_fpath
+
 
 def _error(msg):
     print >> sys.stderr, msg
@@ -129,3 +131,5 @@ def dmb_post(diffscuss_fname, recipients, git_exe):
             _error(
                 "Inbox %s doesn't seem to exist, please create it or specify another.")
         _link(review_fpath, inbox_path)
+
+    return review_fpath

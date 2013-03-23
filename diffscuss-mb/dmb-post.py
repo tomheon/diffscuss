@@ -10,11 +10,17 @@ from common import dmb_post
 
 
 def main(opts, args):
-    dmb_post(args[0], args[1:], opts.git_exe)
+    review_path = dmb_post(args[0], args[1:], opts.git_exe)
+    if opts.print_review_path:
+        print review_path
 
 
 if __name__ == '__main__':
     parser = OptionParser(usage="%prog [options] diffscuss_file recipient1 [recipient2...]")
+    parser.add_option("-p", "--print-review-path",
+                      dest="print_review_path",
+                      action="store_true",
+                      help="Print the path of the review before exiting.")
     parser.add_option("-g", "--git-exe", dest="git_exe", default="git",
                       help=dedent("""\
                                   Git exe (defaults to 'git'.

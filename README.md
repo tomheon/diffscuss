@@ -9,9 +9,8 @@
 
 * gen-diffscuss.py, a tool for generating code reviews from git repos.
 
-There are also plans for: a Vim mode, some command line tools, and
-tools to allow diffscuss files to serve as a code-review interchange
-format.
+There are also plans for some command line tools, and tools to allow diffscuss
+files to serve as a code-review interchange format.
 
 ## Why Use Diffscuss?
 
@@ -157,6 +156,50 @@ You can move around the diffscussion quickly using:
 * ```C-c a``` to move to the beginning of the current thread.
 
 * ```C-c e``` to move to the end of the current thread.
+
+## The Vim Plugin
+
+Like the Emacs mode, the Vim plugin offers syntax highlight, comment insertion,
+commands for jumping to source files, and motions for comments and threads.
+The Vim plugin is implemented primarily in Python, so you'll need a version of
+Vim compiled with Python support in order to use it.
+
+### Configuration
+
+The Vim plugin requires you to set `g:diffscuss_config` in your `.vimrc`,
+which it uses to pre-fill comment headers and locate scripts.
+
+```vim
+let g:diffscuss_config = {
+    \'author': 'Your Name',
+    \'email': 'your.email@example.com',
+    \'diffscuss_dir': '/path/to/diffscuss'
+    \}
+```
+
+### Inserting Comments
+
+* `<leader>dd`: insert a new comment contextually (Emacs `C-c C-c`)
+* `<leader>df`: insert a new review-level comment (Emacs `C-c C-f`)
+* `<leader>dr`: insert a new reply (Emacs `C-c C-r`)
+* `<leader>di`: insert a new comment (Emacs `C-c C-i`)
+
+### Showing the Source
+
+* `<leader>do`: show the old source version (Emacs `C-c -`)
+* `<leader>dn`: show the new source version (Emacs `C-c +`)
+* `<leader>ds`: show the local source version (Emacs `C-c s`)
+
+### Navigation
+
+* `]d`: jump to the start of the next comment
+* `[d`: jump to the start of the previous comment
+* `]D`: jump to the end of the next comment
+* `[D`: jump to the end of the previous comment
+* `]t`: jump to the start of the next thread
+* `[t`: jump to the start of the previous thread
+* `]T`: jump to the end of the next thread
+* `[T`: jump to the end of the previous thread
 
 ## gen-diffscuss.py
 

@@ -31,7 +31,7 @@ def _git_log(revision, git_exe):
 
 
 def _write_diff(output_f, revision, git_exe):
-    output_f.write(check_output([git_exe, "diff", revision]))
+    output_f.write(check_output([git_exe, "diff", "--unified=20", revision]))
 
 
 def _write_diffscuss_header(output_f, author, email, git_exe):

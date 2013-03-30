@@ -57,7 +57,8 @@ def _git_log(revision, git_exe):
     """
     Return a list of log lines.
     """
-    return check_output([git_exe, "log", "--pretty=format:%B%n", revision]).split('\n')
+    return check_output([git_exe, "log", "--pretty=format:%B%n",
+                         "--reverse", revision]).split('\n')
 
 
 def _write_diff(output_f, revision, git_exe):

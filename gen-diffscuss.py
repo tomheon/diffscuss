@@ -1,11 +1,41 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
-from subprocess import check_output
+import subprocess
 import sys
 import time
 from textwrap import dedent
 
+
+def _check_output(*popenargs, **kwargs):
+    """
+    Run command with arguments and return its output as a byte string.
+
+    Backported from Python 2.7 as it's implemented as pure python on
+    stdlib.
+
+    >>> check_output(['/usr/bin/python', '--version'])
+    Python 2.6.2
+
+    Copied from https://gist.github.com/edufelipe/1027906.
+    """
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        error = subprocess.CalledProcessError(retcode, cmd)
+        error.output = output
+        raise error
+    return output
+
+
+if 'check_output' not in dir(subprocess):
+    check_output = _check_output
+else:
+    check_output = subprocess.check_output
 
 def _git_config(config_name, git_exe):
     return check_output([git_exe, "config", "--get", config_name]).strip()

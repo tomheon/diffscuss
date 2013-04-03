@@ -169,21 +169,21 @@
   (append
    (list
      '("^%\\*\\([ ].*\n\\|\n\\)" . diffscuss-level-1) ;; level 1 header
-     '("^%-\\([ ]\\|\n\\)" . diffscuss-level-1) ;; level 1 body
+     '("^%-\\([ ]\\|\n\\|$\\)" . diffscuss-level-1) ;; level 1 body
      '("^%[*]\\{2\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-2) ;; level 2 header
-     '("^%[-]\\{2\\}\\([ ]\\|\n\\)" . diffscuss-level-2) ;; level 2 body
+     '("^%[-]\\{2\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-2) ;; level 2 body
      '("^%[*]\\{3\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-3) ;; level 3 header
-     '("^%[-]\\{3\\}\\([ ]\\|\n\\)" . diffscuss-level-3) ;; level 3 body
+     '("^%[-]\\{3\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-3) ;; level 3 body
      '("^%[*]\\{4\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-4) ;; level 4 header
-     '("^%[-]\\{4\\}\\([ ]\\|\n\\)" . diffscuss-level-4) ;; level 4 body
+     '("^%[-]\\{4\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-4) ;; level 4 body
      '("^%[*]\\{5\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-5) ;; level 5 header
-     '("^%[-]\\{5\\}\\([ ]\\|\n\\)" . diffscuss-level-5) ;; level 5 body
+     '("^%[-]\\{5\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-5) ;; level 5 body
      '("^%[*]\\{6\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-6) ;; level 6 header
-     '("^%[-]\\{6\\}\\([ ]\\|\n\\)" . diffscuss-level-6) ;; level 6 body
+     '("^%[-]\\{6\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-6) ;; level 6 body
      '("^%[*]\\{7\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-7) ;; level 7 header
-     '("^%[-]\\{7\\}\\([ ]\\|\n\\)" . diffscuss-level-7) ;; level 7 body
+     '("^%[-]\\{7\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-7) ;; level 7 body
      '("^%[*]\\{8\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-8) ;; level 8 header
-     '("^%[-]\\{8\\}\\([ ]\\|\n\\)" . diffscuss-level-8)) ;; level 8 body
+     '("^%[-]\\{8\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-8)) ;; level 8 body
    diff-font-lock-keywords))
 
 ;; Utility functions
@@ -201,7 +201,7 @@
   "Utility function to help make header / body regexps"
   (concat "^"
           (regexp-quote (replace-regexp-in-string from-string to-string parse-leader))
-          "\\([ ]\\|\n\\)"))
+          "\\([ ]\\|\n\\|$\\)"))
 
 (defun diffscuss-comment-body-regexp (parse-leader)
   "Return a regexp matching the begging of a body line leading with parse-leader"
@@ -433,12 +433,29 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
             (diffscuss-force-body leader)
             " ")))
 
+(defun diffscuss-jump-to-reply-spot ()
+  "Jump to where a reply should naturally fit."
+  (let ((leader (diffscuss-parse-leader)))
+    (if leader
+        (progn (goto-char (diffscuss-find-body-end))
+               (beginning-of-line)
+               (forward-line 1)
+               (while (and
+                       (diffscuss-parse-leader)
+                       (> (length (diffscuss-parse-leader))
+                           (length leader))
+                       (zerop (forward-line 1))))
+               ;; calibrate for end of file or not
+               (forward-line -1)
+               (goto-char (diffscuss-find-body-end))))))
+
 (defun diffscuss-reply-to-comment ()
   "Reply to the current comment"
   (interactive)
   (let ((leader (diffscuss-parse-leader)))
     (if leader
-        (progn (goto-char (diffscuss-find-body-end))
+        (progn (diffscuss-jump-to-reply-spot)
+               (end-of-line)
                (newline)
                (insert (diffscuss-make-comment (concat leader "*")))
                (forward-line -1)

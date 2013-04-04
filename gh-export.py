@@ -153,7 +153,8 @@ def _overlay_pr_top_level(diff_canvas, gh, pull_request):
                  ('x-github-updated-at',
                   _gh_time_to_diffscuss_time(pull_request.updated_at)),])
     init_thread = _compose(_echo(init_comment),
-                           _echo(_make_thread(pull_request.get_issue_comments(),
+                           _echo(_make_thread(sorted(list(pull_request.get_issue_comments()),
+                                                     key=lambda ic: ic.created_at),
                                               init_offset=1)))
     diff_canvas[0] = _compose(init_thread, diff_canvas[0])
 
@@ -164,8 +165,10 @@ def _overlay_pr_comments(diff_canvas, pristine_canvas, pull_request):
     these contextual comments available as "review comments" as
     opposed to "issue comments."
     """
-    for (path, path_comments) in itertools.groupby(pull_request.get_review_comments(),
-                                                   lambda rc: rc.path):
+    get_path = lambda rc: rc.path
+    for (path, path_comments) in itertools.groupby(sorted(list(pull_request.get_review_comments()),
+                                                          key=get_path),
+                                                   get_path):
         _overlay_path_comments(diff_canvas, pristine_canvas, path, path_comments)
 
 
@@ -217,8 +220,10 @@ def _overlay_path_comments(diff_canvas, orig_diff, path, path_comments):
         # Until I figure out what circumstances this can happen in,
         # just blow up.
         raise Exception("Couldn't find target for path %s" % path)
-    for (position, position_comments) in itertools.groupby(path_comments,
-                                                           lambda pc: pc.position):
+    get_position = lambda pc: pc.position
+    for (position, position_comments) in itertools.groupby(sorted(list(path_comments),
+                                                                  key=get_position),
+                                                           get_position):
         if position is None:
             # TODO: warn that we're skipping outdated information
             continue

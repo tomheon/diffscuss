@@ -12,7 +12,8 @@ from textwrap import dedent, wrap
 from github import Github, GithubException
 import requests
 
-from diffscuss.walker import walk, COMMENT, DIFF, DIFF_HEADER
+from diffscuss.walker import walk, DIFF, DIFF_HEADER, COMMENT_HEADER, \
+    COMMENT_BODY
 
 
 def _mkdir_p(path):
@@ -194,7 +195,7 @@ def _find_base_target_idx(orig_diff, path):
     looking_for_range_line = False
 
     for (i, tagged_line) in enumerate(walk(StringIO(orig_diff))):
-        assert(tagged_line[0] != COMMENT)
+        assert(tagged_line[0] not in [COMMENT_HEADER, COMMENT_BODY])
         if looking_for_range_line and _is_range_line(tagged_line):
             return i
         if _is_target_path(tagged_line, path):

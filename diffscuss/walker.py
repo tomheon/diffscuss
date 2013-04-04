@@ -20,11 +20,8 @@ class CommentInHeaderException(Exception):
 
 DIFF_HEADER = 'DIFF_HEADER'
 DIFF = 'DIFF'
-COMMENT = 'COMMENT'
-
-
-Comment = namedtuple('Comment', ['header_lines', 'body_lines'])
-
+COMMENT_HEADER = 'COMMENT_HEADER'
+COMMENT_BODY = 'COMMENT_BODY'
 
 def walk(fil):
     """
@@ -36,11 +33,15 @@ def walk(fil):
 
     (DIFF_HEADER, line)
 
-    For each diff header line (e.g. Index lines, range lines), or
+    For each diff header line (e.g. Index lines, range lines),
 
-    (COMMENT, comment)
+    (COMMENT_HEADER, line)
 
-    for each Diffscuss comment, where comment is a Comment named tuple.
+    for each diffscuss comment header line, or
+
+    (COMMENT_BODY, line)
+
+    for each diffscuss body line.
 
     @fil: a file-like object containing Diffscuss.
 
@@ -71,8 +72,9 @@ def walk(fil):
         if _is_diffscuss_line(line):
             if in_header:
                 raise CommentInHeaderException()
-            comment, line = _read_comment(line, fil)
-            yield (COMMENT, comment)
+            tagged_comment_lines, line = _read_comment(line, fil)
+            for tag, comment_line in tagged_comment_lines:
+                yield (tag, comment_line)
             # continue so we don't read another line at the bottom
             continue
         elif in_header or _is_not_diff_line(line):
@@ -92,9 +94,13 @@ def _read_comment(line, fil):
     _check_header(header_lines)
     body_lines, line = _read_body(line, fil)
     _check_body(body_lines)
-
-    return Comment(header_lines=header_lines,
-                   body_lines=body_lines), line
+    return ([(COMMENT_HEADER, header_line)
+             for header_line
+             in header_lines] +
+            [(COMMENT_BODY, body_line)
+             for body_line
+             in body_lines],
+            line)
 
 
 def _check_body(body_lines):

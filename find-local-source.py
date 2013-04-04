@@ -6,7 +6,7 @@ import re
 import sys
 from textwrap import dedent
 
-from diffscuss.walker import walk, DIFF, COMMENT, DIFF_HEADER
+from diffscuss.walker import walk, DIFF, DIFF_HEADER
 
 # TODO: handle weirdness when someone chooses a line in a diff header
 
@@ -45,13 +45,6 @@ def _find_git_repo(starting_dir):
             return cur_dir
         cur_dir = os.path.dirname(cur_dir)
     return None
-
-
-def _update_line_num(item, line_num):
-    if item[0] == COMMENT:
-        return line_num + len(item[1].header_lines) + len(item[1].body_lines)
-    else:
-        return line_num + 1
 
 
 FNAME_RE = re.compile(r'^(---|\+\+\+) (.*)')
@@ -156,7 +149,7 @@ def _find_candidates(input_f, line_number):
         cur_new_fname = _maybe_update_new_fname(item, cur_new_fname)
         cur_old_line_num = _maybe_update_old_line_num(item, cur_old_line_num)
         cur_new_line_num = _maybe_update_new_line_num(item, cur_new_line_num)
-        cur_line_num = _update_line_num(item, cur_line_num)
+        cur_line_num += 1
         cur_old_line = _maybe_update_old_line(item, cur_old_line)
         cur_new_line = _maybe_update_new_line(item, cur_new_line)
 

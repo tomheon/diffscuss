@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import itertools
 import os
 from StringIO import StringIO
@@ -207,14 +209,14 @@ SIMPLE_COMMENT = (dedent("""\
                          %* email: hi@example.com
                          %*
                          %-
-                         %- body 1
+                         %- body 1 ☃
                          %-
                          %- body 2
                          %-"""),
                   [('COMMENT',
                     Comment(header_lines=['%*\n', '%* author: Testy McTesterson\n',
                                           '%* email: hi@example.com\n', '%*\n'],
-                            body_lines=['%-\n', '%- body 1\n', '%-\n',
+                            body_lines=['%-\n', '%- body 1 ☃\n', '%-\n',
                                         '%- body 2\n', '%-\n']))])
 
 SIMPLE_THREAD = (dedent("""\

@@ -88,7 +88,7 @@ def _diff_canvas(username, password, pull_request):
     diff_s = StringIO(resp.text)
     diff_canvas = []
     line = diff_s.readline()
-    while line != '':
+    while line != u'':
         diff_canvas.append(_echo(line))
         line = diff_s.readline()
     return diff_canvas, resp.text
@@ -102,17 +102,17 @@ def _render_canvas(diff_canvas, user_or_org, repo, pull_request, output_dir):
 def _gh_time_to_diffscuss_time(gh_time):
     # gh times are all zulu, and come in w/out timezones through
     # PyGithub, so we hardcode the offset
-    return gh_time.strftime("%Y-%m-%dT%T-0000")
+    return unicode(gh_time.strftime("%Y-%m-%dT%T-0000"))
 
 
 def _make_header_line(depth, header, value):
     if header is None:
-        return "%%%s \n" % ('*' * depth)
-    return "%%%s %s: %s\n" % ('*' * depth, header, value)
+        return u"%%%s \n" % (u'*' * depth)
+    return u"%%%s %s: %s\n" % (u'*' * depth, header, value)
 
 
 def _make_body_line(depth, body):
-    return "%%%s %s\n" % ('-' * depth, body)
+    return u"%%%s %s\n" % (u'-' * depth, body)
 
 
 def _make_comment(depth, body, headers):
@@ -132,13 +132,13 @@ def _make_comment(depth, body, headers):
                                           width=wrap_body_lines_at):
                 body_lines.append(_make_body_line(depth, wrapped_body_line))
         else:
-            body_lines.append(_make_body_line(depth, ''))
-    body_lines.append(_make_body_line(depth, ''))
-    return ''.join(header_lines + body_lines)
+            body_lines.append(_make_body_line(depth, u''))
+    body_lines.append(_make_body_line(depth, u''))
+    return u''.join(header_lines + body_lines)
 
 
 def _compose(line_func_one, line_func_two):
-    return lambda: ''.join([line_func_one(), line_func_two()])
+    return lambda: u''.join([line_func_one(), line_func_two()])
 
 
 def _overlay_pr_top_level(diff_canvas, gh, pull_request):
@@ -150,12 +150,12 @@ def _overlay_pr_top_level(diff_canvas, gh, pull_request):
     """
     init_comment = _make_comment(
         depth=1,
-        body=(pull_request.title + "\n\n" + pull_request.body),
-        headers=[('author', pull_request.user.login),
-                 ('email', pull_request.user.email),
-                 ('date', _gh_time_to_diffscuss_time(pull_request.created_at)),
-                 ('x-github-pull-request-url', pull_request.url),
-                 ('x-github-updated-at',
+        body=(pull_request.title + u"\n\n" + pull_request.body),
+        headers=[(u'author', pull_request.user.login),
+                 (u'email', pull_request.user.email),
+                 (u'date', _gh_time_to_diffscuss_time(pull_request.created_at)),
+                 (u'x-github-pull-request-url', pull_request.url),
+                 (u'x-github-updated-at',
                   _gh_time_to_diffscuss_time(pull_request.updated_at)),])
     init_thread = _compose(_echo(init_comment),
                            _echo(_make_thread(sorted(list(pull_request.get_issue_comments()),
@@ -178,12 +178,12 @@ def _overlay_pr_comments(diff_canvas, pristine_canvas, pull_request):
 
 
 def _is_range_line(tagged_line):
-    return tagged_line[0] == DIFF_HEADER and tagged_line[1].startswith('@@')
+    return tagged_line[0] == DIFF_HEADER and tagged_line[1].startswith(u'@@')
 
 
 def _path_match(diff_header_line, path):
-    return diff_header_line.startswith(('--- a/%s' % path,
-                                        '+++ b/%s' % path))
+    return diff_header_line.startswith((u'--- a/%s' % path,
+                                        u'+++ b/%s' % path))
 
 
 def _is_target_path(tagged_line, path):
@@ -209,14 +209,14 @@ def _make_thread(gh_comments, init_offset=0):
         comment = _make_comment(
             depth=i + 1 + init_offset,
             body=(gh_comment.body),
-            headers=[('author', gh_comment.user.login),
-                     ('email', gh_comment.user.email),
-                     ('date', _gh_time_to_diffscuss_time(gh_comment.created_at)),
-                     ('x-github-comment-url', gh_comment.url),
-                     ('x-github-updated-at',
+            headers=[(u'author', gh_comment.user.login),
+                     (u'email', gh_comment.user.email),
+                     (u'date', _gh_time_to_diffscuss_time(gh_comment.created_at)),
+                     (u'x-github-comment-url', gh_comment.url),
+                     (u'x-github-updated-at',
                       _gh_time_to_diffscuss_time(gh_comment.updated_at)),])
         comments.append(comment)
-    return ''.join(comments)
+    return u''.join(comments)
 
 
 def _overlay_path_comments(diff_canvas, orig_diff, path, path_comments):
@@ -252,8 +252,8 @@ def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request
 
     dest_dir = os.path.join(output_dir, user_or_org.login, repo.name)
     _mkdir_p(dest_dir)
-    dest_fname = os.path.join(dest_dir, "%s.diffscuss" % pull_request.number)
-    dest_fname_partial = "%s.partial" % dest_fname
+    dest_fname = os.path.join(dest_dir, u"%s.diffscuss" % pull_request.number)
+    dest_fname_partial = u"%s.partial" % dest_fname
 
     with open(dest_fname_partial, 'wb') as dest_fil:
         for line in _render_canvas(diff_canvas, user_or_org, repo,

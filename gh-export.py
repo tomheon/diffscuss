@@ -121,10 +121,14 @@ def _make_comment(depth, body, headers):
         header_lines.append(_make_header_line(depth, header, value))
     header_lines.append(_make_header_line(depth, None, None))
     body_s = StringIO(body)
+    wrap_body_lines_at = 80 - depth - 2 # 2 for the % and space just
+    # in case there's some amazingly deep test or something.
+    wrap_body_lines_at = max(wrap_body_lines_at, 40)
     for body_line in body_s:
         body_line = body_line.strip()
         if body_line:
-            for wrapped_body_line in wrap(body_line.rstrip()):
+            for wrapped_body_line in wrap(body_line.rstrip(),
+                                          width=wrap_body_lines_at):
                 body_lines.append(_make_body_line(depth, wrapped_body_line))
         else:
             body_lines.append(_make_body_line(depth, ''))

@@ -58,6 +58,11 @@ def walk(fil):
     line = fil.readline()
     in_header = False
 
+    # allow the normal magic header lines (such as encoding), but
+    # don't consider them part of the diffscuss file.
+    while line.startswith("#"):
+        line = fil.readline()
+
     while True:
 
         if not line:

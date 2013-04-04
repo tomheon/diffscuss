@@ -1,0 +1,107 @@
+# -*- coding: utf-8 -*-
+# also this weird thing
+{COMMENT_TOP}diff --git a/diffscuss-mode/diffscuss-mode.el b/diffscuss-mode/diffscuss-mode.el
+index e95bace..404b745 100644
+--- a/diffscuss-mode/diffscuss-mode.el
++++ b/diffscuss-mode/diffscuss-mode.el
+@@ -345,6 +345,10 @@{COMMENT_AFTER_RANGE_1}
+
+ ;; insert / reply to comment commands
+
++(defun diffscuss-get-date-time ()
++  "Get the current local date and time in ISO 8601."{COMMENT_IN_DIFF_1}
++  (format-time-string "%Y-%m-%dT%T%z"))
++
+ (defun diffscuss-make-comment (leader)
+   "Return a new comment."
+   (let ((header (diffscuss-force-header leader))){COMMENT_IN_DIFF_2}
+@@ -355,6 +359,10 @@{COMMENT_AFTER_RANGE_2}
+             (diffscuss-get-author)
+             "\n")
+             header
++            " date: "
++            (diffscuss-get-date-time)
++            "\n"
++            header
+             "\n"
+             (diffscuss-force-body leader)
+             " \n"
+@@ -384,12 +392,42 @@
+   (forward-line -1)
+   (end-of-line))
+
++(defun diffscuss-insert-file-comment ()
++  "Insert a file-level comment."
++  (interactive)
++  (beginning-of-buffer)
++  (insert (diffscuss-make-comment "%*"))
++  (newline)
++  (forward-line -2)
++  (end-of-line))
++
++(defun diffscuss-in-header-p ()
++  "True if we're in the header material."
++  ;; if we travel up until we hit a meta line, we'll hit a range line
++  ;; first if we're not in a header, otherwise we'll hit a different
++  ;; meta line.
++  (save-excursion
++    (while (and (not (diffscuss-meta-line-p))
++                (zerop (forward-line -1))))
++    (not (diffscuss-range-line-p))))
++
+ (defun diffscuss-comment-or-reply ()
+   "Insert a comment or reply based on context."
+   (interactive)
+-  (if (diffscuss-parse-leader)
+-      (diffscuss-reply-to-comment)
+-    (diffscuss-insert-comment)))
++  ;; if at the very top of the file, insert a comment for the entire
++  ;; file (meaning before any of the diff headers or lines)
++  (if (= (point) 1)
++      (diffscuss-insert-file-comment)
++    ;; otherwise, if we're already in a comment, reply to it.
++    (if (diffscuss-parse-leader)
++        (diffscuss-reply-to-comment)
++      ;; if we're on a meta piece, go just past it
++      (if (diffscuss-in-header-p)
++          (progn (while (and (not (diffscuss-range-line-p))
++                             (zerop (forward-line 1))))
++                 (diffscuss-insert-comment))
++        ;; otherwise, new top-level comment.
++        (diffscuss-insert-comment)))))
+
+ ;; intelligent newline
+
+@@ -442,7 +480,7 @@
+   "Non nil if the current line is part of hunk's meta data."
+   (save-excursion
+       (beginning-of-line)
+-      (not (looking-at "^[% +<>\n\\-]"))))
++      (not (looking-at "^[% +\n\\-]"))))
+
+ (defun diffscuss-get-source-file (old-or-new)
+   "Get the name of the source file."
+diff --git a/diffscuss/walker.py b/diffscuss/walker.py
+index 74384c1..5852f4a 100644
+--- a/diffscuss/walker.py
++++ b/diffscuss/walker.py
+@@ -72,10 +72,16 @@ def walk(fil):
+             # level can increase by more than one....
+             if line_level - cur_comment_level > 1:
+                 raise BadNestingException()
++
+             # or if we've changed level mid-comment...
+-            if line_level != cur_comment_level and not _is_author_line(line):{COMMENT_IN_DIFF_3}
++            if (line_level != cur_comment_level
++                #and not _is_author_line(line)
++                and not _is_header(line)):
+                 raise BadNestingException()
+
++            # At this point, we accept the new line_level
++            cur_comment_level = line_level
++
+             # or if this is a header line of a comment and it's not
+             # either following a header or is an author line or an empty line...
+             if (is_header and
+\ No newline at end of file
+{COMMENT_BOTTOM}

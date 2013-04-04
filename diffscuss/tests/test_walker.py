@@ -259,6 +259,16 @@ TEMPLATE_TESTS = [
          AUTHOR_SECOND_COMMENT,
      ]),
 
+    ('leading_hash_template.diffscuss', _standard_template_defaults(), STANDARD_TEMPLATE_PARSED,
+     [
+         MISSING_AUTHOR_COMMENT,
+         EMPTY_COMMENT,
+         BAD_NESTING_COMMENT,
+         SIMPLE_COMMENT,
+         SIMPLE_THREAD,
+         AUTHOR_SECOND_COMMENT,
+     ]),
+
      ('comment_in_header.diffscuss', _comment_in_header_defaults(), [],
       [
           (SIMPLE_COMMENT[0], CommentInHeaderException),

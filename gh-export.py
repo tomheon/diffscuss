@@ -234,10 +234,15 @@ def _overlay_path_comments(diff_canvas, orig_diff, path, path_comments):
                                       key=lambda pc: pc.created_at))))
 
 
+def _overlay_encoding(diff_canvas):
+    diff_canvas[0] = _compose(_echo(u"# -*- coding: utf-8 -*-\n"), diff_canvas[0])
+
+
 def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request, output_dir):
     diff_canvas, orig_diff = _diff_canvas(username, password, pull_request)
     pristine_canvas = list(diff_canvas)
     _overlay_pr_top_level(diff_canvas, gh, pull_request)
+    _overlay_encoding(diff_canvas)
     _overlay_pr_comments(diff_canvas, orig_diff, pull_request)
 
     dest_dir = os.path.join(output_dir, user_or_org.login, repo.name)

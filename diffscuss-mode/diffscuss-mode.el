@@ -20,6 +20,11 @@
 ;; find-local-source.py is for example)
 (defvar diffscuss-dir nil)
 
+;; Where to find the version of python to use.  Minimum is 2.6.  (If
+;; you're on a mac, you may need to set this, as some macs seems to
+;; have 2.4 as the default version).
+(defvar diffscuss-python-exe "/usr/bin/python")
+
 ;;; Code:
 
 ;; we need to make sure diff mode is present and loaded so we can get
@@ -647,20 +652,40 @@ and old or new is 'new'."
       (looking-at line-pattern)
       (string-to-number (buffer-substring (match-beginning group-num) (match-end group-num))))))
 
+(defun diffscuss-check-python ()
+  (save-excursion
+    (with-temp-buffer
+      (call-process diffscuss-python-exe
+                    nil
+                    t
+                    nil
+                    "-V")
+      (beginning-of-buffer)
+      (if (not (looking-at "Python \\([[:digit:]]+\\)\\.\\([[:digit:]]+\\)"))
+          (error "Python exe %s did not return version when run with -V" diffscuss-python-exe))
+      (if (or (< (string-to-number (buffer-substring (match-beginning 1) (match-end 1)))
+                 2)
+              (< (string-to-number (buffer-substring (match-beginning 2) (match-end 2)))
+                 6))
+          (error "Python version too early, require 2.6+, found: %s"
+                 (trim-string (buffer-string)))))))
+
 (defun diffscuss-goto-local-source ()
   "Attempt to jump to the appropriate source."
   (interactive)
+  (diffscuss-check-python)
   (if (not diffscuss-dir)
       (message "Must set diffscuss-dir before you can jump to local source" "")
     (progn
-      (let ((find-source-exe (concat (file-name-as-directory diffscuss-dir) "find-local-source.py"))
-            (outbuf-name (generate-new-buffer-name "diffscuss-local-source")))
+      (let ((outbuf-name (generate-new-buffer-name "diffscuss-local-source")))
         (if (/= 0 (call-process-region (point-min)
                                        (point-max)
-                                       find-source-exe
+                                       diffscuss-python-exe
                                        nil
                                        outbuf-name
                                        nil
+                                       (concat (file-name-as-directory diffscuss-dir)
+                                               "find-local-source.py")
                                        (number-to-string (line-number-at-pos))))
             (with-current-buffer outbuf-name
               (message "%s" (buffer-string))
@@ -819,37 +844,47 @@ and old or new is 'new'."
 
 (defun diffscuss-mb-check ()
   (interactive)
+  (diffscuss-check-python)
   (if (not diffscuss-dir)
       (message "Must set diffscuss-dir before you can check mailboxes" "")
-    (let ((mb-check-exe (concat (file-name-as-directory diffscuss-dir)
-                                (file-name-as-directory "diffscuss-mb")
-                                "dmb-check.py"))
-          (outbuf (get-buffer-create "*diffscuss-mb-check*")))
+    (let ((outbuf (get-buffer-create "*diffscuss-mb-check*")))
       (with-current-buffer outbuf
         (setq buffer-read-only nil)
         (text-mode)
         (erase-buffer))
-      (call-process mb-check-exe nil outbuf nil "-e")
+      (call-process
+       diffscuss-python-exe
+       nil outbuf nil
+       (concat (file-name-as-directory diffscuss-dir)
+               (file-name-as-directory "diffscuss-mb")
+               "dmb-check.py")
+       "-e")
       (with-current-buffer outbuf
         (beginning-of-buffer)
         (compilation-mode))
       (pop-to-buffer outbuf))))
 
 (defun diffscuss-mb-cmd-impl (recips verb dmb-cmd)
+  (diffscuss-check-python)
   (if (not diffscuss-dir)
       (message "Must set diffscuss-dir before you can %s reviews." verb)
-    (let ((mb-exe (concat (file-name-as-directory diffscuss-dir)
-                               (file-name-as-directory "diffscuss-mb")
-                               dmb-cmd))
-          (orig-file buffer-file-name)
+    (let ((orig-file buffer-file-name)
           (new-file buffer-file-name))
       (with-temp-buffer
         (let ((exe-res nil))
           (if (string= "" recips)
-              (setq exe-res (call-process mb-exe nil t nil
+              (setq exe-res (call-process diffscuss-python-exe
+                                          nil t nil
+                                          (concat (file-name-as-directory diffscuss-dir)
+                                                  (file-name-as-directory "diffscuss-mb")
+                                                  dmb-cmd)
                                           "--print-review-path"
                                           orig-file))
-            (setq exe-res (apply 'call-process mb-exe nil t nil
+            (setq exe-res (apply 'call-process diffscuss-python-exe
+                                 nil t nil
+                                 (concat (file-name-as-directory diffscuss-dir)
+                                         (file-name-as-directory "diffscuss-mb")
+                                         dmb-cmd)
                                  "--print-review-path"
                                  orig-file
                                  (split-string recips " "))))

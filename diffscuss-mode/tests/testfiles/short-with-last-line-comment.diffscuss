@@ -1,0 +1,31 @@
+%*
+%* author: Edmund Jorgensen
+%* email: tomheon@gmail.com
+%* date: 2013-04-05T16:17:27-0400
+%*
+%- Testing 1.
+%-
+%**
+%** author: Edmund Jorgensen
+%** email: tomheon@gmail.com
+%** date: 2013-04-05T16:17:58-0400
+%**
+%-- Testing 2.
+%--
+diff --git a/.gitignore b/.gitignore
+index 4e59ca6..11a78a5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,4 +1,5 @@
+ *~
+ *.pyc
+ tmp
+ env
++gh-export.log
+%*
+%* author: Edmund Jorgensen
+%* email: tomheon@gmail.com
+%* date: 2013-04-05T19:55:51-0400
+%*
+%- NEW COMMENT TEXT
+%-

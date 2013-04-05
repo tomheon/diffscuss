@@ -140,4 +140,65 @@ diffscuss-parse-leader against it."
 (test-navigation "testfiles/testnav2.diffscuss" 956 'diffscuss-previous-thread 1)
 (test-navigation "testfiles/testnav2.diffscuss" 15000 'diffscuss-previous-thread 839)
 
+;; test inserting comments
+
+(defun strip-dates (instr)
+  (replace-regexp-in-string "date: .*" "DATELINE" instr))
+
+(defun test-comment-insert (test-filename init-position comment-func expected-filename)
+  (with-temp-buffer
+    (insert-file-contents test-filename)
+    (goto-char init-position)
+    (funcall comment-func)
+    (insert "NEW COMMENT TEXT")
+    ;; since the testfiles get created in emacs, delete trailing
+    ;; whitespace to prevent tears when only whitespace differs
+    (delete-trailing-whitespace)
+    (let ((actual-results (buffer-string)))
+      (erase-buffer)
+      (insert-file-contents expected-filename)
+      (assert-t (string= (strip-dates (buffer-string)) (strip-dates actual-results))))))
+
+;; short.diffscuss has two comments in one thread
+;;
+;; comment one 1:113
+;;
+;; comment two 114:233
+;;
+;; File level comments
+(test-comment-insert "testfiles/short.diffscuss" 1 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-top-level.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 1 'diffscuss-insert-file-comment
+                     "testfiles/short-with-new-top-level.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 323 'diffscuss-insert-file-comment
+                     "testfiles/short-with-new-top-level.diffscuss")
+;; replies in various forms
+(test-comment-insert "testfiles/short.diffscuss" 2 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-top-level-reply.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 2 'diffscuss-reply-to-comment
+                     "testfiles/short-with-new-top-level-reply.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 1 'diffscuss-reply-to-comment
+                     "testfiles/short-with-new-top-level-reply.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 114 'diffscuss-reply-to-comment
+                     "testfiles/short-with-new-second-level-reply.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 221 'diffscuss-reply-to-comment
+                     "testfiles/short-with-new-second-level-reply.diffscuss")
+;; new comment
+(test-comment-insert "testfiles/short.diffscuss" 234 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-hunk-level-comment.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 340 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-hunk-level-comment.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 350 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-hunk-level-comment.diffscuss")
+
+(test-comment-insert "testfiles/short.diffscuss" 362 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-interdiff-comment.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 364 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-new-interdiff-comment.diffscuss")
+
+(test-comment-insert "testfiles/short.diffscuss" 372 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-last-line-comment.diffscuss")
+(test-comment-insert "testfiles/short.diffscuss" 386 'diffscuss-insert-contextual-comment
+                     "testfiles/short-with-last-line-comment.diffscuss")
+
 (end-tests) ;; Stop the clock and print a summary

@@ -16,6 +16,51 @@ from diffscuss.walker import walk, DIFF, DIFF_HEADER, COMMENT_HEADER, \
     COMMENT_BODY
 
 
+def _echo(line):
+    return lambda: line
+
+
+def _compose(line_func_one, line_func_two):
+    return lambda: u''.join([line_func_one(), line_func_two()])
+
+
+class DiffscussComposer(object):
+    """
+    Allows us to insert content into the original diff without
+    changing the line numbers, so we can sync up positions in the
+    diffscuss with positions in the diff even after adding comments.
+    """
+
+    def __init__(self, orig_diff):
+        self.orig_diff = orig_diff
+        self.composed_lines = []
+        self.top_matter = _echo('')
+
+        # we want to maintain things like trailing newline or not, so
+        # use readline instead of the line iterators
+        diff_s = StringIO(orig_diff)
+        line = diff_s.readline()
+
+        while line != u'':
+            self.composed_lines.append(_echo(line))
+            line = diff_s.readline()
+
+    def append_at(self, index, text):
+        if index == -1:
+            self.top_matter = _compose(self.top_matter,
+                                       _echo(text))
+        elif index >= 0:
+            self.composed_lines[index] = _compose(self.composed_lines[index],
+                                                  _echo(text))
+        else:
+            raise Exception("Index must be >= -1.")
+
+    def render(self):
+        yield self.top_matter()
+        for line_func in self.composed_lines:
+            yield line_func()
+
+
 def _mkdir_p(path):
     try:
         os.makedirs(path)
@@ -74,29 +119,12 @@ def _pull_requests_from_specs(gh, args):
             yield user_or_org, repo, pull_request
 
 
-def _echo(line):
-    return lambda: line
-
-
-def _diff_canvas(username, password, pull_request):
+def _get_diff_text(username, password, pull_request):
     resp = requests.get(pull_request.diff_url, auth=(username, password))
     if not resp.ok:
         raise Exception("Error pulling %s: %s" % (pull_request.diff_url,
                                                   resp))
-    # we want to maintain things like trailing newline or not, so use
-    # readline instead the line iterators
-    diff_s = StringIO(resp.text)
-    diff_canvas = []
-    line = diff_s.readline()
-    while line != u'':
-        diff_canvas.append(_echo(line))
-        line = diff_s.readline()
-    return diff_canvas, resp.text
-
-
-def _render_canvas(diff_canvas, user_or_org, repo, pull_request, output_dir):
-    for line_func in diff_canvas:
-        yield line_func()
+    return resp.text
 
 
 def _gh_time_to_diffscuss_time(gh_time):
@@ -137,11 +165,7 @@ def _make_comment(depth, body, headers):
     return u''.join(header_lines + body_lines)
 
 
-def _compose(line_func_one, line_func_two):
-    return lambda: u''.join([line_func_one(), line_func_two()])
-
-
-def _overlay_pr_top_level(diff_canvas, gh, pull_request):
+def _overlay_pr_top_level(composer, gh, pull_request):
     """
     At the top of the diffscuss file, build a thread out of:
 
@@ -157,42 +181,41 @@ def _overlay_pr_top_level(diff_canvas, gh, pull_request):
                  (u'x-github-pull-request-url', pull_request.url),
                  (u'x-github-updated-at',
                   _gh_time_to_diffscuss_time(pull_request.updated_at)),])
-    init_thread = _compose(_echo(init_comment),
-                           _echo(_make_thread(sorted(list(pull_request.get_issue_comments()),
+    init_thread = init_comment + _make_thread(sorted(list(pull_request.get_issue_comments()),
                                                      key=lambda ic: ic.created_at),
-                                              init_offset=1)))
-    diff_canvas[0] = _compose(init_thread, diff_canvas[0])
+                                              init_offset=1)
+    composer.append_at(-1, init_thread)
 
 
-def _overlay_pr_comments(diff_canvas, orig_diff, pull_request):
+def _overlay_pr_comments(composer, pull_request):
     """
     Get the inline comments into the diffscuss file (github makes
     these contextual comments available as "review comments" as
     opposed to "issue comments."
     """
-    _overlay_comments(diff_canvas, orig_diff,
+    _overlay_comments(composer,
                       pull_request.get_review_comments())
 
 
-def _overlay_comments(diff_canvas, orig_diff, comments):
+def _overlay_comments(composer, comments):
     get_path = lambda rc: rc.path
     for (path, path_comments) in itertools.groupby(sorted(list(comments),
                                                           key=get_path),
                                                    get_path):
         if path:
-            _overlay_path_comments(diff_canvas, orig_diff, path, path_comments)
+            _overlay_path_comments(composer, path, path_comments)
         else:
             # if there's no path, make a new thread at the top of the
             # review.
-            _overlay_review_level_comments(diff_canvas, path_comments)
+            _overlay_review_level_comments(composer, path_comments)
 
 
-def _overlay_review_level_comments(diff_canvas, comments):
+def _overlay_review_level_comments(composer, comments):
     thread = _make_thread(sorted(list(comments),
                                  key=lambda ic: ic.created_at))
     # note that we're assuming here that the pr thread has already
     # been created.
-    diff_canvas[0] = _compose(diff_canvas[0], _echo(thread))
+    composer.append_at(-1, thread)
 
 
 def _is_range_line(tagged_line):
@@ -237,8 +260,8 @@ def _make_thread(gh_comments, init_offset=0):
     return u''.join(comments)
 
 
-def _overlay_path_comments(diff_canvas, orig_diff, path, path_comments):
-    base_target_idx = _find_base_target_idx(orig_diff, path)
+def _overlay_path_comments(composer, path, path_comments):
+    base_target_idx = _find_base_target_idx(composer.orig_diff, path)
     if base_target_idx is None:
         # Until I figure out what circumstances this can happen in,
         # just blow up.
@@ -250,15 +273,14 @@ def _overlay_path_comments(diff_canvas, orig_diff, path, path_comments):
         if position is None:
             # TODO: warn that we're skipping outdated information
             continue
-        canvas_idx = base_target_idx + position
-        diff_canvas[canvas_idx] = _compose(
-            diff_canvas[canvas_idx],
-            _echo(_make_thread(sorted(list(position_comments),
-                                      key=lambda pc: pc.created_at))))
+        target_idx = base_target_idx + position
+        composer.append_at(target_idx,
+                           _make_thread(sorted(list(position_comments),
+                                               key=lambda pc: pc.created_at)))
 
 
-def _overlay_encoding(diff_canvas):
-    diff_canvas[0] = _compose(_echo(u"# -*- coding: utf-8 -*-\n"), diff_canvas[0])
+def _overlay_encoding(composer):
+    composer.append_at(-1, u"# -*- coding: utf-8 -*-\n")
 
 
 def _safe_get_commit(repo, sha):
@@ -271,7 +293,7 @@ def _safe_get_commit(repo, sha):
             raise
 
 
-def _overlay_commit_comments(diff_canvas, orig_diff, pull_request):
+def _overlay_commit_comments(composer, pull_request):
     for commit in pull_request.get_commits():
         # the commit comments seem generally to be in the head, but
         # let's make sure.
@@ -279,26 +301,24 @@ def _overlay_commit_comments(diff_canvas, orig_diff, pull_request):
             repo = part.repo
             repo_commit = _safe_get_commit(repo, commit.sha)
             if repo_commit:
-                _overlay_comments(diff_canvas, orig_diff, repo_commit.get_comments())
+                _overlay_comments(composer, repo_commit.get_comments())
 
 
 def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request, output_dir):
-    diff_canvas, orig_diff = _diff_canvas(username, password, pull_request)
-    _overlay_pr_top_level(diff_canvas, gh, pull_request)
-    _overlay_pr_comments(diff_canvas, orig_diff, pull_request)
-    _overlay_commit_comments(diff_canvas, orig_diff, pull_request)
+    diff_text = _get_diff_text(username, password, pull_request)
+    composer = DiffscussComposer(diff_text)
+    _overlay_encoding(composer)
+    _overlay_pr_top_level(composer, gh, pull_request)
+    _overlay_pr_comments(composer, pull_request)
+    _overlay_commit_comments(composer, pull_request)
 
-    # this should always come last, so that it can override anything
-    # before it and be first in the file.
-    _overlay_encoding(diff_canvas)
     dest_dir = os.path.join(output_dir, user_or_org.login, repo.name)
     _mkdir_p(dest_dir)
     dest_fname = os.path.join(dest_dir, u"%s.diffscuss" % pull_request.number)
     dest_fname_partial = u"%s.partial" % dest_fname
 
     with open(dest_fname_partial, 'wb') as dest_fil:
-        for line in _render_canvas(diff_canvas, user_or_org, repo,
-                                   pull_request, output_dir):
+        for line in composer.render():
             dest_fil.write(line.encode('utf-8'))
 
     shutil.move(dest_fname_partial, dest_fname)

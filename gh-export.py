@@ -2,6 +2,7 @@
 
 import errno
 import itertools
+import logging
 from optparse import OptionParser
 import os
 import shutil
@@ -46,6 +47,9 @@ class DiffscussComposer(object):
             line = diff_s.readline()
 
     def append_at(self, index, text):
+        logging.debug("Appending at index %s text %s",
+                      index,
+                      text)
         if index == -1:
             self.top_matter = _compose(self.top_matter,
                                        _echo(text))
@@ -75,8 +79,15 @@ def _password(passfile):
 
 
 def _pull_requests_from_repo(repo):
+    logging.debug("Finding all pull requests in repo %s",
+                  repo.url)
     for state in ['open', 'closed']:
+        logging.debug("Finding %s pull requests in repo %s",
+                      state,
+                      repo.url)
         for pull_request in repo.get_pulls(state=state):
+            logging.debug("Found pull request %s",
+                          pull_request.url)
             yield pull_request
 
 
@@ -85,10 +96,14 @@ def _user_or_org(gh, user_or_org_name):
     # the api user has access, unless you access the organization as
     # an organization, so first try to treat the name as an org, and
     # fall back to user.
+    logging.debug("Finding user or org with name %s", user_or_org_name)
     try:
+        logging.debug("Trying org %s", user_or_org_name)
         user_or_org = gh.get_organization(user_or_org_name)
+        logging.debug("Found org %s", user_or_org_name)
     except GithubException, e:
         if e.status == 404:
+            logging.debug("No org %s, trying user", user_or_org_name)
             user_or_org = gh.get_user(user_or_org_name)
         else:
             raise
@@ -96,18 +111,26 @@ def _user_or_org(gh, user_or_org_name):
 
 
 def _pull_requests_from_spec(gh, spec):
+    logging.info("Parsing spec %s", spec)
     if ':' in spec:
         repo_name, pr_id = spec.split(':')
         repo = gh.get_repo(repo_name)
         user_or_org = _user_or_org(gh, repo_name.split('/')[0])
+        logging.info("Spec is for pr #%s in repo %s",
+                     pr_id,
+                     repo_name)
         yield user_or_org, repo, repo.get_pull(int(pr_id))
     elif '/' in spec:
         repo = gh.get_repo(spec)
         user_or_org = _user_or_org(gh, spec.split('/')[0])
+        logging.info("Spec is for all prs in repo %s",
+                     repo.url)
         for pull_request in _pull_requests_from_repo(repo):
             yield user_or_org, repo, pull_request
     else:
         user_or_org = _user_or_org(gh, spec)
+        logging.info("Spec is for all prs in all repos for user/org %s",
+                     spec)
         for repo in user_or_org.get_repos():
             for pull_request in _pull_requests_from_repo(repo):
                 yield user_or_org, repo, pull_request
@@ -116,10 +139,14 @@ def _pull_requests_from_spec(gh, spec):
 def _pull_requests_from_specs(gh, args):
     for spec in args:
         for user_or_org, repo, pull_request in _pull_requests_from_spec(gh, spec):
+            logging.info("Found pull request %s",
+                         pull_request.url)
             yield user_or_org, repo, pull_request
 
 
 def _get_diff_text(username, password, pull_request):
+    logging.info("Requesting diff from url %s",
+                 pull_request.diff_url)
     resp = requests.get(pull_request.diff_url, auth=(username, password))
     if not resp.ok:
         raise Exception("Error pulling %s: %s" % (pull_request.diff_url,
@@ -172,6 +199,8 @@ def _overlay_pr_top_level(composer, gh, pull_request):
     - the title and initial body of the pull request
     - the comments on the associated issue
     """
+    logging.info("Overlaying top-level thread for pr %s",
+                 pull_request.url)
     init_comment = _make_comment(
         depth=1,
         body=(pull_request.title + u"\n\n" + pull_request.body),
@@ -184,6 +213,7 @@ def _overlay_pr_top_level(composer, gh, pull_request):
     init_thread = init_comment + _make_thread(sorted(list(pull_request.get_issue_comments()),
                                                      key=lambda ic: ic.created_at),
                                               init_offset=1)
+    logging.debug("Init thread is %s", init_thread)
     composer.append_at(-1, init_thread)
 
 
@@ -193,28 +223,38 @@ def _overlay_pr_comments(composer, pull_request):
     these contextual comments available as "review comments" as
     opposed to "issue comments."
     """
+    logging.info("Overlaying review comments for pr %s",
+                 pull_request.url)
     _overlay_comments(composer,
                       pull_request.get_review_comments())
 
 
 def _overlay_comments(composer, comments):
+    comments = list(comments)
+    logging.info("Overlaying %d total comments", len(comments))
     get_path = lambda rc: rc.path
-    for (path, path_comments) in itertools.groupby(sorted(list(comments),
+    for (path, path_comments) in itertools.groupby(sorted(comments,
                                                           key=get_path),
                                                    get_path):
         if path:
+            logging.info("Found path %s, will write path comments", path)
             _overlay_path_comments(composer, path, path_comments)
         else:
+            logging.info("Could not find path, writing review level comments.")
             # if there's no path, make a new thread at the top of the
             # review.
             _overlay_review_level_comments(composer, path_comments)
 
 
 def _overlay_review_level_comments(composer, comments):
-    thread = _make_thread(sorted(list(comments),
+    comments = list(comments)
+    logging.info("Overlaying %d review level comments",
+                 len(comments))
+    thread = _make_thread(sorted(comments,
                                  key=lambda ic: ic.created_at))
     # note that we're assuming here that the pr thread has already
     # been created.
+    logging.debug("Thread is %s", thread)
     composer.append_at(-1, thread)
 
 
@@ -233,14 +273,21 @@ def _is_target_path(tagged_line, path):
 
 
 def _find_base_target_idx(orig_diff, path):
+    logging.debug("Finding base target index for %s", path)
     looking_for_range_line = False
 
     for (i, tagged_line) in enumerate(walk(StringIO(orig_diff))):
+        logging.debug("Checking at index %d tagged line %s",
+                      i, tagged_line)
         assert(tagged_line[0] not in [COMMENT_HEADER, COMMENT_BODY])
         if looking_for_range_line and _is_range_line(tagged_line):
+            logging.debug("Found range line at index %d", i)
             return i
         if _is_target_path(tagged_line, path):
+            logging.debug("Found path %s at index %s, now looking for range line",
+                          path, i)
             looking_for_range_line = True
+    logging.info("Could not find path %s in diff", path)
     return None
 
 
@@ -261,22 +308,31 @@ def _make_thread(gh_comments, init_offset=0):
 
 
 def _overlay_path_comments(composer, path, path_comments):
+    logging.info("Overlaying comments for path %s", path)
     base_target_idx = _find_base_target_idx(composer.orig_diff, path)
+    logging.debug("Base target index for path %s is %s", path, base_target_idx)
     if base_target_idx is None:
-        # TODO log better
-        print "Couldn't find target for path %s (likely outdated diff)" % path
+        logging.warn("Couldn't find target for path %s (likely outdated diff)",
+                     path)
         return
 
     get_position = lambda pc: pc.position
     for (position, position_comments) in itertools.groupby(sorted(list(path_comments),
                                                                   key=get_position),
                                                            get_position):
+        position_comments = list(position_comments)
         if position is None:
-            # TODO: warn that we're skipping outdated information
+            logging.info("Null position in path %s for %d comments (assuming outdated diff)",
+                         path,
+                         len(position_comments))
             continue
+
+        logging.info("Writing %d comments for path %s at position %s.",
+                     len(position_comments),
+                     path, position)
         target_idx = base_target_idx + position
         composer.append_at(target_idx,
-                           _make_thread(sorted(list(position_comments),
+                           _make_thread(sorted(position_comments,
                                                key=lambda pc: pc.created_at)))
 
 
@@ -295,17 +351,25 @@ def _safe_get_commit(repo, sha):
 
 
 def _overlay_commit_comments(composer, pull_request):
+    logging.info("Overlaying all commit comments.")
     for commit in pull_request.get_commits():
+        logging.info("Overlaying commit %s", commit.sha)
         # the commit comments seem generally to be in the head, but
         # let's make sure.
         for part in [pull_request.base, pull_request.head]:
             repo = part.repo
+            logging.debug("Checking for commit in repo %s", repo.url)
             repo_commit = _safe_get_commit(repo, commit.sha)
+            logging.debug("Found commit: %s", repo_commit)
             if repo_commit:
+                logging.info("Will overlay commit %s from repo %s",
+                             commit.sha,
+                             repo.url)
                 _overlay_comments(composer, repo_commit.get_comments())
 
 
 def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request, output_dir):
+    logging.info("Getting diff text for pull request %s", pull_request.url)
     diff_text = _get_diff_text(username, password, pull_request)
     composer = DiffscussComposer(diff_text)
     _overlay_encoding(composer)
@@ -314,25 +378,38 @@ def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request
     _overlay_commit_comments(composer, pull_request)
 
     dest_dir = os.path.join(output_dir, user_or_org.login, repo.name)
+    logging.debug("Destination dir is %s", dest_dir)
     _mkdir_p(dest_dir)
     dest_fname = os.path.join(dest_dir, u"%s.diffscuss" % pull_request.number)
+    logging.debug("Destination filename is %s", dest_fname)
     dest_fname_partial = u"%s.partial" % dest_fname
+    logging.debug("Writing partial results to %s", dest_fname_partial)
 
     with open(dest_fname_partial, 'wb') as dest_fil:
         for line in composer.render():
             dest_fil.write(line.encode('utf-8'))
 
+    logging.info("Moving final results to %s", dest_fname)
     shutil.move(dest_fname_partial, dest_fname)
 
 
 def main(opts, args):
+    log_level = logging.INFO
+    if opts.debug:
+        log_level = logging.DEBUG
+    logging.basicConfig(filename=opts.logfile, level=log_level,
+                        format='[%(levelname)s %(asctime)s] %(message)s')
+
+    logging.info("Starting run.")
+
     password = _password(opts.passfile)
     gh = Github(opts.username, password)
 
     for user_or_org, repo, pull_request in _pull_requests_from_specs(gh, args):
-        print >> sys.stderr, "Exporting %s/%s/%s" % (user_or_org.login,
-                                                     repo.name,
-                                                     pull_request.number)
+        logging.info("Exporting %s/%s:%s",
+                     user_or_org.login,
+                     repo.name,
+                     pull_request.number)
         _export_to_diffscuss(gh, opts.username, password, user_or_org, repo, pull_request,
                              opts.output_dir)
     return 0
@@ -371,6 +448,13 @@ if __name__ == '__main__':
     parser.add_option("-o", "--output",
                       help="Directory in which to put output (defaults to 'output')",
                       dest="output_dir", default="output")
+    parser.add_option("-l", "--logfile",
+                      help="File to use for logging (defaults to gh-export.log)",
+                      dest="logfile", default="gh-export.log")
+    parser.add_option("-d", "--debug",
+                      help="Turn on debug level logging.",
+                      action="store_true", default=False,
+                      dest="debug")
 
     (opts, args) = parser.parse_args()
 

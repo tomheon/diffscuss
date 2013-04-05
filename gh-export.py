@@ -164,17 +164,35 @@ def _overlay_pr_top_level(diff_canvas, gh, pull_request):
     diff_canvas[0] = _compose(init_thread, diff_canvas[0])
 
 
-def _overlay_pr_comments(diff_canvas, pristine_canvas, pull_request):
+def _overlay_pr_comments(diff_canvas, orig_diff, pull_request):
     """
     Get the inline comments into the diffscuss file (github makes
     these contextual comments available as "review comments" as
     opposed to "issue comments."
     """
+    _overlay_comments(diff_canvas, orig_diff,
+                      pull_request.get_review_comments())
+
+
+def _overlay_comments(diff_canvas, orig_diff, comments):
     get_path = lambda rc: rc.path
-    for (path, path_comments) in itertools.groupby(sorted(list(pull_request.get_review_comments()),
+    for (path, path_comments) in itertools.groupby(sorted(list(comments),
                                                           key=get_path),
                                                    get_path):
-        _overlay_path_comments(diff_canvas, pristine_canvas, path, path_comments)
+        if path:
+            _overlay_path_comments(diff_canvas, orig_diff, path, path_comments)
+        else:
+            # if there's no path, make a new thread at the top of the
+            # review.
+            _overlay_review_level_comments(diff_canvas, path_comments)
+
+
+def _overlay_review_level_comments(diff_canvas, comments):
+    thread = _make_thread(sorted(list(comments),
+                                 key=lambda ic: ic.created_at))
+    # note that we're assuming here that the pr thread has already
+    # been created.
+    diff_canvas[0] = _compose(diff_canvas[0], _echo(thread))
 
 
 def _is_range_line(tagged_line):
@@ -243,13 +261,36 @@ def _overlay_encoding(diff_canvas):
     diff_canvas[0] = _compose(_echo(u"# -*- coding: utf-8 -*-\n"), diff_canvas[0])
 
 
+def _safe_get_commit(repo, sha):
+    try:
+        return repo.get_commit(sha)
+    except GithubException, e:
+        if e.status == 404:
+            return None
+        else:
+            raise
+
+
+def _overlay_commit_comments(diff_canvas, orig_diff, pull_request):
+    for commit in pull_request.get_commits():
+        # the commit comments seem generally to be in the head, but
+        # let's make sure.
+        for part in [pull_request.base, pull_request.head]:
+            repo = part.repo
+            repo_commit = _safe_get_commit(repo, commit.sha)
+            if repo_commit:
+                _overlay_comments(diff_canvas, orig_diff, repo_commit.get_comments())
+
+
 def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request, output_dir):
     diff_canvas, orig_diff = _diff_canvas(username, password, pull_request)
-    pristine_canvas = list(diff_canvas)
     _overlay_pr_top_level(diff_canvas, gh, pull_request)
-    _overlay_encoding(diff_canvas)
     _overlay_pr_comments(diff_canvas, orig_diff, pull_request)
+    _overlay_commit_comments(diff_canvas, orig_diff, pull_request)
 
+    # this should always come last, so that it can override anything
+    # before it and be first in the file.
+    _overlay_encoding(diff_canvas)
     dest_dir = os.path.join(output_dir, user_or_org.login, repo.name)
     _mkdir_p(dest_dir)
     dest_fname = os.path.join(dest_dir, u"%s.diffscuss" % pull_request.number)

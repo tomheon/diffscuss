@@ -263,9 +263,10 @@ def _make_thread(gh_comments, init_offset=0):
 def _overlay_path_comments(composer, path, path_comments):
     base_target_idx = _find_base_target_idx(composer.orig_diff, path)
     if base_target_idx is None:
-        # Until I figure out what circumstances this can happen in,
-        # just blow up.
-        raise Exception("Couldn't find target for path %s" % path)
+        # TODO log better
+        print "Couldn't find target for path %s (likely outdated diff)" % path
+        return
+
     get_position = lambda pc: pc.position
     for (position, position_comments) in itertools.groupby(sorted(list(path_comments),
                                                                   key=get_position),

@@ -228,6 +228,30 @@ diffscuss-parse-leader against it."
 (test-newline "testfiles/short.diffscuss" 222 'diffscuss-newline-and-indent
               "testfiles/short-post-open-interline.diffscuss")
 
+(require 'cl)
+
 ;; fills
+(defun test-fill (test-filename fill-positions fill-func expected-filename)
+  (with-temp-buffer
+    (insert-file-contents test-filename)
+    (loop for pos in fill-positions
+          do
+          (goto-char pos)
+          (funcall fill-func))
+    ;; since the testfiles get created in emacs, delete trailing
+    ;; whitespace to prevent tears when only whitespace differs
+    (delete-trailing-whitespace)
+    (let ((actual-results (buffer-string)))
+      (erase-buffer)
+      (insert-file-contents expected-filename)
+      (assert-equal (buffer-string) actual-results))))
+
+(test-fill "testfiles/pre-fill.diffscuss" '(518 436 432 358 268)
+           'diffscuss-fill-comment-paragraph
+           "testfiles/post-fill.diffscuss")
+
+(test-fill "testfiles/pre-fill.diffscuss" '(518 436 432 358 268)
+           'diffscuss-fill-paragraph
+           "testfiles/post-fill.diffscuss")
 
 (end-tests) ;; Stop the clock and print a summary

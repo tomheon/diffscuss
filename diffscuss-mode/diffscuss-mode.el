@@ -372,19 +372,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
 (unless (fboundp 'string-prefix-p)      ; not defined in Emacs 23.1
   (fset 'string-prefix-p (symbol-function 'backport-string-prefix-p)))
 
-
 ;; Fill logic.
-
-(defun diffscuss-fill-comment ()
-  "Fill the body of the entire current comment."
-  (save-excursion
-    (save-restriction
-      (narrow-to-region (diffscuss-find-body-start)
-                        (diffscuss-find-body-end))
-      (let ((fill-prefix (concat (diffscuss-force-body (diffscuss-parse-leader))
-                                 " ")))
-        (fill-region (point-min) (point-max))
-        ))))
 
 (defun diffscuss-fill-comment-paragraph ()
   "Fill the current paragraph of the current comment."

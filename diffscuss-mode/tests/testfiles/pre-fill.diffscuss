@@ -1,0 +1,30 @@
+%*
+%* author: Edmund Jorgensen
+%* email: tomheon@gmail.com
+%* date: 2013-04-05T16:17:27-0400
+%*
+%- Testing 1.
+%-
+%**
+%** author: Edmund Jorgensen
+%** email: tomheon@gmail.com
+%** date: 2013-04-05T16:17:58-0400
+%**
+%-- Long line this is a long line a really long line hahahaha so long yup yup yup
+%--
+%-- and this is one short line
+%-- and another short line
+%--
+%-- and this is a perfectly filled paragraph already so it shouldn't
+%-- do anything when it's filled hahahahahah
+%--
+diff --git a/.gitignore b/.gitignore
+index 4e59ca6..11a78a5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,4 +1,5 @@
+ *~
+ *.pyc
+ tmp
+ env
++gh-export.log

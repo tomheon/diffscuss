@@ -435,7 +435,7 @@ if __name__ == '__main__':
 
                                        E.g.:
 
-                                       hut8labs/diffscuss/15
+                                       hut8labs/diffscuss:15
                                        tomheon/git_by_a_bus
                                        mpapi
                                        """))

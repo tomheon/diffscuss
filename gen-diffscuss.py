@@ -61,8 +61,11 @@ def _git_log(revision, git_exe):
                          "--reverse", revision]).split('\n')
 
 
-def _write_diff(output_f, revision, git_exe):
-    output_f.write(check_output([git_exe, "diff", "--unified=20", revision]))
+def _write_diff(revision, lines_context, output_f, git_exe):
+    output_f.write(check_output([git_exe,
+                                 "diff",
+                                 "--unified=%d" % lines_context,
+                                 revision]))
 
 
 def _write_diffscuss_header(output_f, author, email, git_exe):
@@ -90,12 +93,12 @@ def _write_diffscuss_body(output_f, revision, git_exe):
     output_f.write('\n')
 
 
-def main(revision, output_f, author=None, email=None, git_exe=None):
+def main(revision, lines_context, output_f, author=None, email=None, git_exe=None):
     if not git_exe:
         git_exe = 'git'
     _write_diffscuss_header(output_f, author, email, git_exe)
     _write_diffscuss_body(output_f, revision, git_exe)
-    _write_diff(output_f, revision, git_exe)
+    _write_diff(revision, lines_context, output_f, git_exe)
 
 
 if __name__ == '__main__':
@@ -119,6 +122,9 @@ if __name__ == '__main__':
     parser.add_option("-o", "--output",
                       help="File in which to put the output (defaults to stdout).",
                       dest="output")
+    parser.add_option("-c", "--context",
+                      help="Number of lines of context to show in the diff (defaults to 20)",
+                      default=20, dest="lines_context")
 
     opts, args = parser.parse_args()
 
@@ -127,7 +133,8 @@ if __name__ == '__main__':
     else:
         out_f = open(opts.output, 'wb')
 
-    main(args[0], out_f, git_exe=opts.git_exe, author=opts.author, email=opts.email)
+    main(args[0], int(opts.lines_context), out_f,
+         git_exe=opts.git_exe, author=opts.author, email=opts.email)
 
     if opts.output is not None:
         out_f.close()

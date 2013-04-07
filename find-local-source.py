@@ -7,7 +7,7 @@ the best referent for a line in a diffscuss file.
 Intended mainly for use in editors to facilitate jumping to source
 from a diffscuss file.
 """
-
+from collections import namedtuple
 from optparse import OptionParser
 import os
 import re
@@ -20,6 +20,13 @@ from diffscuss.walker import walk, DIFF, DIFF_HEADER
 # exit codes for various error conditions
 NO_GIT_DIR = 2
 CANNOT_FIND_CANDIDATES = 3
+
+
+Candidate = namedtuple('Candidate', 'fname line_num line_text')
+
+
+LocalCandidate = namedtuple('LocalCandidate',
+                            'found_match local_line_num candidate')
 
 
 def _exit(msg, exit_code):
@@ -222,17 +229,16 @@ def _maybe_update_new_line(item, cur_new_line):
 def _find_candidates(input_f, line_number):
     """
     If @line_number is a line number in the diffscuss file in
-    @input_f, return a tuple of two tuples of form:
+    @input_f, return a list of two Candidate tuples:
 
-    (file name, line number, line text)
+    - one for the new version of the source in the diffscuss file
 
-    One for the new version of the source in the diffscuss file, and
-    one for the old version of the source in the diffscuss file.
+    - one for the old version of the source in the diffscuss file
 
     The new version is always listed first.
 
     If line_number ends up being greater than the number of lines in
-    input_f, returns an empty tuple.
+    input_f, returns an empty list.
     """
     cur_old_fname = None
     cur_new_fname = None
@@ -258,53 +264,54 @@ def _find_candidates(input_f, line_number):
         # old and new versions of the source as we went, we have our
         # candidates for matching source.
         if cur_line_num >= line_number:
-            return ((cur_new_fname,
-                      _safe_decr(cur_new_line_num),
-                      cur_new_line),
-                    (cur_old_fname,
-                     _safe_decr(cur_old_line_num),
-                     cur_old_line))
+            return [Candidate(fname=cur_new_fname,
+                              line_num=_safe_decr(cur_new_line_num),
+                              line_text=cur_new_line),
+                    Candidate(fname=cur_old_fname,
+                              line_num=_safe_decr(cur_old_line_num),
+                              line_text=cur_old_line)]
 
-    return tuple()
+    return list()
 
 
-def _candidate_exists(candidate_fname, git_repo):
+def _candidate_exists(candidate, git_repo):
     """
-    Return true if the @candidate_fname is not /dev/null, and exists
+    Return true if the @candidate.fname is not /dev/null, and exists
     under git_repo.
     """
     # this is how git diffs represent a file that didn't exist in an
     # earlier revision
-    if candidate_fname == '/dev/null':
+    if not candidate.fname or candidate.fname == '/dev/null':
         return False
     try:
-        with open(os.path.join(git_repo, candidate_fname), 'rb'):
+        with open(os.path.join(git_repo, candidate.fname), 'rb'):
             return True
     except IOError:
         return False
 
 
-def _best_candidate(candidates, git_repo):
+def _best_local_candidate(local_candidates, git_repo):
     """
-    Given @candidates, a collection of tuples of
-
-    (fname, line num, line)
-
+    Given @local_candidates, a list of LocalCandidate named tuples,
     scraped from a diffscuss file, return the best candidate.
 
-    Currently this means always returning the first candidate whose
-    fname actually exists in local source.
+    The best candidate is:
 
-    Since the candidates should always be listed with the new version
-    of the source first, this means we always consider the new version
-    if the file name is correct.  This covers the "commit then review"
-    case well, but could stand to be blown up and improved to better
-    cover the "review then commit" case.
+    * the earliest candidate in the list where the matching line was
+      found
+
+    * or the earliest candidate in the list, if none of the matching
+      lines were found
     """
-    for candidate_fname, line_num, line in candidates:
-        if _candidate_exists(candidate_fname, git_repo):
-            return (candidate_fname, line_num, line)
-    return None
+    best_candidate = None
+
+    for candidate in local_candidates:
+        if best_candidate is None:
+            best_candidate = candidate
+        elif candidate.found_match and not best_candidate.found_match:
+            best_candidate = candidate
+
+    return best_candidate
 
 
 def _closest_line_num(fil, orig_line_num, orig_line):
@@ -317,10 +324,11 @@ def _closest_line_num(fil, orig_line_num, orig_line):
     - finding all the lines in @fil that, when stripped, match the
       @orig_line exactly
 
-    - return the number the matching line with the smallest absolutely
-      distance from @orig_line_num
+    - returning the number the matching line with the smallest
+      absolutely distance from @orig_line_num, in a tuple (True,
+      line_num)
 
-    - if no matching lines are found, returning @orig_line_num
+    - if no matching lines are found, returning (False, @orig_line_num)
 
     This works decently for a broad number of cases, but could also be
     improved for cases in which the @orig_line has subsequently been
@@ -333,28 +341,33 @@ def _closest_line_num(fil, orig_line_num, orig_line):
 
     for ind, line in enumerate(fil):
         line = line.strip()
-        if orig_line == line:
+        if orig_line and orig_line == line:
             matching_line_nums.append(ind + 1)
 
     if not matching_line_nums:
-        return orig_line_num
+        return (False, orig_line_num)
 
     matching_line_nums = [(abs(line_num - orig_line_num), line_num)
                           for line_num
                           in matching_line_nums]
     matching_line_nums.sort()
 
-    return matching_line_nums[0][1]
+    return (True, matching_line_nums[0][1])
 
 
-def _best_line_num_for_candidate(best_candidate, git_repo):
+def _localize_candidate(candidate, git_repo):
     """
-    Given @best_candidate, a tuple of fname, line num, and line text,
-    find the closest line matching that candidate in on-disk source.
+    Given @candidate, return a LocalCandidate, which includes the best
+    guess for a local_line_num matching the line_text in @candidate,
+    and whether or not the local line matches the text exactly.
     """
-    candidate_fname, candidate_line_num, candidate_line = best_candidate
-    with open(os.path.join(git_repo, candidate_fname), 'rU') as fil:
-        return _closest_line_num(fil, candidate_line_num, candidate_line)
+    with open(os.path.join(git_repo, candidate.fname), 'rU') as fil:
+        (found_match, local_line_num) = _closest_line_num(fil,
+                                                          candidate.line_num,
+                                                          candidate.line_text)
+        return LocalCandidate(found_match=found_match,
+                              local_line_num=local_line_num,
+                              candidate=candidate)
 
 
 def main(directory, input_fname, output_fname, line_number):
@@ -367,13 +380,21 @@ def main(directory, input_fname, output_fname, line_number):
         _exit("Cannot find git repo at or above %s" % directory, NO_GIT_DIR)
 
     candidates = _find_candidates(input_f, line_number)
-    best_candidate = _best_candidate(candidates, git_repo)
+    existing_candidates = [c
+                           for c
+                           in candidates
+                           if _candidate_exists(c, git_repo)]
+    local_candidates = [_localize_candidate(c, git_repo)
+                        for c
+                        in existing_candidates]
+    best_candidate = _best_local_candidate(local_candidates, git_repo)
+
     if not best_candidate:
         _exit("Cannot find any candidate files.", CANNOT_FIND_CANDIDATES)
 
-    best_line = _best_line_num_for_candidate(best_candidate, git_repo)
     output_f.write("%s %d" % (os.path.join(git_repo,
-                                           best_candidate[0]), best_line))
+                                           best_candidate.candidate.fname),
+                              best_candidate.local_line_num))
 
     if close_input:
         input_f.close()

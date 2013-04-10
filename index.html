@@ -54,39 +54,13 @@ integrated with git).</p></li>
 editors with Diffscuss tooling support).</p></li>
 </ul><h2>What Does a Diffscuss Review Look Like?</h2>
 
-<div>
-%*<br>%* author: Edmund Jorgensen<br>%* email: edmund@example.com<br>%* date: 2013-04-09T20:27:04-0400<br>%*<br>%- Explode Comment in walker and just read line by line.<br>%-<br>%- Later I'll add a record reader a la Matt Papi.<br>%-<br>%-<br><div>diff --git a/diffscuss/tests/test_walker.py b/diffscuss/tests/test_walker.py<br>
-index c3a04dd..3042bf8 100644<br>
---- a/diffscuss/tests/test_walker.py<br>
-+++ b/diffscuss/tests/test_walker.py<br>
-@@ -1,178 +1,179 @@
-</div>
+<p>Screenshot of a Diffscuss review in Emacs:</p>
 
-<div> # -*- coding: utf-8 -*-<br><br>
- import itertools<br>
- import os<br>
- from StringIO import StringIO<br>
- from textwrap import dedent<br><br>
- from nose.tools import eq_, ok_<br><br>
- from diffscuss.walker import walk, MissingAuthorException, \<br>
-</div>
+<p><img src="doc/screenshot.png" alt="Emacs Screenshot"></p>
 
-<div>-     EmptyCommentException, BadNestingException, Comment, \<br>
--     CommentInHeaderException
-</div>
+<p>After jumping to source:</p>
 
-<div>+     EmptyCommentException, BadNestingException, \<br>
-+     CommentInHeaderException, DIFF_HEADER, DIFF, \<br>
-+     COMMENT_HEADER, COMMENT_BODY
-</div>
-
-<p>%*<br>%* author: Testy McTesterson<br>%* email: <a href="mailto:testy@example.com">testy@example.com</a><br>%* date: 2013-04-09T20:47:19-0400<br>%*<br>%- I don't think you ever use COMMENT_BODY, remove?<br>%-<br>%**<br>%** author: Edmund Jorgensen<br>%** email: <a href="mailto:edmund@example.com">edmund@example.com</a><br>%** date: 2013-04-09T21:12:54-0400<br>%**<br>%-- Good call, fixed.<br>%--<br><br><br>
- def <em>test_fname(fname):<br>
-     return os.path.join(os.path.dirname(</em>_file__),<br>
-                         'testfiles',<br>
-                         fname)<br>...
-</p>
-</div>
+<p><img src="doc/screenshot-jump-to-source.png" alt="Emacs Screenshot"></p>
 
 <h2>The Format in a Nutshell</h2>
 

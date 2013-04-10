@@ -1,29 +1,87 @@
 # Diffscuss: Code Reviews.  In Plain Text.
 
-## What is Diffscuss?
+## Why Should You Use Diffscuss?
 
-* A format for embedding code reviews into unified diff files.
+* Create and read reviews in your editor.  Jump straight to the
+  associated source to apply fixes etc.
 
-* An Emacs mode for creating / reading / responding to reviews in that
-  format, with git integration.
+* Keep your reviews in your repo, right next to your code, or email
+  them back and forth if you're a small team and that's easier.
 
-* gen-diffscuss.py, a tool for generating code reviews from git repos.
+* Use grep and all the rest of that unix-y toolchain goodness on your
+  reviews.
 
-There are also plans for some command line tools, and tools to allow diffscuss
-files to serve as a code-review interchange format.
+## Why Shouldn't You Use Diffscuss?
 
-## Why Use Diffscuss?
+* You're a big team with a lot of process around code reviews
+  (e.g. you have automated restrictions for review-then-commit
+  workflows).
 
-If you like:
+* You're not using git (for the moment, Diffscuss is tightly
+  integrated with git).
 
-* Plain text formats that play nicely with the *nix toolchain
+* You're not using Emacs or vim (for the moment, those are the two
+  editors with Diffscuss tooling support).
 
-* Lightweight, flexible code-review processes
+## What Does a Diffscuss Review Look Like?
 
-* The idea of being able to work with / keep your reviews close to
-  your source, even in the same repository
-
-Then you might want to give Diffscuss a look.
+<div style="font-family: Courier New; border: 2px solid; padding: 5px;">
+<span style="color: blue;">%*</span><br />
+<span style="color: blue;">%* author: Edmund Jorgensen</span><br />
+<span style="color: blue;">%* email: edmund@example.com</span><br />
+<span style="color: blue;">%* date: 2013-04-09T20:27:04-0400</span><br />
+<span style="color: blue;">%*</span><br />
+<span style="color: blue;">%-</span> Explode Comment in walker and just read line by line.<br />
+<span style="color: blue;">%-</span><br />
+<span style="color: blue;">%-</span> Later I'll add a record reader a la Matt Papi.<br />
+<span style="color: blue;">%-</span><br />
+<span style="color: blue;">%-</span><br />
+<div style="color: gray;">diff --git a/diffscuss/tests/test_walker.py b/diffscuss/tests/test_walker.py<br />
+index c3a04dd..3042bf8 100644<br />
+--- a/diffscuss/tests/test_walker.py<br />
++++ b/diffscuss/tests/test_walker.py<br />
+@@ -1,178 +1,179 @@
+</div>
+<div> # -*- coding: utf-8 -*-<br />
+<br />
+&nbsp;import itertools<br />
+&nbsp;import os<br />
+&nbsp;from StringIO import StringIO<br />
+&nbsp;from textwrap import dedent<br />
+<br />
+&nbsp;from nose.tools import eq_, ok_<br />
+<br />
+&nbsp;from diffscuss.walker import walk, MissingAuthorException, \<br />
+</div>
+<div style="color: red;">-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EmptyCommentException, BadNestingException, Comment, \<br />
+-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CommentInHeaderException
+</div>
+<div style="color: green;">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EmptyCommentException, BadNestingException, \<br />
++&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CommentInHeaderException, DIFF_HEADER, DIFF, \<br />
++&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COMMENT_HEADER, COMMENT_BODY
+</div>
+<span style="color: blue;">%*</span><br />
+<span style="color: blue;">%* author: Testy McTesterson</span><br />
+<span style="color: blue;">%* email: testy@example.com</span><br />
+<span style="color: blue;">%* date: 2013-04-09T20:47:19-0400</span><br />
+<span style="color: blue;">%*</span><br />
+<span style="color: blue;">%-</span> I don't think you ever use COMMENT_BODY, remove?<br />
+<span style="color: blue;">%-</span><br />
+<span style="color: purple;">%**</span><br />
+<span style="color: purple;">%** author: Edmund Jorgensen</span><br />
+<span style="color: purple;">%** email: edmund@example.com</span><br />
+<span style="color: purple;">%** date: 2013-04-09T21:12:54-0400</span><br />
+<span style="color: purple;">%**</span><br />
+<span style="color: purple;">%--</span> Good call, fixed.<br />
+<span style="color: purple;">%--</span><br />
+<br />
+<br />
+&nbsp;def _test_fname(fname):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return os.path.join(os.path.dirname(__file__),<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'testfiles',<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fname)<br />
+<span>...</span>
+</div>
 
 ## The Format in a Nutshell
 
@@ -33,67 +91,41 @@ beginning with %* are comment headers, and lines beginning with %- are
 comment bodies.  The number of * or - characters indicates reply
 threading.
 
-Since one example is worth a lot of explaining, here's an example
-diffscuss file:
+Comments apply to the line directly above them.  Comments at the top
+of the file apply to the entire review in general.
 
-```
-%*
-%* author: Bob Jones
-%* email: bjones@example.com
-%* date: 2013-03-15T19:00:21-0400
-%*
-%- This change set accomplishes two purposes:
-%-
-%- * Add a version of the world greeting for our Spanish-speaking users.
-%-
-%- * Indicate that it's only a test.
-%-
-%**
-%** author: Edmund Jorgensen
-%** email: edmund@example.com
-%** date: 2013-03-16T19:00:45-0400
-%**
-%-- Looks good, one question about internationalization.
-%--
-diff --git a/example.txt b/example.txt
-index f75ba05..01632d8 100644
---- a/example.txt
-+++ b/example.txt
-@@ -1 +1,7 @@
- Hello, world.
-+
-+Hola, mundo.
-%*
-%* author: Edmund Jorgensen
-%* email: edmund@example.com
-%* date: 2013-03-16T19:00:37-0400
-%*
-%- I'm not sure we want to go international just yet.
-%-
-%**
-%** author: Bob Jones
-%** email: bjones@example.com
-%** date: 2013-03-17T18:12:49-0400
-%**
-%-- What are your specific concerns?
-%--
-+
-+This is a test.
-+
-+It is only a test.
-```
-
-The comments at the top of the file apply to the entire review in
-general.
-
-The other two comments address the ```+Hola, mundo.``` line (that is,
-the line directly above the first comment in the thread).
-
-Take a look at the "Format Definition" section for much more detail.
+Take a look at the "Format Definition" section for (much) more detail.
 
 ## The Emacs Mode
 
-The Emacs mode colorizes diffscuss files to make for easier reading.
+The Emacs mode is implemented in a single .el file, diffscuss-mode.el.
+To install, either move the diffscuss-mode.el file to a directory in
+your load path or else add the Diffscuss mode directory to your load
+path in your .emacs file like so:
+
+```
+(setq load-path
+      (append (list nil "/path/to/diffscuss/diffscuss-mode")
+               load-path))
+```
+
+Once the file is in your load path, require the mode with:
+
+```
+(require 'diffscuss-mode)
+```
+
+To use the jump to local source feature, you also need to add the
+following to your .emacs:
+
+```
+(setq diffscuss-dir "/path/to/diffscuss")
+```
+
+Where /path/to/diffscuss is the path to the top level of your
+Diffscuss checkout (that is, where find-local-source.py is located).
+
+The mode colorizes Diffscuss files to make for easier reading.
 In addition it helps with:
 
 ### Inserting Comments
@@ -115,10 +147,24 @@ The main command you need to know is ```C-c C-c```, which generally
 * If the cursor is on a diff line, it will create a comment directly
   below that line (this is also available with ```C-c C-i```).
 
-### Showing the Source
+### Jumping to Source
+
+All these require that the Diffscuss file you are visiting is
+somewhere under a git checkout of the repo against which the Diffscuss
+file was generated, and that you have set the ```diffscuss-dir```
+Emacs variable to root directory of your Diffscuss installation (where
+find-local-source.py is located).
+
+#### Local Source
 
 If you position the cursor on one of the diff lines in a Diffscuss
 file, then:
+
+* ```C-c s``` will attempt to find the local source file / line in
+  that file that's the best candidate to match up with the Diffscuss
+  line the cursor is currently on.
+
+#### Repository Versions of the Source
 
 * ```C-c -``` will open up a temporary buffer containing the old
   version of the source (if it's available locally), with the cursor
@@ -128,22 +174,9 @@ file, then:
   version of the source (if it's available locally), with the cursor
   positioned on the same line.
 
-Both of these require that the Diffscuss file you're visiting is
-located inside the git repo directory.
-
-* ```C-c s``` will attempt to find the local source file / line in
-  that file that's the best candidate to match up with the diffscuss
-  line the cursor is currently on.
-
-This requires that the diffscuss file you are visiting is somewhere
-under a git checkout of the repo against which the diffscuss file was
-generated, and that you have set the ```diffscuss-dir``` Emacs
-variable to root directory of your diffscuss installation (where
-find-local-source.py is located).
-
 ### Navigation
 
-You can move around the diffscussion quickly using:
+You can move around the Diffscussion quickly using:
 
 * ```C-c f``` to move forward one comment.
 
@@ -213,6 +246,67 @@ For example,
 Makes a Diffscuss file containing the diffs from the last three
 commits in a local git repo, introduced with a comment at the top
 containing all the log messages for those three commits.
+
+## Simple Mailbox Support
+
+Diffscuss ships with diffscuss-mb, which provides simple mailbox
+support for reviews.  In a nutshell, diffscuss-mb manages a single
+directory (let's call it "diffscussions" in this example), with two
+subdirs:
+
+* reviews - where your .diffscuss files live
+
+* users - which has one subdir per user in your system
+
+When you post a diffscuss file for review, it's move into the
+"reviews" directory, and for each user you request review from, a
+symlink is created in their user directory.
+
+There is support for posting reviews, marking them done (which just
+translates to removing symlinks in user directories), and "bouncing"
+reviews, which means marking your review done and asking someone else
+to take a look (e.g., because you made comments that you want the
+original poster to implement / respond to).
+
+The Emacs and Vim modes have support for checking your mailbox,
+posting, bouncing, and marking reviews done.
+
+In Emacs:
+
+* ```C-c m p``` prompts for recipients and posts the current Diffscuss
+  file for their review
+
+* ```C-c m b``` prompts for recipients and bounces the review to them,
+  removing the review from your inbox.
+
+* ```C-c m d``` marks the review as done, removing it from your inbox.
+
+* ```M-x diffscuss-mb-check``` checks your inbox and lists all
+  incoming reviews.  You may wish to bind it globally to ```C-c m c```
+  with:
+
+```
+(global-set-key "\C-cmc"  'diffscuss-mb-check)
+```
+
+## What the Future Might Hold
+
+* Side-by-side diff viewing in the modes
+
+* Svn support
+
+* Support for other Sublime
+
+* Support for Eclipse
+
+* Support for other editors
+
+* Export from ReviewBoard / other code review systems
+
+* Imports into various code review systems (Diffscuss as code review interchange)
+
+If any of these appeal to you / scratch a personal itch, please let us
+know--or even better, contribute!
 
 ## Format Definition
 
@@ -411,36 +505,6 @@ act as a thread discussing the review as a whole--for example,
 introductory remarks about what the changes are attempting to achieve,
 "ship it" remarks, etc.).
 
-## What the Future Might Hold
-
-### Providing for the Liberation of Code Reviews (Aspirational)
-
-Right now, if you use Github (for example), you can stop using Github
-at any moment without losing any of your code and history--it's all in
-your git repo.
-
-Github has done a fantastic job of making sure you can even take your
-wiki information with you--that's just another git repo.
-
-But the comments on your pull requests--all that amazing and rich
-history of problems being hammered out and nits picked--is harder to
-reconstruct.  Github has--in amazing non-lockin-y fashion, and mad
-props to them for it--provided an API to get all the information about
-your pull requests, but it's non-trivial to reconstruct it all,
-requiring a bunch of calls and a bunch of reconstructed json.
-
-Now imagine you could hit the pull request url with a .diffscuss
-extension (as you can already do with a .diff extension) and pull in
-the diff--**with** the contextualized comments, right inline, for
-viewing in your editor or whatever.  That would be pretty cool, no?
-Especially if you could then import into another code review system
-with relatively little effort.
-
-Or say that, just like you can with your Github wiki, you could clone
-a git repo of all your project's pull requests, in a simple textual
-format, for offline reading, and potentially--with some push
-magic--even offline code reviews.
-
-This is an aspirational in the extreme goal--after all, Github would
-have to create the .diffscuss endpoint etc.--but a simple, standard
-format helps pave the way.
+Every Diffscuss file must begin with such a changeset level thread
+(optionally preceded by any number of "magic" comment lines, e.g. "#
+-*- coding: utf-8 -*-").

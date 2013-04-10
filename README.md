@@ -25,63 +25,13 @@
 
 ## What Does a Diffscuss Review Look Like?
 
-<div style="font-family: Courier New; border: 2px solid; padding: 5px;">
-<span style="color: blue;">%*</span><br />
-<span style="color: blue;">%* author: Edmund Jorgensen</span><br />
-<span style="color: blue;">%* email: edmund@example.com</span><br />
-<span style="color: blue;">%* date: 2013-04-09T20:27:04-0400</span><br />
-<span style="color: blue;">%*</span><br />
-<span style="color: blue;">%-</span> Explode Comment in walker and just read line by line.<br />
-<span style="color: blue;">%-</span><br />
-<span style="color: blue;">%-</span> Later I'll add a record reader a la Matt Papi.<br />
-<span style="color: blue;">%-</span><br />
-<span style="color: blue;">%-</span><br />
-<div style="color: gray;">diff --git a/diffscuss/tests/test_walker.py b/diffscuss/tests/test_walker.py<br />
-index c3a04dd..3042bf8 100644<br />
---- a/diffscuss/tests/test_walker.py<br />
-+++ b/diffscuss/tests/test_walker.py<br />
-@@ -1,178 +1,179 @@
-</div>
-<div> # -*- coding: utf-8 -*-<br />
-<br />
-&nbsp;import itertools<br />
-&nbsp;import os<br />
-&nbsp;from StringIO import StringIO<br />
-&nbsp;from textwrap import dedent<br />
-<br />
-&nbsp;from nose.tools import eq_, ok_<br />
-<br />
-&nbsp;from diffscuss.walker import walk, MissingAuthorException, \<br />
-</div>
-<div style="color: red;">-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EmptyCommentException, BadNestingException, Comment, \<br />
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CommentInHeaderException
-</div>
-<div style="color: green;">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EmptyCommentException, BadNestingException, \<br />
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CommentInHeaderException, DIFF_HEADER, DIFF, \<br />
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COMMENT_HEADER, COMMENT_BODY
-</div>
-<span style="color: blue;">%*</span><br />
-<span style="color: blue;">%* author: Testy McTesterson</span><br />
-<span style="color: blue;">%* email: testy@example.com</span><br />
-<span style="color: blue;">%* date: 2013-04-09T20:47:19-0400</span><br />
-<span style="color: blue;">%*</span><br />
-<span style="color: blue;">%-</span> I don't think you ever use COMMENT_BODY, remove?<br />
-<span style="color: blue;">%-</span><br />
-<span style="color: purple;">%**</span><br />
-<span style="color: purple;">%** author: Edmund Jorgensen</span><br />
-<span style="color: purple;">%** email: edmund@example.com</span><br />
-<span style="color: purple;">%** date: 2013-04-09T21:12:54-0400</span><br />
-<span style="color: purple;">%**</span><br />
-<span style="color: purple;">%--</span> Good call, fixed.<br />
-<span style="color: purple;">%--</span><br />
-<br />
-<br />
-&nbsp;def _test_fname(fname):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return os.path.join(os.path.dirname(__file__),<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'testfiles',<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fname)<br />
-<span>...</span>
-</div>
+Screenshot of a Diffscuss review in Emacs:
+
+![Emacs Screenshot](doc/screenshot.png)
+
+After jumping to source:
+
+![Emacs Screenshot](doc/screenshot-jump-to-source.png)
 
 ## The Format in a Nutshell
 

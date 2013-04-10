@@ -289,6 +289,17 @@ In Emacs:
 (global-set-key "\C-cmc"  'diffscuss-mb-check)
 ```
 
+See ```diffscuss-mb/dmb-init.py``` to get started.
+
+## Pull Request Export (Experimental)
+
+Diffscuss ships with ```gh-export.py```, which exports one or more
+Github pull requests into local Diffscuss files.
+
+One possible use for this (besides transition, if you're going to use
+Diffscuss), is to provide a searchable, offline copy of your pull
+requests.
+
 ## What the Future Might Hold
 
 * Side-by-side diff viewing in the modes

@@ -2,8 +2,9 @@
 
 ## Why Should You Use Diffscuss?
 
-* Create and read reviews in your editor.  Jump straight to the
-  associated source to apply fixes etc.
+* Lower the activation energy for code reviews by creating and reading
+  reviews in your editor. Then jump straight to the associated source
+  to apply fixes etc.
 
 * Keep your reviews in your repo, right next to your code, or email
   them back and forth if you're a small team and that's easier.

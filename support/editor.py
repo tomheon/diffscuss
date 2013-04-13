@@ -107,7 +107,7 @@ class LineProperties(object):
         >>> LineProperties('%---- This is a deep reply body line').depth
         4
         """
-        match = re.search('^%((\*|-)+)', self.line)
+        match = re.search(r'^%((\*|-)\2*)', self.line)
         if match:
             return len(match.group(1))
         return 0

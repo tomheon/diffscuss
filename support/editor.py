@@ -299,10 +299,11 @@ def show_local_source(buf, (row, col)):
     under the cursor.
     """
     cmd = """
-        python {script} -i {buffer_name} {row}
-        """.format(script=_get_script('find-local-source.py'),
+        {python} {script} -i {buffer_name} {row}
+        """.format(python=_get_python(),
+                   script=_get_script('find-local-source.py'),
                    buffer_name=buf.name, row=row)
-    output = subprocess.check_output(cmd, shell=True)
+    output = _get_output(cmd)
     filename, line = output.rsplit(' ', 1)
     return  '+%s %s' % (line, filename)
 
@@ -398,11 +399,19 @@ def show_source(buf, (row, col), tempfile, conf):
     cmd = """
         git show {rev}:{filename} > {tempfile}
         """.format(rev=rev, filename=filename, tempfile=tempfile)
-    subprocess.check_call(cmd, shell=True)
+    _get_output(cmd)
     return lineno
 
 
 ### Mailboxes
+
+def _get_python():
+    """
+    Returns the Python executable from the plugin config, or a reasonable
+    default.
+    """
+    return config().get('python', 'python')
+
 
 def _get_mailbox_script(name):
     """
@@ -413,16 +422,32 @@ def _get_mailbox_script(name):
     return os.path.join(mailbox_script_dir, name)
 
 
+def _get_output(command):
+    """
+    Runs `command` in a shell and returns its output (from stdout), or raises
+    an exception if the command failed.
+
+    (Used instead of `check_output` for pre-2.7 compatibility.)
+    """
+    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+    output = proc.communicate()[0]
+    if proc.wait() != 0:
+        raise Exception('"%s" failed with status %d' % (command,
+                                                        proc.returncode))
+    return output
+
+
 def mailbox_check(_buffer, _cursor, tempfile):
     """
     Writes the output of the mailbox check script to `tempfile` for preview
     display.
     """
     cmd = """
-        python {script} > {tempfile}
-        """.format(script=_get_mailbox_script('dmb-check.py'),
+        {python} {script} > {tempfile}
+        """.format(python=_get_python(),
+                   script=_get_mailbox_script('dmb-check.py'),
                    tempfile=tempfile)
-    subprocess.check_call(cmd, shell=True)
+    _get_output(cmd)
 
 
 def mailbox_post(buffer_name, prompt_func):
@@ -432,11 +457,12 @@ def mailbox_post(buffer_name, prompt_func):
     """
     recips = prompt_func('Post to: ')
     cmd = """
-        python {script} -p {diffscuss_file} {recips}
-        """.format(script=_get_mailbox_script('dmb-post.py'),
+        {python} {script} -p {diffscuss_file} {recips}
+        """.format(python=_get_python(),
+                   script=_get_mailbox_script('dmb-post.py'),
                    diffscuss_file=buffer_name,
                    recips=recips)
-    result = subprocess.check_output(cmd, shell=True)
+    result = _get_output(cmd)
     return 'Posted %s' % result
 
 
@@ -447,11 +473,12 @@ def mailbox_bounce(buffer_name, prompt_func):
     """
     recips = prompt_func('Bounce to: ')
     cmd = """
-        python {script} -p {diffscuss_file} {recips}
-        """.format(script=_get_mailbox_script('dmb-bounce.py'),
+        {python} {script} -p {diffscuss_file} {recips}
+        """.format(python=_get_python(),
+                   script=_get_mailbox_script('dmb-bounce.py'),
                    diffscuss_file=buffer_name,
                    recips=input_str)
-    result = subprocess.check_output(cmd, shell=True)
+    result = _get_output(cmd)
     return 'Bounced %s' % result
 
 
@@ -460,10 +487,11 @@ def mailbox_done(buffer_name, _prompt_func):
     Calls the mailbox done script.
     """
     cmd = """
-        python {script} -p {diffscuss_file}
-        """.format(script=_get_mailbox_script('dmb-done.py'),
+        {python} {script} -p {diffscuss_file}
+        """.format(python=_get_python(),
+                   script=_get_mailbox_script('dmb-done.py'),
                    diffscuss_file=buffer_name)
-    result = subprocess.check_output(cmd, shell=True)
+    result = _get_output(cmd)
     return 'Completed %s' % result
 
 

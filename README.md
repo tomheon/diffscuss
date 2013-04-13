@@ -149,16 +149,39 @@ The Vim plugin is implemented primarily in Python, so you'll need a version of
 Vim compiled with Python support in order to use it
 (```vim --version | grep '+python'```).
 
+### Installation
+
+#### With Vundle
+
+If you use Vundle, add this to your `.vimrc` and then `:BundleInstall`:
+
+```
+Bundle 'hut8labs/diffscuss', {'rtp': 'diffscuss.vim/'}
+```
+
+#### With Pathogen
+
+If you use Pathogen:
+
+1. Clone the `diffscuss` repository.
+2. Copy `diffscuss/diffscuss.vim` to `~/.vim/bundle`.
+3. Set the `diffscuss_dir` key of `g:diffscuss_config` to the path of the
+   `diffscuss` clone.
+
 ### Configuration
 
-The Vim plugin requires you to set `g:diffscuss_config` in your `.vimrc`,
-which it uses to pre-fill comment headers and locate scripts.
+The Vim plugin will use its environment and `git config` to determine your name
+and email (for pre-filling comments) and for various runtime paths.
+
+If you wish, you can override these settings by specifying some or all of a
+`g:diffscuss_config` dictionary in your `.vimrc`:
 
 ```vim
 let g:diffscuss_config = {
     \'author': 'Your Name',
     \'email': 'your.email@example.com',
-    \'diffscuss_dir': '/path/to/diffscuss'
+    \'diffscuss_dir': '/path/to/diffscuss',
+    \'python': '/path/to/python'
     \}
 ```
 

@@ -143,10 +143,11 @@ You can move around the Diffscussion quickly using:
 
 ## The Vim Plugin
 
-Like the Emacs mode, the Vim plugin offers syntax highlight, comment insertion,
+Like the Emacs mode, the Vim plugin offers syntax highlighting, comment insertion,
 commands for jumping to source files, and motions for comments and threads.
 The Vim plugin is implemented primarily in Python, so you'll need a version of
-Vim compiled with Python support in order to use it.
+Vim compiled with Python support in order to use it
+(```vim --version | grep '+python'```).
 
 ### Configuration
 

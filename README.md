@@ -240,6 +240,21 @@ In Emacs:
 (global-set-key "\C-cmc"  'diffscuss-mb-check)
 ```
 
+In Vim:
+
+* ```<leader>mp``` prompts for recipients and posts the current Diffscuss
+  file for their review
+
+* ```<leader>mb``` prompts for recipients and bounces the review to them,
+  removing the review from your inbox.
+
+* ```<leader>md``` marks the review as done, removing it from your inbox.
+
+* ```<leader>mc``` opens a preview window with a list of all incoming 
+  reviews in your inbox. You can use ```gf``` with your cursor on a
+  filename in the list to open the review (or e.g. ```C-w gf``` to open it
+  in a new tab).
+
 See ```diffscuss-mb/dmb-init.py``` to get started.
 
 ## Pull Request Export (Experimental)

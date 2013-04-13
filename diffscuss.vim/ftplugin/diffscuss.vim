@@ -20,7 +20,6 @@ nnoremap <buffer> <silent> <leader>ds :<c-u>call DiffscussShowLocalSource()<cr>
 nnoremap <buffer> <silent> <leader>mp :<c-u>call DiffscussMailboxPost()<cr>
 nnoremap <buffer> <silent> <leader>mb :<c-u>call DiffscussMailboxBounce()<cr>
 nnoremap <buffer> <silent> <leader>md :<c-u>call DiffscussMailboxDone()<cr>
-nnoremap <buffer> <silent> <leader>mc :<c-u>call DiffscussMailboxCheck()<cr>
 
 " Navigation
 nnoremap <buffer> <silent> ]d :<c-u>call DiffscussNextComment()<cr>
@@ -103,10 +102,6 @@ endfunction
 
 function! DiffscussMailboxDone()
     python run_mailbox(mailbox_done)
-endfunction
-
-function! DiffscussMailboxCheck()
-    python open_preview(mailbox_check)
 endfunction
 
 " === Navigation

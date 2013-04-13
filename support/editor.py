@@ -133,7 +133,7 @@ def find_header_start(buf, (row, col)):
     for offset, line in enumerate(reversed(buf[:row - body_offset])):
         if not LineProperties(line).is_header:
             return (row - body_offset - offset, col)
-    return row, col
+    return 1, col
 
 
 def find_body_end(buf, (row, col)):

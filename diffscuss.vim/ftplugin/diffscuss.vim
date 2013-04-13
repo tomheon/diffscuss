@@ -6,31 +6,31 @@ endif
 " === Mappings and setup
 
 " Comment insertion
-nnoremap <buffer> <leader>di :<c-u>call <SID>InsertComment()<cr>
-nnoremap <buffer> <leader>df :<c-u>call <SID>InsertFileComment()<cr>
-nnoremap <buffer> <leader>dr :<c-u>call <SID>ReplyToComment()<cr>
-nnoremap <buffer> <leader>dd :<c-u>call <SID>InsertContextualComment()<cr>
+nnoremap <buffer> <silent> <leader>di :<c-u>call DiffscussInsertComment()<cr>
+nnoremap <buffer> <silent> <leader>df :<c-u>call DiffscussInsertFileComment()<cr>
+nnoremap <buffer> <silent> <leader>dr :<c-u>call DiffscussReplyToComment()<cr>
+nnoremap <buffer> <silent> <leader>dd :<c-u>call DiffscussInsertContextualComment()<cr>
 
 " Showing source
-nnoremap <buffer> <silent> <leader>dn :<c-u>call <SID>ShowNewSource()<cr>
-nnoremap <buffer> <silent> <leader>do :<c-u>call <SID>ShowOldSource()<cr>
-nnoremap <buffer> <silent> <leader>ds :<c-u>call <SID>ShowLocalSource()<cr>
+nnoremap <buffer> <silent> <leader>dn :<c-u>call DiffscussShowNewSource()<cr>
+nnoremap <buffer> <silent> <leader>do :<c-u>call DiffscussShowOldSource()<cr>
+nnoremap <buffer> <silent> <leader>ds :<c-u>call DiffscussShowLocalSource()<cr>
 
 " Mailboxes
-noremap <buffer> <leader>mp :<c-u>call <SID>MailboxPost()<cr>
-nnoremap <buffer> <leader>mb :<c-u>call <SID>MailboxBounce()<cr>
-nnoremap <buffer> <leader>md :<c-u>call <SID>MailboxDone()<cr>
-nnoremap <buffer> <leader>mc :<c-u>call <SID>MailboxCheck()<cr>
+nnoremap <buffer> <silent> <leader>mp :<c-u>call DiffscussMailboxPost()<cr>
+nnoremap <buffer> <silent> <leader>mb :<c-u>call DiffscussMailboxBounce()<cr>
+nnoremap <buffer> <silent> <leader>md :<c-u>call DiffscussMailboxDone()<cr>
+nnoremap <buffer> <silent> <leader>mc :<c-u>call DiffscussMailboxCheck()<cr>
 
 " Navigation
-nnoremap <buffer> <silent> ]d :<c-u>call <SID>NextComment()<cr>
-nnoremap <buffer> <silent> [d :<c-u>call <SID>PrevComment()<cr>
-nnoremap <buffer> <silent> ]D :<c-u>call <SID>NextCommentEnd()<cr>
-nnoremap <buffer> <silent> [D :<c-u>call <SID>PrevCommentEnd()<cr>
-nnoremap <buffer> <silent> ]t :<c-u>call <SID>NextThread()<cr>
-nnoremap <buffer> <silent> [t :<c-u>call <SID>PrevThread()<cr>
-nnoremap <buffer> <silent> ]T :<c-u>call <SID>NextThreadEnd()<cr>
-nnoremap <buffer> <silent> [T :<c-u>call <SID>PrevThreadEnd()<cr>
+nnoremap <buffer> <silent> ]d :<c-u>call DiffscussNextComment()<cr>
+nnoremap <buffer> <silent> [d :<c-u>call DiffscussPrevComment()<cr>
+nnoremap <buffer> <silent> ]D :<c-u>call DiffscussNextCommentEnd()<cr>
+nnoremap <buffer> <silent> [D :<c-u>call DiffscussPrevCommentEnd()<cr>
+nnoremap <buffer> <silent> ]t :<c-u>call DiffscussNextThread()<cr>
+nnoremap <buffer> <silent> [t :<c-u>call DiffscussPrevThread()<cr>
+nnoremap <buffer> <silent> ]T :<c-u>call DiffscussNextThreadEnd()<cr>
+nnoremap <buffer> <silent> [T :<c-u>call DiffscussPrevThreadEnd()<cr>
 
 " Auto-formatting
 set comments=nb:%-,nb:%*,nb:%--,nb:%**,nb:%---,nb:%***,nb:%----,nb:%****,nb:%-----,nb:%******,nb:%------,nb:%*******,nb:%-------,nb:%********
@@ -57,88 +57,88 @@ execute printf("pyfile %s/support/editor.py", s:diffscuss_dir)
 
 " === Comment insertion
 
-function! s:InsertComment()
+function! DiffscussInsertComment()
     python update_buffer(insert_comment)
     start!
 endfunction
 
-function! s:InsertFileComment()
+function! DiffscussInsertFileComment()
     python update_buffer(insert_file_comment)
     start!
 endfunction
 
-function! s:ReplyToComment()
+function! DiffscussReplyToComment()
     python update_buffer(reply_to_comment)
     start!
 endfunction
 
-function! s:InsertContextualComment()
+function! DiffscussInsertContextualComment()
     python update_buffer(insert_contextual_comment)
     start!
 endfunction
 
 " === Showing source
 
-function! s:ShowOldSource()
+function! DiffscussShowOldSource()
     python open_preview(show_old_source)
 endfunction
 
-function! s:ShowNewSource()
+function! DiffscussShowNewSource()
     python open_preview(show_new_source)
 endfunction
 
-function! s:ShowLocalSource()
+function! DiffscussShowLocalSource()
     python open_file(show_local_source)
 endfunction
 
 " === Mailboxes
 
-function! s:MailboxPost()
+function! DiffscussMailboxPost()
     python run_mailbox(mailbox_post)
 endfunction
 
-function! s:MailboxBounce()
+function! DiffscussMailboxBounce()
     python run_mailbox(mailbox_bounce)
 endfunction
 
-function! s:MailboxDone()
+function! DiffscussMailboxDone()
     python run_mailbox(mailbox_done)
 endfunction
 
-function! s:MailboxCheck()
+function! DiffscussMailboxCheck()
     python open_preview(mailbox_check)
 endfunction
 
 " === Navigation
 
-function! s:NextComment()
+function! DiffscussNextComment()
     python update_buffer(find_next_comment)
 endfunction
 
-function! s:PrevComment()
+function! DiffscussPrevComment()
     python update_buffer(find_prev_comment)
 endfunction
 
-function! s:NextThread()
+function! DiffscussNextThread()
     python update_buffer(find_next_thread)
 endfunction
 
-function! s:PrevThread()
+function! DiffscussPrevThread()
     python update_buffer(find_prev_thread)
 endfunction
 
-function! s:NextCommentEnd()
+function! DiffscussNextCommentEnd()
     python update_buffer(find_next_comment_end)
 endfunction
 
-function! s:PrevCommentEnd()
+function! DiffscussPrevCommentEnd()
     python update_buffer(find_prev_comment_end)
 endfunction
 
-function! s:NextThreadEnd()
+function! DiffscussNextThreadEnd()
     python update_buffer(find_next_thread_end)
 endfunction
 
-function! s:PrevThreadEnd()
+function! DiffscussPrevThreadEnd()
     python update_buffer(find_prev_thread_end)
 endfunction

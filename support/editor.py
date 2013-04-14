@@ -181,11 +181,11 @@ def find_thread_end(buf, (row, col)):
     comment's thread and the current column. Otherwise, returns the current row
     and column.
     """
-    if LineProperties(buf[row]).is_diffscuss:
+    if LineProperties(buf[row - 1]).is_diffscuss:
         for offset, line in enumerate(buf[row:]):
             if not LineProperties(line).is_diffscuss:
                 break
-        return row + offset, 0
+        return row + offset, col
     return row, col
 
 
@@ -205,6 +205,7 @@ def make_comment(depth=1):
     Returns a string using the values from `config()` for a comment of depth
     `depth`.
     """
+    depth = max(depth, 1)
     header = '%' + '*' * depth
     body = '%' + '-' * depth
 

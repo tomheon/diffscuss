@@ -18,84 +18,162 @@ def _exit(msg, exit_code):
     sys.exit(exit_code)
 
 
-def _cur_is_none(x, y):
-    return x is None
+class HeaderExtractor(object):
+
+    def __init__(self, header_names):
+        if not isinstance(header_names, list):
+            header_names = [header_names]
+        self.header_names = header_names
+
+    def process_line(self, line_tup):
+        (line_type, line) = line_tup
+        if line_type == walker.COMMENT_HEADER:
+            parsed_header = header.parse_header(line)
+            if (parsed_header and
+                parsed_header[0] in self.header_names):
+                self.extract_from_header(parsed_header)
+
+    def extract_from_header(self, parsed_header):
+        # for override
+        pass
+
+    def get(self):
+        # for override
+        pass
 
 
-def _cur_is_earlier(cur, new):
-    return (cur is None or
-            dates.parse_to_utc_dt(cur) < dates.parse_to_utc_dt(new))
+class OrigAuthorExtractor(HeaderExtractor):
+
+    def __init__(self):
+        super(OrigAuthorExtractor, self).__init__('author')
+        self.author = None
+
+    def extract_from_header(self, parsed_header):
+        if self.author is None:
+            self.author = parsed_header[1]
+
+    def get(self):
+        return self.author
 
 
-def _maybe_update(cur, parsed_header, header_name, pred):
-    if parsed_header:
-        name, val = parsed_header
-        if header_name == name and pred(cur, val):
-            return val
-    return cur
+class PostedAtExtractor(HeaderExtractor):
+
+    def __init__(self):
+        super(PostedAtExtractor, self).__init__('date')
+        self.posted_at = None
+
+    def extract_from_header(self, parsed_header):
+        if self.posted_at is None:
+            self.posted_at = parsed_header[1]
+
+    def get(self):
+        return dates.parse_to_local_dt(self.posted_at)
 
 
-def _is_author(parsed_header):
-    return parsed_header and parsed_header[0] == 'author'
+class LastCommentExtractor(HeaderExtractor):
+
+    def __init__(self):
+        super(LastCommentExtractor, self).__init__(['author', 'date'])
+        self.last_comment_at = None
+        self.last_comment_by = None
+        self.last_author_seen = None
+
+    def extract_from_header(self, parsed_header):
+        if parsed_header[0] == 'author':
+            self.last_author_seen = parsed_header[1]
+        if parsed_header[0] == 'date' and self._is_latest(parsed_header[1]):
+            self.last_comment_at = parsed_header[1]
+            self.last_comment_by = self.last_author_seen
+
+    def _is_latest(self, dt_s):
+        return (self.last_comment_at is None or
+                dates.parse_to_utc_dt(self.last_comment_at) <
+                dates.parse_to_utc_dt(dt_s))
+
+    def get(self):
+        return "%s by %s" % (dates.parse_to_local_dt(self.last_comment_at),
+                             self.last_comment_by)
 
 
-def _fmt_top_commenters(author_counts):
-    cnt_auth_tups = [(cnt, auth) for (auth, cnt) in author_counts.items()]
-    cnt_auth_tups.sort()
-    cnt_auth_tups.reverse()
-    return ", ".join(["%s (%d)" % (auth, cnt)
-                      for (cnt, auth)
-                      in cnt_auth_tups[:3]])
+class LineCounter(object):
+
+    def __init__(self, line_types):
+        self.line_types = line_types
+        self.line_count = 0
+
+    def process_line(self, line_tup):
+        (line_type, line) = line_tup
+        if line_type in self.line_types:
+            self.line_count += 1
+
+    def get(self):
+        return self.line_count
+
+
+class TopAuthorsExtractor(HeaderExtractor):
+
+    def __init__(self):
+        super(TopAuthorsExtractor, self).__init__('author')
+        self.author_counts = defaultdict(int)
+
+    def extract_from_header(self, parsed_header):
+        self.author_counts[parsed_header[1]] += 1
+
+    def get(self):
+        cnt_auth_tups = [(cnt, auth)
+                         for (auth, cnt)
+                         in self.author_counts.items()]
+        cnt_auth_tups.sort()
+        cnt_auth_tups.reverse()
+        return ", ".join(["%s (%d)" % (auth, cnt)
+                          for (cnt, auth)
+                          in cnt_auth_tups[:3]])
+
+
+class NumCommentsExtractor(HeaderExtractor):
+
+    def __init__(self):
+        super(NumCommentsExtractor, self).__init__('author')
+        self.comment_count = 0
+
+    def extract_from_header(self, parsed_header):
+        self.comment_count += 1
+
+    def get(self):
+        return self.comment_count
 
 
 def _parse(listing):
-    author = None
     fname = os.path.basename(listing)
-    posted_at = None
-    last_comment_at = None
-    comments = 0
-    diff_lines = 0
-    author_counts = defaultdict(int)
+
+    extractors = [OrigAuthorExtractor(),
+                  PostedAtExtractor(),
+                  LastCommentExtractor(),
+                  LineCounter([walker.DIFF_HEADER, walker.DIFF]),
+                  NumCommentsExtractor(),
+                  TopAuthorsExtractor()]
 
     with open(listing, 'rb') as fil:
-        for (line_type, line) in walker.walk(fil):
-            if line_type == walker.COMMENT_HEADER:
-                parsed_header = header.parse_header(line)
-                author = _maybe_update(author, parsed_header,
-                                       'author', _cur_is_none)
-                posted_at = _maybe_update(posted_at, parsed_header,
-                                          'date', _cur_is_none)
-                last_comment_at = _maybe_update(last_comment_at,
-                                                parsed_header,
-                                                'date',
-                                                _cur_is_earlier)
-                if _is_author(parsed_header):
-                    comments += 1
-                    author_counts[parsed_header[1]] += 1
-            elif line_type == walker.DIFF_HEADER:
-                diff_lines += 1
-            elif line_type == walker.DIFF:
-                diff_lines += 1
-            elif line_type == walker.COMMENT_BODY:
-                pass
-            else:
-                raise Exception("Bad line type %s" % line_type)
+        for line_tup in walker.walk(fil):
+            for extractor in extractors:
+                extractor.process_line(line_tup)
 
-    return (fname, author, posted_at,
-            last_comment_at, diff_lines,
-            comments, _fmt_top_commenters(author_counts))
+    return [fname] + [e.get() for e in extractors]
+
 
 def _gen_summary(listing):
-    return dedent("""\
+    try:
+        return dedent("""\
                   File: %s
-                  Review-Author: %s
-                  Review-Date: %s
-                  Last-Comment-Date: %s
+                  Posted-By: %s
+                  Posted-At: %s
+                  Last-Comment: %s
                   Diff-Lines: %d
                   Comments: %d
                   Top-Commenters: %s
-                  """ %
-                  (_parse(listing)))
+                  """ % tuple(_parse(listing)))
+    except:
+        return "Trouble parsing diffscuss, no summary available.\n"
 
 
 def _format_listing(listing, emacs, short):
@@ -107,8 +185,8 @@ def _format_listing(listing, emacs, short):
     if short:
         return f_line
     else:
-        return "%s\n%s\n\n" % (_gen_summary(listing),
-                               f_line)
+        return "%s%s\n\n" % (_gen_summary(listing),
+                             f_line)
 
 
 def main(opts, args):

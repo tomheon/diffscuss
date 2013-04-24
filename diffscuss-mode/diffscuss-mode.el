@@ -815,6 +815,18 @@ and old or new is 'new'."
               (zerop (forward-line 1))))
   (recenter))
 
+(defun diffscuss-string-ends-with (s ending)
+  "return non-nil if string S ends with ENDING."
+  (let ((elength (length ending)))
+    (string= (substring s (- 0 elength)) ending)))
+
+(defun diffscuss-dir-fmted ()
+  "Return diffscuss-dir, but ensure it ends with a /, so it's
+suitable to use for default-directory"
+  (if (not (diffscuss-string-ends-with diffscuss-dir "/"))
+      (concat diffscuss-dir "/")
+    (diffscuss-dir)))
+
 (defun diffscuss-previous-comment ()
   "Jump to the previous comment."
   (interactive)
@@ -840,13 +852,15 @@ and old or new is 'new'."
         (setq buffer-read-only nil)
         (text-mode)
         (erase-buffer))
-      (call-process
-       diffscuss-python-exe
-       nil outbuf nil
-       (concat (file-name-as-directory diffscuss-dir)
-               (file-name-as-directory "diffscuss-mb")
-               "dmb-check.py")
-       "-e")
+      (let* ((my-directory default-directory)
+             (default-directory (diffscuss-dir-fmted)))
+        (call-process
+         diffscuss-python-exe
+         nil outbuf nil
+         "-m"
+         "diffscuss-mb.dmb-check"
+         "-e"
+         my-directory))
       (with-current-buffer outbuf
         (beginning-of-buffer)
         (compilation-mode))

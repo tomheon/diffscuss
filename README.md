@@ -274,7 +274,7 @@ In Vim:
 
 * ```<leader>md``` marks the review as done, removing it from your inbox.
 
-* ```<leader>mc``` opens a preview window with a list of all incoming 
+* ```<leader>mc``` opens a preview window with a list of all incoming
   reviews in your inbox. You can use ```gf``` with your cursor on a
   filename in the list to open the review (or e.g. ```C-w gf``` to open it
   in a new tab).
@@ -296,7 +296,7 @@ requests.
 
 * Svn support
 
-* Support for other Sublime
+* Support for Sublime
 
 * Support for Eclipse
 

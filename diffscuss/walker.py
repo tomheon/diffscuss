@@ -196,3 +196,4 @@ def _is_not_diff_line(line):
     can strip trailing spaces.
     """
     return line.strip() and not line.startswith(DIFF_CHARS)
+

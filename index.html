@@ -36,8 +36,8 @@
 <h2>Why Should You Use Diffscuss?</h2>
 
 <ul>
-<li><p>Lower the activation energy and cycle times for code reviews by
-creating and reading reviews in your editor.  Then jump straight to
+<li><p>Lower the activation energy and cycle time for code reviews by
+creating and reading reviews in your editor. Then jump straight to
 the associated source to apply fixes etc.</p></li>
 <li><p>Keep your reviews in your repo, right next to your code, or email
 them back and forth if you're a small team and that's easier.</p></li>
@@ -57,11 +57,11 @@ editors with Diffscuss tooling support).</p></li>
 
 <p>Screenshot of a Diffscuss review in Emacs:</p>
 
-<p><img src="https://github.com/hut8labs/diffscuss/blob/master/doc/screenshot.png?raw=true" alt="Emacs Screenshot"></p>
+<p><img src="doc/diffscuss-reading-review.png" alt="Emacs Screenshot"></p>
 
 <p>After jumping to source:</p>
 
-<p><img src="https://github.com/hut8labs/diffscuss/blob/master/doc/screenshot-jump-to-source.png?raw=true" alt="Emacs Screenshot"></p>
+<p><img src="doc/diffscuss-jump-to-source.png" alt="Emacs Screenshot"></p>
 
 <h2>The Format in a Nutshell</h2>
 
@@ -161,20 +161,43 @@ positioned on the same line.</p></li>
 <li><p><code>C-c e</code> to move to the end of the current thread.</p></li>
 </ul><h2>The Vim Plugin</h2>
 
-<p>Like the Emacs mode, the Vim plugin offers syntax highlight, comment insertion,
+<p>Like the Emacs mode, the Vim plugin offers syntax highlighting, comment insertion,
 commands for jumping to source files, and motions for comments and threads.
 The Vim plugin is implemented primarily in Python, so you'll need a version of
-Vim compiled with Python support in order to use it.</p>
+Vim compiled with Python support in order to use it
+(<code>vim --version | grep '+python'</code>).</p>
 
-<h3>Configuration</h3>
+<h3>Installation</h3>
 
-<p>The Vim plugin requires you to set <code>g:diffscuss_config</code> in your <code>.vimrc</code>,
-which it uses to pre-fill comment headers and locate scripts.</p>
+<h4>With Vundle</h4>
+
+<p>If you use Vundle, add this to your <code>.vimrc</code> and then <code>:BundleInstall</code>:</p>
+
+<pre><code>Bundle 'hut8labs/diffscuss', {'rtp': 'diffscuss.vim/'}
+</code></pre>
+
+<h4>With Pathogen</h4>
+
+<p>If you use Pathogen:</p>
+
+<ol>
+<li>Clone the <code>diffscuss</code> repository.</li>
+<li>Copy <code>diffscuss/diffscuss.vim</code> to <code>~/.vim/bundle</code>.</li>
+<li>Set the <code>diffscuss_dir</code> key of <code>g:diffscuss_config</code> to the path of the
+<code>diffscuss</code> clone.</li>
+</ol><h3>Configuration</h3>
+
+<p>The Vim plugin will use its environment and <code>git config</code> to determine your name
+and email (for pre-filling comments) and for various runtime paths.</p>
+
+<p>If you wish, you can override these settings by specifying some or all of a
+<code>g:diffscuss_config</code> dictionary in your <code>.vimrc</code>:</p>
 
 <div class="highlight"><pre><span class="k">let</span> <span class="k">g</span>:diffscuss_config <span class="p">=</span> {
     \<span class="s1">'author'</span>: <span class="s1">'Your Name'</span><span class="p">,</span>
     \<span class="s1">'email'</span>: <span class="s1">'your.email@example.com'</span><span class="p">,</span>
-    \<span class="s1">'diffscuss_dir'</span>: <span class="s1">'/path/to/diffscuss'</span>
+    \<span class="s1">'diffscuss_dir'</span>: <span class="s1">'/path/to/diffscuss'</span><span class="p">,</span>
+    \<span class="s1">'python'</span>: <span class="s1">'/path/to/python'</span>
     \}
 </pre></div>
 
@@ -267,7 +290,19 @@ with:</p></li>
 </ul><pre><code>(global-set-key "\C-cmc"  'diffscuss-mb-check)
 </code></pre>
 
-<p>See <code>diffscuss-mb/dmb-init.py</code> to get started.</p>
+<p>In Vim:</p>
+
+<ul>
+<li><p><code>&lt;leader&gt;mp</code> prompts for recipients and posts the current Diffscuss
+file for their review</p></li>
+<li><p><code>&lt;leader&gt;mb</code> prompts for recipients and bounces the review to them,
+removing the review from your inbox.</p></li>
+<li><p><code>&lt;leader&gt;md</code> marks the review as done, removing it from your inbox.</p></li>
+<li><p><code>&lt;leader&gt;mc</code> opens a preview window with a list of all incoming
+reviews in your inbox. You can use <code>gf</code> with your cursor on a
+filename in the list to open the review (or e.g. <code>C-w gf</code> to open it
+in a new tab).</p></li>
+</ul><p>See <code>diffscuss-mb/dmb-init.py</code> to get started.</p>
 
 <h2>Pull Request Export (Experimental)</h2>
 
@@ -283,7 +318,7 @@ requests.</p>
 <ul>
 <li><p>Side-by-side diff viewing in the modes</p></li>
 <li><p>Svn support</p></li>
-<li><p>Support for other Sublime</p></li>
+<li><p>Support for Sublime</p></li>
 <li><p>Support for Eclipse</p></li>
 <li><p>Support for other editors</p></li>
 <li><p>Export from ReviewBoard / other code review systems</p></li>
@@ -486,7 +521,7 @@ introductory remarks about what the changes are attempting to achieve,
       </footer>
     </div>
 
-
+    
 
   </body>
 </html>

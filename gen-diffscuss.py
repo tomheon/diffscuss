@@ -19,15 +19,17 @@ def _check_output(*popenargs, **kwargs):
 
     Copied from https://gist.github.com/edufelipe/1027906.
     """
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    output, unused_err = process.communicate()
+    process = subprocess.Popen(stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               *popenargs, **kwargs)
+    output, err = process.communicate()
     retcode = process.poll()
     if retcode:
         cmd = kwargs.get("args")
         if cmd is None:
             cmd = popenargs[0]
         error = subprocess.CalledProcessError(retcode, cmd)
-        error.output = output
+        error.output = '\n'.join([output, err])
         raise error
     return output
 
@@ -36,6 +38,7 @@ if 'check_output' not in dir(subprocess):
     check_output = _check_output
 else:
     check_output = subprocess.check_output
+
 
 def _git_config(config_name, git_exe):
     return check_output([git_exe, "config", "--get", config_name]).strip()
@@ -96,9 +99,14 @@ def _write_diffscuss_body(output_f, revision, git_exe):
 def main(revision, lines_context, output_f, author=None, email=None, git_exe=None):
     if not git_exe:
         git_exe = 'git'
-    _write_diffscuss_header(output_f, author, email, git_exe)
-    _write_diffscuss_body(output_f, revision, git_exe)
-    _write_diff(revision, lines_context, output_f, git_exe)
+    try:
+        _write_diffscuss_header(output_f, author, email, git_exe)
+        _write_diffscuss_body(output_f, revision, git_exe)
+        _write_diff(revision, lines_context, output_f, git_exe)
+    except subprocess.CalledProcessError, e:
+        print >> sys.stderr, e
+        print >> sys.stderr, e.output
+        sys.exit(e.retcode)
 
 
 if __name__ == '__main__':
@@ -107,6 +115,7 @@ if __name__ == '__main__':
 
                 git_revision_range will be passed as-is to git diff and git log.
                 For example, you could use HEAD~3..HEAD or some_branch..master.
+
                 Note that you probably don't want just a branch name, as git log
                 will start the log from that point and run backwards to the initial
                 commit in the repo."""))

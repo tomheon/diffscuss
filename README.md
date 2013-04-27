@@ -233,7 +233,7 @@ subdirs:
 
 * users - which has one subdir per user in your system
 
-When you post a diffscuss file for review, it's move into the
+When you post a diffscuss file for review, it's moved into the
 "reviews" directory, and for each user you request review from, a
 symlink is created in their user directory.
 

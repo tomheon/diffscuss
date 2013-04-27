@@ -28,11 +28,11 @@
 
 Screenshot of a Diffscuss review in Emacs:
 
-![Emacs Screenshot](doc/screenshot.png)
+![Emacs Screenshot](doc/diffscuss-reading-review.png)
 
 After jumping to source:
 
-![Emacs Screenshot](doc/screenshot-jump-to-source.png)
+![Emacs Screenshot](doc/diffscuss-jump-to-source.png)
 
 ## The Format in a Nutshell
 

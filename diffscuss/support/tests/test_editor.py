@@ -5,7 +5,7 @@ from functools import wraps
 
 from nose.tools import eq_
 
-import editor
+from diffscuss.support import editor
 
 
 class patch(object):

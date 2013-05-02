@@ -3,7 +3,6 @@
 import errno
 import itertools
 import logging
-from optparse import OptionParser
 import os
 import shutil
 from StringIO import StringIO
@@ -368,7 +367,8 @@ def _overlay_commit_comments(composer, pull_request):
                 _overlay_comments(composer, repo_commit.get_comments())
 
 
-def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request, output_dir):
+def _import_to_diffscuss(gh, username, password, user_or_org, repo,
+                         pull_request, output_dir):
     logging.info("Getting diff text for pull request %s", pull_request.url)
     diff_text = _get_diff_text(username, password, pull_request)
     composer = DiffscussComposer(diff_text)
@@ -393,78 +393,29 @@ def _export_to_diffscuss(gh, username, password, user_or_org, repo, pull_request
     shutil.move(dest_fname_partial, dest_fname)
 
 
-def main(opts, args):
+def main(args):
     log_level = logging.INFO
-    if opts.debug:
+    if args.debug:
         log_level = logging.DEBUG
-    logging.basicConfig(filename=opts.logfile, level=log_level,
+    logging.basicConfig(filename=args.logfile, level=log_level,
                         format='[%(levelname)s %(asctime)s] %(message)s')
 
     logging.info("Starting run.")
 
-    password = _password(opts.passfile)
-    gh = Github(opts.username, password)
+    password = _password(args.passfile)
+    gh = Github(args.username, password)
 
-    for user_or_org, repo, pull_request in _pull_requests_from_specs(gh, args):
-        logging.info("Exporting %s/%s:%s",
+    for (user_or_org,
+         repo,
+         pull_request) in _pull_requests_from_specs(gh,
+                                                    [args.pull_request_spec]):
+        logging.info("Importing %s/%s:%s",
                      user_or_org.login,
                      repo.name,
                      pull_request.number)
-        _export_to_diffscuss(gh, opts.username, password, user_or_org, repo, pull_request,
-                             opts.output_dir)
-    return 0
+        _import_to_diffscuss(gh, args.username, password,
+                             user_or_org, repo, pull_request,
+                             args.output_dir)
+    sys.exit(0)
 
 
-if __name__ == '__main__':
-    parser = OptionParser(usage=dedent("""\
-                                       %prog [options] pr_spec_1 [pr_spec_2 ...]
-
-                                       Specify pull requests as either:
-
-                                       * user_or_org/repo_name:pr_id
-
-                                         to export a single pull request, or
-
-                                       * user_or_org/repo_name
-
-                                         to export all pull requests for a repo.
-
-                                       * user_or_org
-
-                                         to export all pull requests for a user or org.
-
-                                       E.g.:
-
-                                       hut8labs/diffscuss:15
-                                       tomheon/git_by_a_bus
-                                       mpapi
-                                       """))
-    parser.add_option("-p", "--passfile",
-                      help="File containg github password to use for api",
-                      dest="passfile")
-    parser.add_option("-u", "--username",
-                      help="Github user name to use for api",
-                      dest="username")
-    parser.add_option("-o", "--output",
-                      help="Directory in which to put output (defaults to 'output')",
-                      dest="output_dir", default="output")
-    parser.add_option("-l", "--logfile",
-                      help="File to use for logging (defaults to gh-export.log)",
-                      dest="logfile", default="gh-export.log")
-    parser.add_option("-d", "--debug",
-                      help="Turn on debug level logging.",
-                      action="store_true", default=False,
-                      dest="debug")
-
-    (opts, args) = parser.parse_args()
-
-    if not opts.username:
-        parser.error("Username is required.")
-
-    if not opts.passfile:
-        parser.error("Passfile is required.")
-
-    if not args:
-        parser.error("At least one pull request is required.")
-
-    sys.exit(main(opts, args))

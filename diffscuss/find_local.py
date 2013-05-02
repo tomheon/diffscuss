@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 A utility for guessing which file and line of a local source repo are
 the best referent for a line in a diffscuss file.
@@ -370,7 +368,11 @@ def _localize_candidate(candidate, git_repo):
                               candidate=candidate)
 
 
-def main(directory, input_fname, output_fname, line_number):
+def main(args):
+    directory = args.directory
+    input_fname = args.input_file
+    output_fname = args.output_file
+    line_number = args.line_number
     input_f, close_input = _fil_or_default(input_fname, sys.stdin)
     output_f, close_output = _fil_or_default(output_fname, sys.stdout)
     directory = _str_or_default(directory, os.getcwd())
@@ -402,40 +404,3 @@ def main(directory, input_fname, output_fname, line_number):
         output_f.close()
 
 
-if __name__ == '__main__':
-    parser = OptionParser(usage=dedent(
-        """\
-        %prog [options] line_num
-
-        Accepts a diffscuss file (either through the -i argument or
-        stdin) and a line number within that file, and outputs,
-        on either the file specified by -o or stdout, the path
-        and line number of the best-guess local source file.
-
-        The output format is
-
-        file_path line_number
-
-        The line number is 1 based.
-
-        If no source can be found, a blank file name and -1 for the line.
-        """))
-    parser.add_option('-i', '--input-file', dest='input_fname',
-                      default='-',
-                      help="Diffscuss file to read, stdin if not provided or -")
-    parser.add_option('-o', '--output-file', dest='output_fname',
-                      default='-',
-                      help="File to write results to, stdout if not provided or -")
-    parser.add_option('-d', '--directory', dest='directory',
-                      default='-',
-                      help='Directory in which to start searching for the local source, cwd if not provided or -.')
-
-    opts, args = parser.parse_args()
-
-    if len(args) != 1:
-        parser.error("Must provide (exactly one) line number.")
-
-    main(directory=opts.directory,
-         input_fname=opts.input_fname,
-         output_fname=opts.output_fname,
-         line_number=int(args[0]))

@@ -1,8 +1,11 @@
 import os
 import subprocess
+import tempfile
 
 from nose.tools import ok_, eq_
 from impermagit import fleeting_repo
+
+from diffscuss import generate
 
 
 def test_gen_diffscuss_basics():
@@ -80,12 +83,28 @@ def test_gen_diffscuss_basics():
         eq_("+this is the new third line", lines[19])
 
 
+class Args(object):
+
+    def __init__(self, git_revision_range, output_file):
+        self.git_revision_range = git_revision_range
+        self.output_file = output_file
+        self.lines_context = 20
+        self.author = None
+        self.email = None
+        self.git_exe = None
+
+
 def _run_gen_diffscuss(cwd, revs):
-    process = subprocess.Popen(_gen_diffscuss_cmd(revs=revs),
-                               stdout=subprocess.PIPE,
-                               cwd=cwd)
-    output, _err = process.communicate()
-    return output
+    old_dir = os.getcwd()
+    try:
+        os.chdir(cwd)
+        with tempfile.NamedTemporaryFile() as fil:
+            args = Args(revs, fil.name)
+            generate._main(args)
+            return fil.read()
+    finally:
+        os.chdir(old_dir)
+
 
 
 def _gen_diffscuss_cmd(revs):

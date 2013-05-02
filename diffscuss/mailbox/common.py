@@ -5,6 +5,14 @@ import subprocess
 from subprocess import check_call
 
 
+def _git_cmd(git_exe, cmd):
+    if git_exe is None:
+        git_exe = ["/usr/bin/env", "git"]
+    else:
+        git_exe = [git_exe]
+    return git_exe + cmd
+
+
 def _check_output(*popenargs, **kwargs):
     """
     Run command with arguments and return its output as a byte string.
@@ -49,22 +57,22 @@ def mkdir_for_keeps(dir_name):
 
 
 def get_inbox_name(git_exe):
-    return check_output([git_exe,
-                         "config",
-                         "--get",
-                        "diffscuss-mb.inbox"]).strip()
+    return check_output(_git_cmd(git_exe,
+                                 ["config",
+                                  "--get",
+                                  "diffscuss-mb.inbox"])).strip()
 
 def set_inbox_name(inbox_name, git_exe):
-    return check_call([git_exe,
-                       "config",
-                       "diffscuss-mb.inbox",
-                       inbox_name])
+    return check_call(_git_cmd(git_exe,
+                               ["config",
+                                "diffscuss-mb.inbox",
+                                inbox_name]))
 
 
 def get_git_root(git_exe):
-    return check_output([git_exe,
-                         "rev-parse",
-                         "--show-toplevel"]).strip()
+    return check_output(_git_cmd(git_exe,
+                                 ["rev-parse",
+                                  "--show-toplevel"])).strip()
 
 
 def real_abs_join(*args):

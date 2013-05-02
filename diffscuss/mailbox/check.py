@@ -9,7 +9,8 @@ import os
 import sys
 from textwrap import dedent
 
-from common import get_inbox_name, get_inbox_path, check_inited
+from diffscuss.mailbox.common import get_inbox_name, get_inbox_path, \
+    check_inited
 from diffscuss import walker, header, dates
 
 
@@ -189,44 +190,18 @@ def _format_listing(listing, emacs, short):
                              f_line)
 
 
-def main(opts, args):
-    os.chdir(args[0])
-    check_inited(opts.git_exe)
-    inbox = opts.inbox
+def main(args):
+    check_inited(args.git_exe)
+    inbox = args.inbox
     if not inbox:
         try:
-            inbox = get_inbox_name(opts.git_exe)
+            inbox = get_inbox_name(args.git_exe)
         except:
             _exit("Could not find default inbox, please run dmb-config.py", 3)
-    inbox_path = get_inbox_path(inbox, opts.git_exe)
+    inbox_path = get_inbox_path(inbox, args.git_exe)
     if not os.path.exists(inbox_path):
         _exit("Inbox '%s' doesn't exist, create it with dmb-mk-inbox.py" % inbox, 2)
     for review in os.listdir(inbox_path):
         if review != '.gitkeep':
             print _format_listing(os.path.join(inbox_path, review),
-                                  opts.emacs, opts.short)
-
-
-if __name__ == '__main__':
-    parser = OptionParser(usage="%prog [options] directory_to_check")
-    parser.add_option("-g", "--git-exe", dest="git_exe", default="git",
-                      help=dedent("""\
-                                  Git exe (defaults to 'git'.
-                                  """))
-    parser.add_option("-i", "--inbox", dest="inbox",
-                      help=dedent("""\
-                                  Inbox name (if not supplied, will use the return of
-                                  'git config --get diffscuss-mb.inbox'.
-                                  """))
-    parser.add_option("-e", "--emacs", dest="emacs",
-                      action="store_true",
-                      help="Format for emacs compilation mode")
-    parser.add_option("-s", "--short", dest="short",
-                      action="store_true", default=False,
-                      help="List only the reviews, no info about them.")
-
-    (opts, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error("Directory argument required.")
-    main(opts, args)
-
+                                  args.emacs, args.short)

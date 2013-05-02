@@ -25,6 +25,11 @@
 ;; have 2.4 as the default version).
 (defvar diffscuss-python-exe "/usr/bin/python")
 
+;; The top-level diffscuss command to run.  If you haven't installed
+;; diffscuss somewhere in your path, you can override this to provide
+;; the full path to it.
+(defvar diffscuss-exe "diffscuss")
+
 ;;; Code:
 
 ;; we need to make sure diff mode is present and loaded so we can get
@@ -668,12 +673,11 @@ and old or new is 'new'."
       (let ((outbuf-name (generate-new-buffer-name "diffscuss-local-source")))
         (if (/= 0 (call-process-region (point-min)
                                        (point-max)
-                                       diffscuss-python-exe
+                                       diffscuss-exe
                                        nil
                                        outbuf-name
                                        nil
-                                       (concat (file-name-as-directory diffscuss-dir)
-                                               "find-local-source.py")
+                                       "find-local"
                                        (number-to-string (line-number-at-pos))))
             (with-current-buffer outbuf-name
               (message "%s" (buffer-string))
@@ -852,21 +856,18 @@ suitable to use for default-directory"
         (setq buffer-read-only nil)
         (text-mode)
         (erase-buffer))
-      (let* ((my-directory default-directory)
-             (default-directory (diffscuss-dir-fmted)))
-        (call-process
-         diffscuss-python-exe
-         nil outbuf nil
-         "-m"
-         "diffscuss-mb.dmb-check"
-         "-e"
-         my-directory))
+      (call-process
+       diffscuss-exe
+       nil outbuf nil
+       "mailbox"
+       "check"
+       "-e")
       (with-current-buffer outbuf
         (beginning-of-buffer)
         (compilation-mode))
       (pop-to-buffer outbuf))))
 
-(defun diffscuss-mb-cmd-impl (recips verb dmb-cmd)
+(defun diffscuss-mb-cmd-impl (recips verb cmd)
   (diffscuss-check-python)
   (if (not diffscuss-dir)
       (message "Must set diffscuss-dir before you can %s reviews." verb)
@@ -875,21 +876,22 @@ suitable to use for default-directory"
       (with-temp-buffer
         (let ((exe-res nil))
           (if (string= "" recips)
-              (setq exe-res (call-process diffscuss-python-exe
-                                          nil t nil
-                                          (concat (file-name-as-directory diffscuss-dir)
-                                                  (file-name-as-directory "diffscuss-mb")
-                                                  dmb-cmd)
-                                          "--print-review-path"
-                                          orig-file))
-            (setq exe-res (apply 'call-process diffscuss-python-exe
-                                 nil t nil
-                                 (concat (file-name-as-directory diffscuss-dir)
-                                         (file-name-as-directory "diffscuss-mb")
-                                         dmb-cmd)
-                                 "--print-review-path"
-                                 orig-file
-                                 (split-string recips " "))))
+              (setq exe-res (call-process
+                             diffscuss-exe
+                             nil t nil
+                             "mailbox"
+                             cmd
+                             "--print-review-path"
+                             orig-file))
+            (setq exe-res (apply
+                           'call-process
+                           diffscuss-exe
+                           nil t nil
+                           "mailbox"
+                           cmd
+                           "--print-review-path"
+                           orig-file
+                           (split-string recips " "))))
           (if (= 0 exe-res)
               (progn (setq new-file (trim-string (buffer-string)))
                      (message "%s successful" verb))
@@ -900,15 +902,15 @@ suitable to use for default-directory"
 
 (defun diffscuss-mb-post (recips)
   (interactive "sEnter post recipients separated by space: ")
-  (diffscuss-mb-cmd-impl recips "post" "dmb-post.py"))
+  (diffscuss-mb-cmd-impl recips "post" "post"))
 
 (defun diffscuss-mb-bounce (recips)
   (interactive "sEnter bounce recipients separated by space: ")
-  (diffscuss-mb-cmd-impl recips "bounce" "dmb-bounce.py"))
+  (diffscuss-mb-cmd-impl recips "bounce" "bounce"))
 
 (defun diffscuss-mb-done ()
   (interactive)
-  (diffscuss-mb-cmd-impl "" "mark done" "dmb-done.py"))
+  (diffscuss-mb-cmd-impl "" "mark done" "done"))
 
 ;; Define the mode.
 

@@ -2,4 +2,6 @@
 *.pyc
 tmp
 env
-gh-export.log
+gh-import.log
+gh-import
+build

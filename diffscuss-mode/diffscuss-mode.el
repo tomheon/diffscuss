@@ -16,15 +16,6 @@
 ;; the path.
 (defvar diffscuss-git-exe "git")
 
-;; Where to find the python installation of diffscuss (where
-;; find-local-source.py is for example)
-(defvar diffscuss-dir nil)
-
-;; Where to find the version of python to use.  Minimum is 2.6.  (If
-;; you're on a mac, you may need to set this, as some macs seems to
-;; have 2.4 as the default version).
-(defvar diffscuss-python-exe "/usr/bin/python")
-
 ;; The top-level diffscuss command to run.  If you haven't installed
 ;; diffscuss somewhere in your path, you can override this to provide
 ;; the full path to it.
@@ -645,55 +636,33 @@ and old or new is 'new'."
       (looking-at line-pattern)
       (string-to-number (buffer-substring (match-beginning group-num) (match-end group-num))))))
 
-(defun diffscuss-check-python ()
-  (save-excursion
-    (with-temp-buffer
-      (call-process diffscuss-python-exe
-                    nil
-                    t
-                    nil
-                    "-V")
-      (beginning-of-buffer)
-      (if (not (looking-at "Python \\([[:digit:]]+\\)\\.\\([[:digit:]]+\\)"))
-          (error "Python exe %s did not return version when run with -V" diffscuss-python-exe))
-      (if (or (< (string-to-number (buffer-substring (match-beginning 1) (match-end 1)))
-                 2)
-              (< (string-to-number (buffer-substring (match-beginning 2) (match-end 2)))
-                 6))
-          (error "Python version too early, require 2.6+, found: %s"
-                 (trim-string (buffer-string)))))))
-
 (defun diffscuss-goto-local-source ()
   "Attempt to jump to the appropriate source."
   (interactive)
-  (diffscuss-check-python)
-  (if (not diffscuss-dir)
-      (message "Must set diffscuss-dir before you can jump to local source" "")
-    (progn
-      (let ((outbuf-name (generate-new-buffer-name "diffscuss-local-source")))
-        (if (/= 0 (call-process-region (point-min)
-                                       (point-max)
-                                       diffscuss-exe
-                                       nil
-                                       outbuf-name
-                                       nil
-                                       "find-local"
-                                       (number-to-string (line-number-at-pos))))
-            (with-current-buffer outbuf-name
-              (message "%s" (buffer-string))
-              (message "Could not find local source"))
-          (progn
-            (let ((to-find-fname nil)
-                  (to-find-line nil))
-              (with-current-buffer outbuf-name
-                (setq to-find-fname (mapconcat
-                                     'identity
-                                     (butlast (split-string (buffer-string) " ") 1) " "))
-                (setq to-find-line (car (last (split-string (buffer-string) " ") 1))))
-              (pop-to-buffer (find-file-noselect to-find-fname))
-              (goto-line (string-to-number to-find-line))))
+  (let ((outbuf-name (generate-new-buffer-name "diffscuss-local-source")))
+    (if (/= 0 (call-process-region (point-min)
+                                   (point-max)
+                                   diffscuss-exe
+                                   nil
+                                   outbuf-name
+                                   nil
+                                   "find-local"
+                                   (number-to-string (line-number-at-pos))))
+        (with-current-buffer outbuf-name
+          (message "%s" (buffer-string))
+          (message "Could not find local source"))
+      (progn
+        (let ((to-find-fname nil)
+              (to-find-line nil))
           (with-current-buffer outbuf-name
-            (kill-buffer outbuf-name)))))))
+            (setq to-find-fname (mapconcat
+                                 'identity
+                                 (butlast (split-string (buffer-string) " ") 1) " "))
+            (setq to-find-line (car (last (split-string (buffer-string) " ") 1))))
+          (pop-to-buffer (find-file-noselect to-find-fname))
+          (goto-line (string-to-number to-find-line))))
+      (with-current-buffer outbuf-name
+        (kill-buffer outbuf-name)))))
 
 
 (defun diffscuss-show-source-rev (source-file rev line-num old-or-new)
@@ -824,13 +793,6 @@ and old or new is 'new'."
   (let ((elength (length ending)))
     (string= (substring s (- 0 elength)) ending)))
 
-(defun diffscuss-dir-fmted ()
-  "Return diffscuss-dir, but ensure it ends with a /, so it's
-suitable to use for default-directory"
-  (if (not (diffscuss-string-ends-with diffscuss-dir "/"))
-      (concat diffscuss-dir "/")
-    (diffscuss-dir)))
-
 (defun diffscuss-previous-comment ()
   "Jump to the previous comment."
   (interactive)
@@ -848,57 +810,51 @@ suitable to use for default-directory"
 
 (defun diffscuss-mb-check ()
   (interactive)
-  (diffscuss-check-python)
-  (if (not diffscuss-dir)
-      (message "Must set diffscuss-dir before you can check mailboxes" "")
-    (let ((outbuf (get-buffer-create "*diffscuss-mb-check*")))
-      (with-current-buffer outbuf
-        (setq buffer-read-only nil)
-        (text-mode)
-        (erase-buffer))
-      (call-process
-       diffscuss-exe
-       nil outbuf nil
-       "mailbox"
-       "check"
-       "-e")
-      (with-current-buffer outbuf
-        (beginning-of-buffer)
-        (compilation-mode))
-      (pop-to-buffer outbuf))))
+  (let ((outbuf (get-buffer-create "*diffscuss-mb-check*")))
+    (with-current-buffer outbuf
+      (setq buffer-read-only nil)
+      (text-mode)
+      (erase-buffer))
+    (call-process
+     diffscuss-exe
+     nil outbuf nil
+     "mailbox"
+     "check"
+     "-e")
+    (with-current-buffer outbuf
+      (beginning-of-buffer)
+      (compilation-mode))
+    (pop-to-buffer outbuf)))
 
 (defun diffscuss-mb-cmd-impl (recips verb cmd)
-  (diffscuss-check-python)
-  (if (not diffscuss-dir)
-      (message "Must set diffscuss-dir before you can %s reviews." verb)
-    (let ((orig-file buffer-file-name)
-          (new-file buffer-file-name))
-      (with-temp-buffer
-        (let ((exe-res nil))
-          (if (string= "" recips)
-              (setq exe-res (call-process
-                             diffscuss-exe
-                             nil t nil
-                             "mailbox"
-                             cmd
-                             "--print-review-path"
-                             orig-file))
-            (setq exe-res (apply
-                           'call-process
+  (let ((orig-file buffer-file-name)
+        (new-file buffer-file-name))
+    (with-temp-buffer
+      (let ((exe-res nil))
+        (if (string= "" recips)
+            (setq exe-res (call-process
                            diffscuss-exe
                            nil t nil
                            "mailbox"
                            cmd
                            "--print-review-path"
-                           orig-file
-                           (split-string recips " "))))
-          (if (= 0 exe-res)
-              (progn (setq new-file (trim-string (buffer-string)))
-                     (message "%s successful" verb))
-            (message "Could not %s, got error: %s" verb (buffer-string)))))
-      (if (not (string= buffer-file-name new-file))
-          (progn (set-visited-file-name new-file)
-                 (message "Visiting new review file." ""))))))
+                           orig-file))
+          (setq exe-res (apply
+                         'call-process
+                         diffscuss-exe
+                         nil t nil
+                         "mailbox"
+                         cmd
+                         "--print-review-path"
+                         orig-file
+                         (split-string recips " "))))
+        (if (= 0 exe-res)
+            (progn (setq new-file (trim-string (buffer-string)))
+                   (message "%s successful" verb))
+          (message "Could not %s, got error: %s" verb (buffer-string)))))
+    (if (not (string= buffer-file-name new-file))
+        (progn (set-visited-file-name new-file)
+               (message "Visiting new review file." "")))))
 
 (defun diffscuss-mb-post (recips)
   (interactive "sEnter post recipients separated by space: ")

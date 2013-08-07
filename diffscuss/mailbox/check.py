@@ -197,10 +197,12 @@ def main(args):
         try:
             inbox = get_inbox_name(args.git_exe)
         except:
-            _exit("Could not find default inbox, please run dmb-config.py", 3)
+            _exit("Could not find default inbox, please run "
+                  "'diffscuss mailbox set-default-inbox'", 3)
     inbox_path = get_inbox_path(inbox, args.git_exe)
     if not os.path.exists(inbox_path):
-        _exit("Inbox '%s' doesn't exist, create it with dmb-mk-inbox.py" % inbox, 2)
+        _exit("Inbox '%s' doesn't exist, create it "
+              "with 'diffscuss mailbox make-inbox'" % inbox, 2)
     for review in os.listdir(inbox_path):
         if review != '.gitkeep':
             print _format_listing(os.path.join(inbox_path, review),

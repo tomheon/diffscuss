@@ -87,7 +87,7 @@ def get_dmb_root(git_exe):
         with open(marker_fname, 'rb') as fil:
             codereview_dir_name = fil.read().strip()
     except IOError:
-        raise Exception("Please run dmb-init.py.")
+        raise Exception("Please run 'diffscuss mailbox init'")
     return real_abs_join(git_root, codereview_dir_name)
 
 
@@ -100,7 +100,8 @@ def check_inited(git_exe):
     for d in ['', 'reviews', 'users']:
         to_check = os.path.join(dmb_root, d)
         if not os.path.isdir(to_check):
-            raise Exception("%s does not exist, please create run dmb-init.py." %
+            raise Exception("%s does not exist, please "
+                            "run 'diffscuss mailbox init'" %
                             to_check)
 
 
@@ -116,7 +117,8 @@ def dmb_done(diffscuss_fname, inbox, git_exe):
         inbox = get_inbox_name(git_exe)
     inbox_path = get_inbox_path(inbox, git_exe)
     if not os.path.exists(inbox_path):
-        _exit("Inbox '%s' doesn't exist, create it with dmb-mk-inbox.py" % inbox, 2)
+        _exit("Inbox '%s' doesn't exist, create "
+              "it with 'diffscuss mailbox make-inbox'" % inbox, 2)
 
     diffscuss_fpath = os.path.abspath(os.path.realpath(diffscuss_fname))
 

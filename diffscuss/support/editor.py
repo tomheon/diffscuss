@@ -459,7 +459,7 @@ def mailbox_bounce(buffer_name, prompt_func):
         {diffscuss} mailbox bounce -p {diffscuss_file} {recips}
         """.format(diffscuss=_get_script(),
                    diffscuss_file=buffer_name,
-                   recips=input_str)
+                   recips=recips)
     result = _get_output(cmd)
     return 'Bounced %s' % result
 

@@ -64,9 +64,9 @@ class LineProperties(object):
         """
         Returns True if the line is a diffscuss header line.
 
-        >>> LineProperties('%* This is a header line').is_diffscuss
+        >>> LineProperties('%* This is a header line').is_header
         True
-        >>> LineProperties('%- This is a body line').is_diffscuss
+        >>> LineProperties('%- This is a body line').is_header
         False
         """
         return self.line.startswith('%*')
@@ -76,9 +76,9 @@ class LineProperties(object):
         """
         Returns True if the line is a diffscuss body line.
 
-        >>> LineProperties('%* This is a header line').is_diffscuss
+        >>> LineProperties('%* This is a header line').is_body
         False
-        >>> LineProperties('%- This is a body line').is_diffscuss
+        >>> LineProperties('%- This is a body line').is_body
         True
         """
         return self.line.startswith('%-')

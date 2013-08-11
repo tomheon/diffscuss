@@ -286,23 +286,14 @@ def insert_contextual_comment(buf, (row, col)):
 
 ### Showing source
 
-def _get_script(name):
-    """
-    Returns the path to the script named `name` relative to the diffscuss
-    installation directory.
-    """
-    return os.path.join(config()['diffscuss_dir'], name)
-
-
 def show_local_source(buf, (row, col)):
     """
     Returns the line number and path of the file corresponding to the change
     under the cursor.
     """
     cmd = """
-        {python} {script} -i {buffer_name} {row}
-        """.format(python=_get_python(),
-                   script=_get_script('find-local-source.py'),
+        {diffscuss} find-local -i {buffer_name} {row}
+        """.format(diffscuss=_get_script(),
                    buffer_name=buf.name, row=row)
     output = _get_output(cmd)
     filename, line = output.rsplit(' ', 1)
@@ -404,23 +395,14 @@ def show_source(buf, (row, col), tempfile, conf):
     return lineno
 
 
-### Mailboxes
+### Shelling out
 
-def _get_python():
+def _get_script():
     """
-    Returns the Python executable from the plugin config, or a reasonable
-    default.
+    Returns the path to the diffscuss CLI executable, relative to the
+    installation directory.
     """
-    return config().get('python', 'python')
-
-
-def _get_mailbox_script(name):
-    """
-    Returns the path to the script named `name` relative to the diffscuss
-    mailbox script directory.
-    """
-    mailbox_script_dir = os.path.join(config()['diffscuss_dir'], 'diffscuss-mb')
-    return os.path.join(mailbox_script_dir, name)
+    return os.path.join(config()['diffscuss_dir'], 'bin', 'diffscuss')
 
 
 def _get_output(command):
@@ -438,15 +420,16 @@ def _get_output(command):
     return output
 
 
+### Mailboxes
+
 def mailbox_check(_buffer, _cursor, tempfile):
     """
     Writes the output of the mailbox check script to `tempfile` for preview
     display.
     """
     cmd = """
-        {python} {script} > {tempfile}
-        """.format(python=_get_python(),
-                   script=_get_mailbox_script('dmb-check.py'),
+        {diffscuss} mailbox check > {tempfile}
+        """.format(diffscuss=_get_script(),
                    tempfile=tempfile)
     _get_output(cmd)
 
@@ -458,9 +441,8 @@ def mailbox_post(buffer_name, prompt_func):
     """
     recips = prompt_func('Post to: ')
     cmd = """
-        {python} {script} -p {diffscuss_file} {recips}
-        """.format(python=_get_python(),
-                   script=_get_mailbox_script('dmb-post.py'),
+        {diffscuss} mailbox post -p {diffscuss_file} {recips}
+        """.format(diffscuss=_get_script(),
                    diffscuss_file=buffer_name,
                    recips=recips)
     result = _get_output(cmd)
@@ -474,9 +456,8 @@ def mailbox_bounce(buffer_name, prompt_func):
     """
     recips = prompt_func('Bounce to: ')
     cmd = """
-        {python} {script} -p {diffscuss_file} {recips}
-        """.format(python=_get_python(),
-                   script=_get_mailbox_script('dmb-bounce.py'),
+        {diffscuss} mailbox bounce -p {diffscuss_file} {recips}
+        """.format(diffscuss=_get_script(),
                    diffscuss_file=buffer_name,
                    recips=input_str)
     result = _get_output(cmd)
@@ -488,9 +469,8 @@ def mailbox_done(buffer_name, _prompt_func):
     Calls the mailbox done script.
     """
     cmd = """
-        {python} {script} -p {diffscuss_file}
-        """.format(python=_get_python(),
-                   script=_get_mailbox_script('dmb-done.py'),
+        {diffscuss} mailbox done -p {diffscuss_file}
+        """.format(diffscuss=_get_script(),
                    diffscuss_file=buffer_name)
     result = _get_output(cmd)
     return 'Completed %s' % result

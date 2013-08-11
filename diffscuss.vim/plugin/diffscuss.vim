@@ -27,8 +27,8 @@ endif
 " === Load Python functions
 
 let s:diffscuss_dir = g:diffscuss_config["diffscuss_dir"]
-execute printf("pyfile %s/support/vimhelper.py", s:diffscuss_dir)
-execute printf("pyfile %s/support/editor.py", s:diffscuss_dir)
+execute printf("pyfile %s/diffscuss/support/vimhelper.py", s:diffscuss_dir)
+execute printf("pyfile %s/diffscuss/support/editor.py", s:diffscuss_dir)
 
 
 " === Global mappings

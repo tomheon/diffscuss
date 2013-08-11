@@ -194,6 +194,24 @@ index rev1..rev2 100644
  diff3
 """.strip().split('\n')
 
+TEST_BUFFER_END = """
+diff --git a/some/file b/some/file
+index rev1..rev2 100644
+--- a/some/file
++++ b/some/file
+@@ -1,1 +1,2 @@
++diff1
+ diff2
+ diff3
+%*
+%* author: Test
+%* email: test@example.com
+%* date: 2013-01-01T00:00:00-0500
+%*
+%- This is a test comment.
+%-
+""".strip().split('\n')
+
 
 def test_find_header_start():
     for i in range(1, len(TEST_BUFFER_NONE) + 1):
@@ -226,6 +244,10 @@ def test_find_body_end():
         result = editor.find_body_end(TEST_BUFFER_NONE, (i, i))
         yield eq_, (i, i), result
 
+    for i in range(1, len(TEST_BUFFER_END) + 1):
+        result = editor.find_body_end(TEST_BUFFER_END, (i, i))
+        yield eq_, (i, i), result
+
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
         result = editor.find_body_end(TEST_BUFFER_FILE, (i, 1))
         if i <= TEST_BUFFER_FILE.index('%**'):
@@ -250,6 +272,10 @@ def test_find_body_end():
 def test_find_subthread_end():
     for i in range(1, len(TEST_BUFFER_NONE) + 1):
         result = editor.find_subthread_end(TEST_BUFFER_NONE, (i, i))
+        yield eq_, (i, i), result
+
+    for i in range(1, len(TEST_BUFFER_END) + 1):
+        result = editor.find_subthread_end(TEST_BUFFER_END, (i, i))
         yield eq_, (i, i), result
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):

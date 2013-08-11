@@ -76,6 +76,22 @@ def teardown_module():
     config_patch._unpatch()
 
 
+class BufferWrapper(list):
+    """
+    Adapts a Python list to the Vim buffer interface.
+    """
+    def append(self, obj, index=None):
+        if not hasattr(obj, '__iter__'):
+            obj = [obj]
+        if index is None:
+            for item in obj:
+                list.append(self, obj)
+        else:
+            for item in obj:
+                list.insert(self, index, item)
+                index += 1
+
+
 TEST_LINE_PROPERTIES = [
     ('@@ -0,0 +1,2 @@',
      dict(is_diff_meta=True, is_diff_range=True,
@@ -351,3 +367,61 @@ def test_make_comment():
         eq_(['%*', '%* author: Unknown', '%* email: Unknown',
              '%* date: 2013-01-01T01:01:01-0500', '%*', '%- ', '%-'],
             editor.make_comment(depth=1))
+
+
+@patch(editor.time, 'strftime', lambda arg: '2013-01-01T00:00:00-0500')
+def test_inject_comment():
+    new_buf = BufferWrapper(list(TEST_BUFFER_NONE))
+    result = editor.inject_comment(new_buf, (6, 1))
+    eq_((12, 3), result)
+    eq_(['diff --git a/some/file b/some/file',
+         'index rev1..rev2 100644',
+         '--- a/some/file',
+         '+++ b/some/file',
+         '@@ -1,1 +1,2 @@',
+         '+diff1',
+         '%*',
+         '%* author: Test',
+         '%* email: test@example.com',
+         '%* date: 2013-01-01T00:00:00-0500',
+         '%*',
+         '%- ',
+         '%-',
+         ' diff2',
+         ' diff3'], new_buf)
+
+
+@patch(editor.time, 'strftime', lambda arg: '2013-01-01T00:00:00-0500')
+def test_insert_comment():
+    new_buf = BufferWrapper(list(TEST_BUFFER_BODY))
+    result = editor.insert_comment(new_buf, (7, 1))
+    eq_((26, 3), result)
+    eq_(['diff --git a/some/file b/some/file',
+         'index rev1..rev2 100644',
+         '--- a/some/file',
+         '+++ b/some/file',
+         '@@ -1,1 +1,2 @@',
+         '+diff1',
+         '%*',
+         '%* author: Test',
+         '%* email: test@example.com',
+         '%* date: 2013-01-01T00:00:00-0500',
+         '%*',
+         '%- This is a test comment.',
+         '%-',
+         '%**',
+         '%** author: Test',
+         '%** email: test@example.com',
+         '%** date: 2013-01-01T00:01:00-0500',
+         '%**',
+         '%-- This is a test reply.',
+         '%--',
+         '%*',
+         '%* author: Test',
+         '%* email: test@example.com',
+         '%* date: 2013-01-01T00:00:00-0500',
+         '%*',
+         '%- ',
+         '%-',
+         ' diff2',
+         ' diff3'], new_buf)

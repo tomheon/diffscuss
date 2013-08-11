@@ -7,8 +7,8 @@ stuff, or (in the common case) a buffer and cursor. (Buffers are a 0-indexed
 list of lines implementing the Vim Python interface; cursors are a 2-tuple of
 integers for the 1-indexed row and column.)
 """
-from collections import namedtuple
 import time
+import os
 import re
 import subprocess
 
@@ -297,7 +297,7 @@ def show_local_source(buf, (row, col)):
                    buffer_name=buf.name, row=row)
     output = _get_output(cmd)
     filename, line = output.rsplit(' ', 1)
-    return  '+%s %s' % (line, filename)
+    return '+%s %s' % (line, filename)
 
 
 def show_old_source(buf, (row, col), tempfile):
@@ -312,6 +312,7 @@ def show_old_source(buf, (row, col), tempfile):
         'range_pattern': '^@@ -(\d+)',
         'index_pattern': '^index ([a-f0-9]+)'
     })
+
 
 def show_new_source(buf, (row, col), tempfile):
     """

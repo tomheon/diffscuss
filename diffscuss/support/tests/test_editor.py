@@ -121,6 +121,7 @@ TEST_LINE_PROPERTIES = [
           is_header=False, is_body=True, is_diffscuss=True, depth=1))
 ]
 
+
 def test_line_properties():
     for line, expected_attrs in TEST_LINE_PROPERTIES:
         yield _check_line_properties, line, expected_attrs
@@ -196,7 +197,7 @@ index rev1..rev2 100644
 
 def test_find_header_start():
     for i in range(1, len(TEST_BUFFER_NONE) + 1):
-        result = editor.find_header_start(TEST_BUFFER_NONE, (i , i))
+        result = editor.find_header_start(TEST_BUFFER_NONE, (i, i))
         yield eq_, (i, i), result
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
@@ -222,7 +223,7 @@ def test_find_header_start():
 
 def test_find_body_end():
     for i in range(1, len(TEST_BUFFER_NONE) + 1):
-        result = editor.find_body_end(TEST_BUFFER_NONE, (i , i))
+        result = editor.find_body_end(TEST_BUFFER_NONE, (i, i))
         yield eq_, (i, i), result
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
@@ -235,20 +236,20 @@ def test_find_body_end():
             yield eq_, (i, 1), result
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
-       result = editor.find_body_end(TEST_BUFFER_BODY, (i, 1))
-       if i <= TEST_BUFFER_BODY.index('%*'):
-           yield eq_, (i, 1), result
-       elif i <= TEST_BUFFER_BODY.index('%**'):
-           yield eq_, (13, 1), result
-       elif i <= TEST_BUFFER_BODY.index(' diff2'):
-           yield eq_, (20, 1), result
-       else:
-           yield eq_, (i, 1), result
+        result = editor.find_body_end(TEST_BUFFER_BODY, (i, 1))
+        if i <= TEST_BUFFER_BODY.index('%*'):
+            yield eq_, (i, 1), result
+        elif i <= TEST_BUFFER_BODY.index('%**'):
+            yield eq_, (13, 1), result
+        elif i <= TEST_BUFFER_BODY.index(' diff2'):
+            yield eq_, (20, 1), result
+        else:
+            yield eq_, (i, 1), result
 
 
 def test_find_subthread_end():
     for i in range(1, len(TEST_BUFFER_NONE) + 1):
-        result = editor.find_subthread_end(TEST_BUFFER_NONE, (i , i))
+        result = editor.find_subthread_end(TEST_BUFFER_NONE, (i, i))
         yield eq_, (i, i), result
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
@@ -261,20 +262,20 @@ def test_find_subthread_end():
             yield eq_, (i, 1), result
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
-      result = editor.find_subthread_end(TEST_BUFFER_BODY, (i, 1))
-      if i <= TEST_BUFFER_BODY.index('%*'):
-          yield eq_, (i, 1), result
-      elif i <= TEST_BUFFER_BODY.index('%**'):
-          yield eq_, (20, 1), result
-      elif i <= TEST_BUFFER_BODY.index(' diff2'):
-          yield eq_, (20, 1), result
-      else:
-          yield eq_, (i, 1), result
+        result = editor.find_subthread_end(TEST_BUFFER_BODY, (i, 1))
+        if i <= TEST_BUFFER_BODY.index('%*'):
+            yield eq_, (i, 1), result
+        elif i <= TEST_BUFFER_BODY.index('%**'):
+            yield eq_, (20, 1), result
+        elif i <= TEST_BUFFER_BODY.index(' diff2'):
+            yield eq_, (20, 1), result
+        else:
+            yield eq_, (i, 1), result
 
 
 def test_find_thread_end():
     for i in range(1, len(TEST_BUFFER_NONE) + 1):
-        result = editor.find_thread_end(TEST_BUFFER_NONE, (i , i))
+        result = editor.find_thread_end(TEST_BUFFER_NONE, (i, i))
         yield eq_, (i, i), result
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
@@ -287,15 +288,15 @@ def test_find_thread_end():
             yield eq_, (i, 1), result
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
-      result = editor.find_thread_end(TEST_BUFFER_BODY, (i, 1))
-      if i <= TEST_BUFFER_BODY.index('%*'):
-          yield eq_, (i, 1), result
-      elif i <= TEST_BUFFER_BODY.index('%**'):
-          yield eq_, (20, 1), result
-      elif i <= TEST_BUFFER_BODY.index(' diff2'):
-          yield eq_, (20, 1), result
-      else:
-          yield eq_, (i, 1), result
+        result = editor.find_thread_end(TEST_BUFFER_BODY, (i, 1))
+        if i <= TEST_BUFFER_BODY.index('%*'):
+            yield eq_, (i, 1), result
+        elif i <= TEST_BUFFER_BODY.index('%**'):
+            yield eq_, (20, 1), result
+        elif i <= TEST_BUFFER_BODY.index(' diff2'):
+            yield eq_, (20, 1), result
+        else:
+            yield eq_, (i, 1), result
 
 
 def test_find_range():

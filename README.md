@@ -30,6 +30,16 @@ directly from a comment to the corresponding line of actual source,
 which lowers the activation energy for addressing reviews and actually
 making all those little suggested improvements.
 
+## What Does a Diffscuss Review Look Like?
+
+Screenshot of a Diffscuss review in Emacs:
+
+![Emacs Screenshot](doc/diffscuss-reading-review.png)
+
+After jumping to source:
+
+![Emacs Screenshot](doc/diffscuss-jump-to-source.png)
+
 ## Why Might You Want to Use Diffscuss?
 
 * you like the idea of reading and responding to code reviews right in
@@ -57,16 +67,6 @@ making all those little suggested improvements.
 
 * you're not using Emacs or Vim (for the moment, those are the two
   editors with diffscuss tooling support)
-
-## What Does a Diffscuss Review Look Like?
-
-Screenshot of a Diffscuss review in Emacs:
-
-![Emacs Screenshot](doc/diffscuss-reading-review.png)
-
-After jumping to source:
-
-![Emacs Screenshot](doc/diffscuss-jump-to-source.png)
 
 ## Getting Started
 

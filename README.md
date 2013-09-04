@@ -79,7 +79,8 @@ install```, or you can grab the latest release from pypi with
 
 ### Install the Emacs mode or Vim plugin
 
-(see below for details and some orientation)
+(see "The Emacs Mode" and "The Vim Plugin" below for installation and
+usage)
 
 You can now go bare bolts and just open up any unified diff file to
 start reviewing, or you can...

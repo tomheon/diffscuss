@@ -34,11 +34,11 @@ making all those little suggested improvements.
 
 Screenshot of a Diffscuss review in Emacs:
 
-![Emacs Screenshot](doc/diffscuss-reading-review.png)
+![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-reading-review.png?raw=true)
 
 After jumping to source:
 
-![Emacs Screenshot](doc/diffscuss-jump-to-source.png)
+![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-jump-to-source.png?raw=true)
 
 ## Why Might You Want to Use Diffscuss?
 

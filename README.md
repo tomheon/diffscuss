@@ -1,28 +1,62 @@
 # Diffscuss: Code Reviews.  In Plain Text.
 
-## Why Should You Use Diffscuss?
+## What is Diffscuss?
 
-* Lower the activation energy and cycle time for code reviews by
-  creating and reading reviews in your editor. Then jump straight to
-  the associated source to apply fixes etc.
+Diffscuss is:
 
-* Keep your reviews in your repo, right next to your code, or email
-  them back and forth if you're a small team and that's easier.
+* a file format, built on the the unified diff format, that allows
+  threaded code reviews to exist inline with the diffs they address
 
-* Use grep and all the rest of that unix-y toolchain goodness on your
-  reviews.
+* an Emacs mode and Vim plugin to support responding to / managing
+  code reviews in that format (including jumping directly to the
+  source code a comment addresses)
+
+* a set of command line tools to support generating and managing
+  reviews in the diffscuss format with a simple, directory based tool
+  for posting and managing code reviews
+
+We at Hut 8 Labs originally developed diffscuss to help us do code
+reviews when we were onsite with a client who didn't have their own
+code review system.  We found ourselves emailing diffs back and forth,
+writing things like "about halfway through the diff you do X, maybe
+you should do Y?"  Eventually we started writing comments right in the
+diffs themselves, with markers like "EWJ REVIEW!!!" and thought "There
+has to be a better way."
+
+Now, about 6 months into using diffscuss, we've grown to love its
+support for code reviews in our editors--where we're already efficient
+at reading and navigating code--and especially its abililty to jump
+directly from a comment to the corresponding line of actual source,
+which lowers the activation energy for addressing reviews and actually
+making all those little suggested improvements.
+
+## Why Might You Want to Use Diffscuss?
+
+* you like the idea of reading and responding to code reviews right in
+  your editor
+
+* you want to lower the activation energy needed to apply small fixes
+  and suggestions (jump right to the source with a single key combo!
+  make the change!  jump right back!)
+
+* you like the idea of keeping your reviews in your repo, right next
+  to your code, or emailing them back and forth if you're just a
+  couple hackers working on something and that's easier
+
+* you like the idea of using grep and all the rest of that unix-y
+  toolchain goodness on your reviews
 
 ## Why Shouldn't You Use Diffscuss?
 
-* You're a big team with a lot of process around code reviews
-  (e.g. you have automated restrictions for review-then-commit
-  workflows).
+* you're a big team, or you have significant process around code
+  reviews (e.g. you have automated restrictions for review-then-commit
+  workflows)
 
-* You're not using git (for the moment, Diffscuss is tightly
-  integrated with git).
+* you're not using git (for the moment, diffscuss is tightly
+  integrated with git)
 
-* You're not using Emacs or vim (for the moment, those are the two
-  editors with Diffscuss tooling support).
+* you're not using Emacs or Vim (for the moment, those are the two
+  editors with diffscuss tooling support)
 
 ## What Does a Diffscuss Review Look Like?
 
@@ -33,6 +67,110 @@ Screenshot of a Diffscuss review in Emacs:
 After jumping to source:
 
 ![Emacs Screenshot](doc/diffscuss-jump-to-source.png)
+
+## Getting Started
+
+### Install the diffscuss exe
+
+Diffscuss is a set of python utils wrapped in a single exe.  You can
+either get the latest source from github and run run ```setup.py
+install```, or you can grab the latest release from pypi with
+```easy_install diffscuss``` or ```pip install diffscuss```.
+
+### Install the Emacs mode or Vim plugin
+
+(see below for details and some orientation)
+
+You can now go bare bolts and just open up any unified diff file to
+start reviewing, or you can...
+
+### Generate a diffscuss review.
+
+Use ```diffscuss generate``` from within a git repo to generate a new
+review.  The only required argument is the revision range to construct
+the review from, which is passed through as is to git and can
+therefore be in any format recognized by git log
+(e.g. ```HEAD^..HEAD``` is a common one).
+
+By default all the commit messages within the range will be collected
+into the initial review comment, and the author will be the value of
+the ```user.name``` git config setting.
+
+### Set up simple code review management
+
+Diffscuss supports an extremely basic per-user "inbox" for incoming
+code reviews.
+
+These inbox are just directories, and reviews are "added to" an inbox
+by creating a symbolic link to a diffscuss file (which is kept in a
+per-repo "diffscussions" directory).
+
+To get started, run ```diffscuss mailbox init``` (or run with -h to
+see help).  This will create (by default) a .diffscuss-mb file and a
+"diffscussions" directory at the top level of your repo, both of which
+should be added to source control.
+
+Next you'll want to create an inbox per user, with ```diffscuss
+mailbox make-inbox <user-name>```, which will create an inbox under
+"diffscussions/users/<user-name>".
+
+Finally, so that you can check your inbox for new reviews, you'll want
+to tell diffscuss which inbox should be considered yours by running
+```diffscuss mailbox set-default-inbox <your-user-name>```.  This
+creates a config variable called diffscuss-mb.inbox in your local git
+config and sets it to the user name you supplied.
+
+### Use simple code review management
+
+Under ```diffscuss mailbox``` There is support for posting reviews,
+marking them done (which just translates to removing symlinks in user
+directories), and "bouncing" reviews, which means marking your review
+done and asking someone else to take a look (e.g., because you made
+comments that you want the original poster to implement / respond to).
+
+Use ```diffscuss mailbox -h``` and ```diffscuss mailbox <subcommand>
+-h``` for arguments and options to run from the command line.
+
+The Emacs and Vim modes also have support for checking your mailbox,
+posting, bouncing, and marking reviews done right from your editor.
+
+In Emacs:
+
+* ```C-c m p``` prompts for recipients and posts the current Diffscuss
+  file for their review
+
+* ```C-c m b``` prompts for recipients and bounces the review to them,
+  removing the review from your inbox.
+
+* ```C-c m d``` marks the review as done, removing it from your inbox.
+
+* ```M-x diffscuss-mb-check``` checks your inbox and lists all
+  incoming reviews.  You may wish to bind it globally to ```C-c m c```
+  with:
+
+```
+(global-set-key "\C-cmc"  'diffscuss-mb-check)
+```
+
+In Vim:
+
+* ```<leader>mp``` prompts for recipients and posts the current Diffscuss
+  file for their review
+
+* ```<leader>mb``` prompts for recipients and bounces the review to them,
+  removing the review from your inbox.
+
+* ```<leader>md``` marks the review as done, removing it from your inbox.
+
+* ```<leader>mc``` opens a preview window with a list of all incoming
+  reviews in your inbox. You can use ```gf``` with your cursor on a
+  filename in the list to open the review (or e.g. ```C-w gf``` to open it
+  in a new tab).
+
+## Getting help
+
+The diffscuss exe has help available with -h globally and for each
+subcommand.
 
 ## The Format in a Nutshell
 
@@ -66,18 +204,8 @@ Once the file is in your load path, require the mode with:
 (require 'diffscuss-mode)
 ```
 
-To use the jump to local source feature, you also need to add the
-following to your .emacs:
-
-```
-(setq diffscuss-dir "/path/to/diffscuss")
-```
-
-Where /path/to/diffscuss is the path to the top level of your
-Diffscuss checkout (that is, where find-local-source.py is located).
-
-The mode colorizes Diffscuss files to make for easier reading.
-In addition it helps with:
+The mode colorizes Diffscuss files to make for easier reading.  In
+addition it helps with:
 
 ### Inserting Comments
 
@@ -100,11 +228,9 @@ The main command you need to know is ```C-c C-c```, which generally
 
 ### Jumping to Source
 
-All these require that the Diffscuss file you are visiting is
+This currently requires that the Diffscuss file you are visiting is
 somewhere under a git checkout of the repo against which the Diffscuss
-file was generated, and that you have set the ```diffscuss-dir```
-Emacs variable to root directory of your Diffscuss installation (where
-find-local-source.py is located).
+file was generated.
 
 #### Local Source
 
@@ -209,88 +335,22 @@ let g:diffscuss_config = {
 * `]T`: jump to the end of the next thread
 * `[T`: jump to the end of the previous thread
 
-## gen-diffscuss.py
-
-gen-diffscuss.py is a helper script for creating a new Diffscuss file
-with diffs and log messages from a set of changes in git.
-
-For example,
-
-```gen-diffscuss.py HEAD~3..HEAD > some_code_review.diffscuss```
-
-Makes a Diffscuss file containing the diffs from the last three
-commits in a local git repo, introduced with a comment at the top
-containing all the log messages for those three commits.
-
-## Simple Mailbox Support
-
-Diffscuss ships with diffscuss-mb, which provides simple mailbox
-support for reviews.  In a nutshell, diffscuss-mb manages a single
-directory (let's call it "diffscussions" in this example), with two
-subdirs:
-
-* reviews - where your .diffscuss files live
-
-* users - which has one subdir per user in your system
-
-When you post a diffscuss file for review, it's moved into the
-"reviews" directory, and for each user you request review from, a
-symlink is created in their user directory.
-
-There is support for posting reviews, marking them done (which just
-translates to removing symlinks in user directories), and "bouncing"
-reviews, which means marking your review done and asking someone else
-to take a look (e.g., because you made comments that you want the
-original poster to implement / respond to).
-
-The Emacs and Vim modes have support for checking your mailbox,
-posting, bouncing, and marking reviews done.
-
-In Emacs:
-
-* ```C-c m p``` prompts for recipients and posts the current Diffscuss
-  file for their review
-
-* ```C-c m b``` prompts for recipients and bounces the review to them,
-  removing the review from your inbox.
-
-* ```C-c m d``` marks the review as done, removing it from your inbox.
-
-* ```M-x diffscuss-mb-check``` checks your inbox and lists all
-  incoming reviews.  You may wish to bind it globally to ```C-c m c```
-  with:
-
-```
-(global-set-key "\C-cmc"  'diffscuss-mb-check)
-```
-
-In Vim:
-
-* ```<leader>mp``` prompts for recipients and posts the current Diffscuss
-  file for their review
-
-* ```<leader>mb``` prompts for recipients and bounces the review to them,
-  removing the review from your inbox.
-
-* ```<leader>md``` marks the review as done, removing it from your inbox.
-
-* ```<leader>mc``` opens a preview window with a list of all incoming
-  reviews in your inbox. You can use ```gf``` with your cursor on a
-  filename in the list to open the review (or e.g. ```C-w gf``` to open it
-  in a new tab).
-
-See ```diffscuss-mb/dmb-init.py``` to get started.
-
 ## Pull Request Export (Experimental)
 
-Diffscuss ships with ```gh-export.py```, which exports one or more
-Github pull requests into local Diffscuss files.
+Diffscuss ships with an experimental ```diffscuss github-import```
+command, which imports or more Github pull requests into local
+Diffscuss files.
 
 One possible use for this (besides transition, if you're going to use
 Diffscuss), is to provide a searchable, offline copy of your pull
 requests.
 
-## What the Future Might Hold
+There's some talk about making this bidirectional, so that, e.g., you
+could import a pull request, make local responses in diffscuss, and
+push the changes, but for the moment it's just talk.  Let us know if
+you'd be interested in this (or interested in helping write it!).
+
+## What Else the Future Might Hold
 
 * Side-by-side diff viewing in the modes
 
@@ -309,7 +369,7 @@ requests.
 If any of these appeal to you / scratch a personal itch, please let us
 know--or even better, contribute!
 
-## Format Definition
+## Format Definition in Hairy Detail
 
 ### Beginning of Line Marker
 
@@ -361,7 +421,8 @@ The current Diffscuss headers are:
 * date
 
 Non-standard headers should begin with an 'x-', to keep compatible
-with future additions to the Diffscuss format.
+with future additions to the Diffscuss format (for example, this is
+what the github import uses).
 
 #### The author Header
 

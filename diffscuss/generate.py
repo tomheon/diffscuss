@@ -132,4 +132,4 @@ def main(args):
     except subprocess.CalledProcessError, e:
         print >> sys.stderr, e
         print >> sys.stderr, e.output
-        sys.exit(e.retcode)
+        sys.exit(e.returncode)

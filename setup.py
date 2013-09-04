@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='diffscuss',
-    version='1.0.0',
+    version='1.0.1',
     author='Edmund Jorgensen',
     author_email='edmund@hut8labs.com',
     packages=['diffscuss', 'diffscuss.support',

@@ -31,29 +31,40 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h1>Diffscuss: Code Reviews.  In Plain Text.</h1>
+        <h1>
+<a name="diffscuss-code-reviews--in-plain-text" class="anchor" href="#diffscuss-code-reviews--in-plain-text"><span class="octicon octicon-link"></span></a>Diffscuss: Code Reviews.  In Plain Text.</h1>
 
-<h2>Why Should You Use Diffscuss?</h2>
+<h2>
+<a name="what-is-diffscuss" class="anchor" href="#what-is-diffscuss"><span class="octicon octicon-link"></span></a>What is Diffscuss?</h2>
 
-<ul>
-<li><p>Lower the activation energy and cycle time for code reviews by
-creating and reading reviews in your editor. Then jump straight to
-the associated source to apply fixes etc.</p></li>
-<li><p>Keep your reviews in your repo, right next to your code, or email
-them back and forth if you're a small team and that's easier.</p></li>
-<li><p>Use grep and all the rest of that unix-y toolchain goodness on your
-reviews.</p></li>
-</ul><h2>Why Shouldn't You Use Diffscuss?</h2>
+<p>Diffscuss is:</p>
 
 <ul>
-<li><p>You're a big team with a lot of process around code reviews
-(e.g. you have automated restrictions for review-then-commit
-workflows).</p></li>
-<li><p>You're not using git (for the moment, Diffscuss is tightly
-integrated with git).</p></li>
-<li><p>You're not using Emacs or Vim (for the moment, those are the two
-editors with Diffscuss tooling support).</p></li>
-</ul><h2>What Does a Diffscuss Review Look Like?</h2>
+<li><p>a file format, built on the the unified diff format, that allows
+threaded code reviews to exist inline with the diffs they address</p></li>
+<li><p>an Emacs mode and Vim plugin to support responding to / managing
+code reviews in that format (including jumping directly to the
+source code a comment addresses)</p></li>
+<li><p>a set of command line tools to support generating and managing
+reviews in the diffscuss format with a simple, directory based tool
+for posting and managing code reviews</p></li>
+</ul><p>We at Hut 8 Labs originally developed diffscuss to help us do code
+reviews when we were onsite with a client who didn't have their own
+code review system.  We found ourselves emailing diffs back and forth,
+writing things like "about halfway through the diff you do X, maybe
+you should do Y?"  Eventually we started writing comments right in the
+diffs themselves, with markers like "EWJ REVIEW!!!" and thought "There
+has to be a better way."</p>
+
+<p>Now, about 6 months into using diffscuss, we've grown to love its
+support for code reviews in our editors--where we're already efficient
+at reading and navigating code--and especially its abililty to jump
+directly from a comment to the corresponding line of actual source,
+which lowers the activation energy for addressing reviews and actually
+making all those little suggested improvements.</p>
+
+<h2>
+<a name="what-does-a-diffscuss-review-look-like" class="anchor" href="#what-does-a-diffscuss-review-look-like"><span class="octicon octicon-link"></span></a>What Does a Diffscuss Review Look Like?</h2>
 
 <p>Screenshot of a Diffscuss review in Emacs:</p>
 
@@ -63,218 +74,103 @@ editors with Diffscuss tooling support).</p></li>
 
 <p><img src="https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-jump-to-source.png?raw=true" alt="Emacs Screenshot"></p>
 
-<h2>The Format in a Nutshell</h2>
-
-<p>Diffscuss adds a single beginning-of-line character to the unified
-diff format: %, which marks the beginning of a comment line.  Lines
-beginning with %* are comment headers, and lines beginning with %- are
-comment bodies.  The number of * or - characters indicates reply
-threading.</p>
-
-<p>Comments apply to the line directly above them.  Comments at the top
-of the file apply to the entire review in general.</p>
-
-<p>Take a look at the "Format Definition" section for (much) more detail.</p>
-
-<h2>The Emacs Mode</h2>
-
-<p>The Emacs mode is implemented in a single .el file, diffscuss-mode.el.
-To install, either move the diffscuss-mode.el file to a directory in
-your load path or else add the Diffscuss mode directory to your load
-path in your .emacs file like so:</p>
-
-<pre><code>(setq load-path
-      (append (list nil "/path/to/diffscuss/diffscuss-mode")
-               load-path))
-</code></pre>
-
-<p>Once the file is in your load path, require the mode with:</p>
-
-<pre><code>(require 'diffscuss-mode)
-</code></pre>
-
-<p>To use the jump to local source feature, you also need to add the
-following to your .emacs:</p>
-
-<pre><code>(setq diffscuss-dir "/path/to/diffscuss")
-</code></pre>
-
-<p>Where /path/to/diffscuss is the path to the top level of your
-Diffscuss checkout (that is, where find-local-source.py is located).</p>
-
-<p>The mode colorizes Diffscuss files to make for easier reading.
-In addition it helps with:</p>
-
-<h3>Inserting Comments</h3>
-
-<p>The main command you need to know is <code>C-c C-c</code>, which generally
-"does the right thing" based on the position of the cursor.  To wit:</p>
+<h2>
+<a name="why-might-you-want-to-use-diffscuss" class="anchor" href="#why-might-you-want-to-use-diffscuss"><span class="octicon octicon-link"></span></a>Why Might You Want to Use Diffscuss?</h2>
 
 <ul>
-<li><p>If the cursor is at the very top of the buffer, it will insert a new
-review-level comment (this function is available anywhere in the
-buffer with <code>C-c C-f</code>).</p></li>
-<li><p>If the cursor is inside another comment, it will create a reply to
-that comment (this can also be invoked with <code>C-c C-r</code>).</p></li>
-<li><p>If the cursor is inside the diff index information for a file /
-hunk, it will insert a comment after the "range line" (the line
-beginning with @@).</p></li>
-<li><p>If the cursor is on a diff line, it will create a comment directly
-below that line (this is also available with <code>C-c C-i</code>).</p></li>
-</ul><h3>Jumping to Source</h3>
-
-<p>All these require that the Diffscuss file you are visiting is
-somewhere under a git checkout of the repo against which the Diffscuss
-file was generated, and that you have set the <code>diffscuss-dir</code>
-Emacs variable to root directory of your Diffscuss installation (where
-find-local-source.py is located).</p>
-
-<h4>Local Source</h4>
-
-<p>If you position the cursor on one of the diff lines in a Diffscuss
-file, then:</p>
+<li><p>you like the idea of reading and responding to code reviews right in
+your editor</p></li>
+<li><p>you want to lower the activation energy needed to apply small fixes
+and suggestions (jump right to the source with a single key combo!
+make the change!  jump right back!)</p></li>
+<li><p>you like the idea of keeping your reviews in your repo, right next
+to your code, or emailing them back and forth if you're just a
+couple hackers working on something and that's easier</p></li>
+<li><p>you like the idea of using grep and all the rest of that unix-y
+toolchain goodness on your reviews</p></li>
+</ul><h2>
+<a name="why-shouldnt-you-use-diffscuss" class="anchor" href="#why-shouldnt-you-use-diffscuss"><span class="octicon octicon-link"></span></a>Why Shouldn't You Use Diffscuss?</h2>
 
 <ul>
-<li>
-<code>C-c s</code> will attempt to find the local source file / line in
-that file that's the best candidate to match up with the Diffscuss
-line the cursor is currently on.</li>
-</ul><h4>Repository Versions of the Source</h4>
+<li><p>you're a big team, or you have significant process around code
+reviews (e.g. you have automated restrictions for review-then-commit
+workflows)</p></li>
+<li><p>you're not using git (for the moment, diffscuss is tightly
+integrated with git)</p></li>
+<li><p>you're not using Emacs or Vim (for the moment, those are the two
+editors with diffscuss tooling support)</p></li>
+</ul><h2>
+<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h2>
 
-<ul>
-<li><p><code>C-c -</code> will open up a temporary buffer containing the old
-version of the source (if it's available locally), with the cursor
-positioned on the same line.</p></li>
-<li><p><code>C-c +</code> will open up a temporary buffer containing the new
-version of the source (if it's available locally), with the cursor
-positioned on the same line.</p></li>
-</ul><h3>Navigation</h3>
+<h3>
+<a name="install-the-diffscuss-exe" class="anchor" href="#install-the-diffscuss-exe"><span class="octicon octicon-link"></span></a>Install the diffscuss exe</h3>
 
-<p>You can move around the Diffscussion quickly using:</p>
+<p>Diffscuss is a set of python utils wrapped in a single exe.  You can
+either get the latest source from github and run run <code>setup.py
+install</code>, or you can grab the latest release from pypi with
+<code>easy_install diffscuss</code> or <code>pip install diffscuss</code>.</p>
 
-<ul>
-<li><p><code>C-c f</code> to move forward one comment.</p></li>
-<li><p><code>C-c b</code> to move back one comment.</p></li>
-<li><p><code>C-c n</code> to move to the next thread.</p></li>
-<li><p><code>C-c p</code> to move to the previous thread.</p></li>
-<li><p><code>C-c a</code> to move to the beginning of the current thread.</p></li>
-<li><p><code>C-c e</code> to move to the end of the current thread.</p></li>
-</ul><h2>The Vim Plugin</h2>
+<h3>
+<a name="install-the-emacs-mode-or-vim-plugin" class="anchor" href="#install-the-emacs-mode-or-vim-plugin"><span class="octicon octicon-link"></span></a>Install the Emacs mode or Vim plugin</h3>
 
-<p>Like the Emacs mode, the Vim plugin offers syntax highlighting, comment insertion,
-commands for jumping to source files, and motions for comments and threads.
-The Vim plugin is implemented primarily in Python, so you'll need a version of
-Vim compiled with Python support in order to use it
-(<code>vim --version | grep '+python'</code>).</p>
+<p>(see "The Emacs Mode" and "The Vim Plugin" below for installation and
+usage)</p>
 
-<h3>Installation</h3>
+<p>You can now go bare bolts and just open up any unified diff file to
+start reviewing, or you can...</p>
 
-<h4>With Vundle</h4>
+<h3>
+<a name="generate-a-diffscuss-review" class="anchor" href="#generate-a-diffscuss-review"><span class="octicon octicon-link"></span></a>Generate a diffscuss review.</h3>
 
-<p>If you use Vundle, add this to your <code>.vimrc</code> and then <code>:BundleInstall</code>:</p>
+<p>Use <code>diffscuss generate</code> from within a git repo to generate a new
+review.  The only required argument is the revision range to construct
+the review from, which is passed through as is to git and can
+therefore be in any format recognized by git log
+(e.g. <code>HEAD^..HEAD</code> is a common one).</p>
 
-<pre><code>Bundle 'hut8labs/diffscuss', {'rtp': 'diffscuss.vim/'}
-</code></pre>
+<p>By default all the commit messages within the range will be collected
+into the initial review comment, and the author will be the value of
+the <code>user.name</code> git config setting.</p>
 
-<h4>With Pathogen</h4>
+<h3>
+<a name="set-up-simple-code-review-management" class="anchor" href="#set-up-simple-code-review-management"><span class="octicon octicon-link"></span></a>Set up simple code review management</h3>
 
-<p>If you use Pathogen:</p>
+<p>Diffscuss supports an extremely basic per-user "inbox" for incoming
+code reviews.</p>
 
-<ol>
-<li>Clone the <code>diffscuss</code> repository.</li>
-<li>Copy <code>diffscuss/diffscuss.vim</code> to <code>~/.vim/bundle</code>.</li>
-<li>Set the <code>diffscuss_dir</code> key of <code>g:diffscuss_config</code> to the path of the
-<code>diffscuss</code> clone.</li>
-</ol><h3>Configuration</h3>
+<p>These inbox are just directories, and reviews are "added to" an inbox
+by creating a symbolic link to a diffscuss file (which is kept in a
+per-repo "diffscussions" directory).</p>
 
-<p>The Vim plugin will use its environment and <code>git config</code> to determine your name
-and email (for pre-filling comments) and for various runtime paths.</p>
+<p>To get started, run <code>diffscuss mailbox init</code> (or run with -h to
+see help).  This will create (by default) a .diffscuss-mb file and a
+"diffscussions" directory at the top level of your repo, both of which
+should be added to source control.</p>
 
-<p>If you wish, you can override these settings by specifying some or all of a
-<code>g:diffscuss_config</code> dictionary in your <code>.vimrc</code>:</p>
+<p>Next you'll want to create an inbox per user, with <code>diffscuss
+mailbox make-inbox &lt;user-name&gt;</code>, which will create an inbox under
+"diffscussions/users/".</p>
 
-<div class="highlight"><pre><span class="k">let</span> <span class="k">g</span>:diffscuss_config <span class="p">=</span> {
-    \<span class="s1">'author'</span>: <span class="s1">'Your Name'</span><span class="p">,</span>
-    \<span class="s1">'email'</span>: <span class="s1">'your.email@example.com'</span><span class="p">,</span>
-    \<span class="s1">'diffscuss_dir'</span>: <span class="s1">'/path/to/diffscuss'</span><span class="p">,</span>
-    \<span class="s1">'python'</span>: <span class="s1">'/path/to/python'</span>
-    \}
-</pre></div>
+<p>Finally, so that you can check your inbox for new reviews, you'll want
+to tell diffscuss which inbox should be considered yours by running
+<code>diffscuss mailbox set-default-inbox &lt;your-user-name&gt;</code>.  This
+creates a config variable called diffscuss-mb.inbox in your local git
+config and sets it to the user name you supplied.</p>
 
-<h3>Inserting Comments</h3>
+<h3>
+<a name="use-simple-code-review-management" class="anchor" href="#use-simple-code-review-management"><span class="octicon octicon-link"></span></a>Use simple code review management</h3>
 
-<ul>
-<li>
-<code>&lt;leader&gt;dd</code>: insert a new comment contextually (Emacs <code>C-c C-c</code>)</li>
-<li>
-<code>&lt;leader&gt;df</code>: insert a new review-level comment (Emacs <code>C-c C-f</code>)</li>
-<li>
-<code>&lt;leader&gt;dr</code>: insert a new reply (Emacs <code>C-c C-r</code>)</li>
-<li>
-<code>&lt;leader&gt;di</code>: insert a new comment (Emacs <code>C-c C-i</code>)</li>
-</ul><h3>Showing the Source</h3>
+<p>Under <code>diffscuss mailbox</code> There is support for posting reviews,
+marking them done (which just translates to removing symlinks in user
+directories), and "bouncing" reviews, which means marking your review
+done and asking someone else to take a look (e.g., because you made
+comments that you want the original poster to implement / respond to).</p>
 
-<ul>
-<li>
-<code>&lt;leader&gt;do</code>: show the old source version (Emacs <code>C-c -</code>)</li>
-<li>
-<code>&lt;leader&gt;dn</code>: show the new source version (Emacs <code>C-c +</code>)</li>
-<li>
-<code>&lt;leader&gt;ds</code>: show the local source version (Emacs <code>C-c s</code>)</li>
-</ul><h3>Navigation</h3>
+<p>Use <code>diffscuss mailbox -h</code> and <code>diffscuss mailbox &lt;subcommand&gt;
+-h</code> for arguments and options to run from the command line.</p>
 
-<ul>
-<li>
-<code>]d</code>: jump to the start of the next comment</li>
-<li>
-<code>[d</code>: jump to the start of the previous comment</li>
-<li>
-<code>]D</code>: jump to the end of the next comment</li>
-<li>
-<code>[D</code>: jump to the end of the previous comment</li>
-<li>
-<code>]t</code>: jump to the start of the next thread</li>
-<li>
-<code>[t</code>: jump to the start of the previous thread</li>
-<li>
-<code>]T</code>: jump to the end of the next thread</li>
-<li>
-<code>[T</code>: jump to the end of the previous thread</li>
-</ul><h2>gen-diffscuss.py</h2>
-
-<p>gen-diffscuss.py is a helper script for creating a new Diffscuss file
-with diffs and log messages from a set of changes in git.</p>
-
-<p>For example,</p>
-
-<p><code>gen-diffscuss.py HEAD~3..HEAD &gt; some_code_review.diffscuss</code></p>
-
-<p>Makes a Diffscuss file containing the diffs from the last three
-commits in a local git repo, introduced with a comment at the top
-containing all the log messages for those three commits.</p>
-
-<h2>Simple Mailbox Support</h2>
-
-<p>Diffscuss ships with diffscuss-mb, which provides simple mailbox
-support for reviews.  In a nutshell, diffscuss-mb manages a single
-directory (let's call it "diffscussions" in this example), with two
-subdirs:</p>
-
-<ul>
-<li><p>reviews - where your .diffscuss files live</p></li>
-<li><p>users - which has one subdir per user in your system</p></li>
-</ul><p>When you post a diffscuss file for review, it's move into the
-"reviews" directory, and for each user you request review from, a
-symlink is created in their user directory.</p>
-
-<p>There is support for posting reviews, marking them done (which just
-translates to removing symlinks in user directories), and "bouncing"
-reviews, which means marking your review done and asking someone else
-to take a look (e.g., because you made comments that you want the
-original poster to implement / respond to).</p>
-
-<p>The Emacs and Vim modes have support for checking your mailbox,
-posting, bouncing, and marking reviews done.</p>
+<p>The Emacs and Vim modes also have support for checking your mailbox,
+posting, bouncing, and marking reviews done right from your editor.</p>
 
 <p>In Emacs:</p>
 
@@ -302,18 +198,211 @@ removing the review from your inbox.</p></li>
 reviews in your inbox. You can use <code>gf</code> with your cursor on a
 filename in the list to open the review (or e.g. <code>C-w gf</code> to open it
 in a new tab).</p></li>
-</ul><p>See <code>diffscuss-mb/dmb-init.py</code> to get started.</p>
+</ul><h2>
+<a name="getting-help" class="anchor" href="#getting-help"><span class="octicon octicon-link"></span></a>Getting help</h2>
 
-<h2>Pull Request Export (Experimental)</h2>
+<p>The diffscuss exe has help available with -h globally and for each
+subcommand.</p>
 
-<p>Diffscuss ships with <code>gh-export.py</code>, which exports one or more
-Github pull requests into local Diffscuss files.</p>
+<h2>
+<a name="the-format-in-a-nutshell" class="anchor" href="#the-format-in-a-nutshell"><span class="octicon octicon-link"></span></a>The Format in a Nutshell</h2>
+
+<p>Diffscuss adds a single beginning-of-line character to the unified
+diff format: %, which marks the beginning of a comment line.  Lines
+beginning with %* are comment headers, and lines beginning with %- are
+comment bodies.  The number of * or - characters indicates reply
+threading.</p>
+
+<p>Comments apply to the line directly above them.  Comments at the top
+of the file apply to the entire review in general.</p>
+
+<p>Take a look at the "Format Definition" section for (much) more detail.</p>
+
+<h2>
+<a name="the-emacs-mode" class="anchor" href="#the-emacs-mode"><span class="octicon octicon-link"></span></a>The Emacs Mode</h2>
+
+<p>The Emacs mode is implemented in a single .el file, diffscuss-mode.el.
+To install, either move the diffscuss-mode.el file to a directory in
+your load path or else add the Diffscuss mode directory to your load
+path in your .emacs file like so:</p>
+
+<pre><code>(setq load-path
+      (append (list nil "/path/to/diffscuss/diffscuss-mode")
+               load-path))
+</code></pre>
+
+<p>Once the file is in your load path, require the mode with:</p>
+
+<pre><code>(require 'diffscuss-mode)
+</code></pre>
+
+<p>The mode colorizes Diffscuss files to make for easier reading.  In
+addition it helps with:</p>
+
+<h3>
+<a name="inserting-comments" class="anchor" href="#inserting-comments"><span class="octicon octicon-link"></span></a>Inserting Comments</h3>
+
+<p>The main command you need to know is <code>C-c C-c</code>, which generally
+"does the right thing" based on the position of the cursor.  To wit:</p>
+
+<ul>
+<li><p>If the cursor is at the very top of the buffer, it will insert a new
+review-level comment (this function is available anywhere in the
+buffer with <code>C-c C-f</code>).</p></li>
+<li><p>If the cursor is inside another comment, it will create a reply to
+that comment (this can also be invoked with <code>C-c C-r</code>).</p></li>
+<li><p>If the cursor is inside the diff index information for a file /
+hunk, it will insert a comment after the "range line" (the line
+beginning with @@).</p></li>
+<li><p>If the cursor is on a diff line, it will create a comment directly
+below that line (this is also available with <code>C-c C-i</code>).</p></li>
+</ul><h3>
+<a name="jumping-to-source" class="anchor" href="#jumping-to-source"><span class="octicon octicon-link"></span></a>Jumping to Source</h3>
+
+<p>This currently requires that the Diffscuss file you are visiting is
+somewhere under a git checkout of the repo against which the Diffscuss
+file was generated.</p>
+
+<h4>
+<a name="local-source" class="anchor" href="#local-source"><span class="octicon octicon-link"></span></a>Local Source</h4>
+
+<p>If you position the cursor on one of the diff lines in a Diffscuss
+file, then:</p>
+
+<ul>
+<li>
+<code>C-c s</code> will attempt to find the local source file / line in
+that file that's the best candidate to match up with the Diffscuss
+line the cursor is currently on.</li>
+</ul><h4>
+<a name="repository-versions-of-the-source" class="anchor" href="#repository-versions-of-the-source"><span class="octicon octicon-link"></span></a>Repository Versions of the Source</h4>
+
+<ul>
+<li><p><code>C-c -</code> will open up a temporary buffer containing the old
+version of the source (if it's available locally), with the cursor
+positioned on the same line.</p></li>
+<li><p><code>C-c +</code> will open up a temporary buffer containing the new
+version of the source (if it's available locally), with the cursor
+positioned on the same line.</p></li>
+</ul><h3>
+<a name="navigation" class="anchor" href="#navigation"><span class="octicon octicon-link"></span></a>Navigation</h3>
+
+<p>You can move around the Diffscussion quickly using:</p>
+
+<ul>
+<li><p><code>C-c f</code> to move forward one comment.</p></li>
+<li><p><code>C-c b</code> to move back one comment.</p></li>
+<li><p><code>C-c n</code> to move to the next thread.</p></li>
+<li><p><code>C-c p</code> to move to the previous thread.</p></li>
+<li><p><code>C-c a</code> to move to the beginning of the current thread.</p></li>
+<li><p><code>C-c e</code> to move to the end of the current thread.</p></li>
+</ul><h2>
+<a name="the-vim-plugin" class="anchor" href="#the-vim-plugin"><span class="octicon octicon-link"></span></a>The Vim Plugin</h2>
+
+<p>Like the Emacs mode, the Vim plugin offers syntax highlighting, comment insertion,
+commands for jumping to source files, and motions for comments and threads.
+The Vim plugin is implemented primarily in Python, so you'll need a version of
+Vim compiled with Python support in order to use it
+(<code>vim --version | grep '+python'</code>).</p>
+
+<h3>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h3>
+
+<h4>
+<a name="with-vundle" class="anchor" href="#with-vundle"><span class="octicon octicon-link"></span></a>With Vundle</h4>
+
+<p>If you use Vundle, add this to your <code>.vimrc</code> and then <code>:BundleInstall</code>:</p>
+
+<pre><code>Bundle 'hut8labs/diffscuss', {'rtp': 'diffscuss.vim/'}
+</code></pre>
+
+<h4>
+<a name="with-pathogen" class="anchor" href="#with-pathogen"><span class="octicon octicon-link"></span></a>With Pathogen</h4>
+
+<p>If you use Pathogen:</p>
+
+<ol>
+<li>Clone the <code>diffscuss</code> repository.</li>
+<li>Copy <code>diffscuss/diffscuss.vim</code> to <code>~/.vim/bundle</code>.</li>
+<li>Set the <code>diffscuss_dir</code> key of <code>g:diffscuss_config</code> to the path of the
+<code>diffscuss</code> clone.</li>
+</ol><h3>
+<a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h3>
+
+<p>The Vim plugin will use its environment and <code>git config</code> to determine your name
+and email (for pre-filling comments) and for various runtime paths.</p>
+
+<p>If you wish, you can override these settings by specifying some or all of a
+<code>g:diffscuss_config</code> dictionary in your <code>.vimrc</code>:</p>
+
+<div class="highlight"><pre><span class="k">let</span> <span class="k">g</span>:diffscuss_config <span class="p">=</span> {
+    \<span class="s1">'author'</span>: <span class="s1">'Your Name'</span><span class="p">,</span>
+    \<span class="s1">'email'</span>: <span class="s1">'your.email@example.com'</span><span class="p">,</span>
+    \<span class="s1">'diffscuss_dir'</span>: <span class="s1">'/path/to/diffscuss'</span><span class="p">,</span>
+    \<span class="s1">'python'</span>: <span class="s1">'/path/to/python'</span>
+    \}
+</pre></div>
+
+<h3>
+<a name="inserting-comments-1" class="anchor" href="#inserting-comments-1"><span class="octicon octicon-link"></span></a>Inserting Comments</h3>
+
+<ul>
+<li>
+<code>&lt;leader&gt;dd</code>: insert a new comment contextually (Emacs <code>C-c C-c</code>)</li>
+<li>
+<code>&lt;leader&gt;df</code>: insert a new review-level comment (Emacs <code>C-c C-f</code>)</li>
+<li>
+<code>&lt;leader&gt;dr</code>: insert a new reply (Emacs <code>C-c C-r</code>)</li>
+<li>
+<code>&lt;leader&gt;di</code>: insert a new comment (Emacs <code>C-c C-i</code>)</li>
+</ul><h3>
+<a name="showing-the-source" class="anchor" href="#showing-the-source"><span class="octicon octicon-link"></span></a>Showing the Source</h3>
+
+<ul>
+<li>
+<code>&lt;leader&gt;do</code>: show the old source version (Emacs <code>C-c -</code>)</li>
+<li>
+<code>&lt;leader&gt;dn</code>: show the new source version (Emacs <code>C-c +</code>)</li>
+<li>
+<code>&lt;leader&gt;ds</code>: show the local source version (Emacs <code>C-c s</code>)</li>
+</ul><h3>
+<a name="navigation-1" class="anchor" href="#navigation-1"><span class="octicon octicon-link"></span></a>Navigation</h3>
+
+<ul>
+<li>
+<code>]d</code>: jump to the start of the next comment</li>
+<li>
+<code>[d</code>: jump to the start of the previous comment</li>
+<li>
+<code>]D</code>: jump to the end of the next comment</li>
+<li>
+<code>[D</code>: jump to the end of the previous comment</li>
+<li>
+<code>]t</code>: jump to the start of the next thread</li>
+<li>
+<code>[t</code>: jump to the start of the previous thread</li>
+<li>
+<code>]T</code>: jump to the end of the next thread</li>
+<li>
+<code>[T</code>: jump to the end of the previous thread</li>
+</ul><h2>
+<a name="pull-request-export-experimental" class="anchor" href="#pull-request-export-experimental"><span class="octicon octicon-link"></span></a>Pull Request Export (Experimental)</h2>
+
+<p>Diffscuss ships with an experimental <code>diffscuss github-import</code>
+command, which imports or more Github pull requests into local
+Diffscuss files.</p>
 
 <p>One possible use for this (besides transition, if you're going to use
 Diffscuss), is to provide a searchable, offline copy of your pull
 requests.</p>
 
-<h2>What the Future Might Hold</h2>
+<p>There's some talk about making this bidirectional, so that, e.g., you
+could import a pull request, make local responses in diffscuss, and
+push the changes, but for the moment it's just talk.  Let us know if
+you'd be interested in this (or interested in helping write it!).</p>
+
+<h2>
+<a name="what-else-the-future-might-hold" class="anchor" href="#what-else-the-future-might-hold"><span class="octicon octicon-link"></span></a>What Else the Future Might Hold</h2>
 
 <ul>
 <li><p>Side-by-side diff viewing in the modes</p></li>
@@ -326,9 +415,11 @@ requests.</p>
 </ul><p>If any of these appeal to you / scratch a personal itch, please let us
 know--or even better, contribute!</p>
 
-<h2>Format Definition</h2>
+<h2>
+<a name="format-definition-in-hairy-detail" class="anchor" href="#format-definition-in-hairy-detail"><span class="octicon octicon-link"></span></a>Format Definition in Hairy Detail</h2>
 
-<h3>Beginning of Line Marker</h3>
+<h3>
+<a name="beginning-of-line-marker" class="anchor" href="#beginning-of-line-marker"><span class="octicon octicon-link"></span></a>Beginning of Line Marker</h3>
 
 <p>All Diffscuss lines begin with one '%'.</p>
 
@@ -336,12 +427,14 @@ know--or even better, contribute!</p>
 80 chars or less when possible is probably good citizenship, since
 they're meant to be read and edited inside editors.</p>
 
-<h3>Diffscuss Comment Format</h3>
+<h3>
+<a name="diffscuss-comment-format" class="anchor" href="#diffscuss-comment-format"><span class="octicon octicon-link"></span></a>Diffscuss Comment Format</h3>
 
 <p>A Diffscuss comment begins with an author line, and possibly other
 header lines, followed by at least one body line.</p>
 
-<h3>Header Lines</h3>
+<h3>
+<a name="header-lines" class="anchor" href="#header-lines"><span class="octicon octicon-link"></span></a>Header Lines</h3>
 
 <p>A header line one '%' followed by at least one '*', followed by a
 space, followed by a header of the format 'field-name: value'.</p>
@@ -373,9 +466,11 @@ newline.</p>
 <li><p>email</p></li>
 <li><p>date</p></li>
 </ul><p>Non-standard headers should begin with an 'x-', to keep compatible
-with future additions to the Diffscuss format.</p>
+with future additions to the Diffscuss format (for example, this is
+what the github import uses).</p>
 
-<h4>The author Header</h4>
+<h4>
+<a name="the-author-header" class="anchor" href="#the-author-header"><span class="octicon octicon-link"></span></a>The author Header</h4>
 
 <p>An author line is a standard header line with a field of 'author' and
 a value indicating who authored the comment.  For example:</p>
@@ -391,12 +486,14 @@ a value indicating who authored the comment.  For example:</p>
 <p>Every comment must begin with an author line.  All other headers are
 optional.</p>
 
-<h4>The date Header</h4>
+<h4>
+<a name="the-date-header" class="anchor" href="#the-date-header"><span class="octicon octicon-link"></span></a>The date Header</h4>
 
 <p>Dates should be specified in the full ISO 8601 standard, including
 time zone offset, e.g. 2013-11-22T23:11:21-0400.</p>
 
-<h3>Body Lines</h3>
+<h3>
+<a name="body-lines" class="anchor" href="#body-lines"><span class="octicon octicon-link"></span></a>Body Lines</h3>
 
 <p>A body line is one '%' character followed by at least one -, followed
 by a space, followed by arbitrary text.</p>
@@ -418,7 +515,8 @@ by a space, followed by arbitrary text.</p>
 
 <p>A body line must always follow a header line or another body line.</p>
 
-<h3>Threads</h3>
+<h3>
+<a name="threads" class="anchor" href="#threads"><span class="octicon octicon-link"></span></a>Threads</h3>
 
 <p>A thread is one or more adjacent comments, properly threaded.</p>
 
@@ -470,7 +568,8 @@ example:</p>
 %-- And I'm a reply to the second top-level comment.
 </code></pre>
 
-<h4>Position / Target of Threads</h4>
+<h4>
+<a name="position--target-of-threads" class="anchor" href="#position--target-of-threads"><span class="octicon octicon-link"></span></a>Position / Target of Threads</h4>
 
 <p>Diffscuss threads are generally taken to apply to the line immediately
 above them, so for example in this snippet:</p>

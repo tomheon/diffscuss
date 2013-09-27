@@ -9,7 +9,8 @@ Diffscuss is:
 
 * an Emacs mode and Vim plugin to support responding to / managing
   code reviews in that format (including jumping directly to the
-  source code a comment addresses)
+  source code a comment addresses--great for actually making those
+  little fixes and improvements)
 
 * a set of command line tools to support generating and managing
   reviews in the diffscuss format with a simple, directory based tool
@@ -17,18 +18,31 @@ Diffscuss is:
 
 We at Hut 8 Labs originally developed diffscuss to help us do code
 reviews when we were onsite with a client who didn't have their own
-code review system.  We found ourselves emailing diffs back and forth,
-writing things like "about halfway through the diff you do X, maybe
-you should do Y?"  Eventually we started writing comments right in the
-diffs themselves, with markers like "EWJ REVIEW!!!" and thought "There
-has to be a better way."
+code review system.  Since a life without code reviews just isn't
+worth living for us, we found ourselves emailing diffs back and forth
+to each other, with messages like "about halfway through the diff you
+do X, maybe you should do Y?"  Eventually we even started inserting
+comments right in the attached diffs themselves--comments like "EWJ
+RENAME THIS VARIABLE OR DIE IN A FIRE!!!"--which worked surprisingly
+well, except that:
 
-Now, about 6 months into using diffscuss, we've grown to love its
-support for code reviews in our editors--where we're already efficient
-at reading and navigating code--and especially its abililty to jump
-directly from a comment to the corresponding line of actual source,
-which lowers the activation energy for addressing reviews and actually
-making all those little suggested improvements.
+* it was easy to miss comments and replies in large diffs, even when
+  the comments were all caps and followed by multiple exclamation
+  points
+
+* it was a pain to co-ordinate reviews and replies from even two other
+  people
+
+* it was a pain to track down the actual source lines a comment
+  referred to, which meant an unpleasantly high activation energy for
+  applying small fixes and suggestions
+
+So we created diffscuss--a code review format based on unified diffs,
+with editor support for threaded inline comments, basic review
+management and git integration, and (best of all) support for jumping
+right from a comment to the local source it addresses, without ever
+leaving the comfort of Emacs (or, because Hut 8's own Matt Papi is a
+Vimmortal, Vim).
 
 ## What Does a Diffscuss Review Look Like?
 

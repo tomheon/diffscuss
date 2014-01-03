@@ -25,7 +25,8 @@ For example:
 
 python diffscuss-notify.py 80 hut8labs.com diffscussions/users/
 """
-import SimpleHTTPServer
+from collections import defaultdict
+import BaseHTTPServer
 import SocketServer
 import cgi
 import json
@@ -34,17 +35,17 @@ import os
 import smtplib
 
 
-def notify(addy, repo_name, repo_url):
-    print "Sending to %s" % addy
+def notify(addy, repo_name, repo_url, count):
     username = os.environ['DIFFSCUSS_NOTIFY_SMTP_USER']
     password = os.environ['DIFFSCUSS_NOTIFY_SMTP_PASSWORD']
     fromaddr = os.environ['DIFFSCUSS_NOTIFY_FROM']
     toaddrs = addy
     msg = \
         ("Subject: New Diffscussion in %s\r\n\r\n"
-         "You have new diffscussions in %s (%s).") % (repo_name,
-                                                      repo_name,
-                                                      repo_url)
+         "You have %s new diffscussions in %s (%s).") % (repo_name,
+                                                         count,
+                                                         repo_name,
+                                                         repo_url)
 
     server = smtplib.SMTP(os.environ['DIFFSCUSS_NOTIFY_SMTP_SERVER'])
     server.starttls()
@@ -53,14 +54,21 @@ def notify(addy, repo_name, repo_url):
     server.quit()
 
 
-class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class ServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+    def do_head(self):
+        self.do_GET()
 
     def do_GET(self):
-        SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        self.send_response(200)
+        self.send_header("Content-Length", 1)
+        self.wfile.write(' ')
 
     def do_POST(self):
         global diffscuss_user_dir
         global domain
+
+        folks_with_diffscussions = defaultdict(int)
 
         form = cgi.FieldStorage(
             fp=self.rfile,
@@ -74,9 +82,16 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 fpath = fpath.encode('utf-8')
                 if fpath.startswith(diffscuss_user_dir):
                     user = os.path.split(fpath[len(diffscuss_user_dir):])[0]
-                    notify("%s@%s" % (user, domain),
-                           payload["repository"]["name"],
-                           payload["repository"]["url"])
+                    folks_with_diffscussions[user] += 1
+
+        for (user, count) in folks_with_diffscussions.items():
+            notify("%s@%s" % (user, domain),
+                   payload["repository"]["name"],
+                   payload["repository"]["url"],
+                   count)
+
+
+        self.do_GET()
 
 
 if __name__ == '__main__':

@@ -35,17 +35,19 @@ import os
 import smtplib
 
 
-def notify(addy, repo_name, repo_url, count):
+def notify(addy, repo_name, repo_url, reviews):
     username = os.environ['DIFFSCUSS_NOTIFY_SMTP_USER']
     password = os.environ['DIFFSCUSS_NOTIFY_SMTP_PASSWORD']
     fromaddr = os.environ['DIFFSCUSS_NOTIFY_FROM']
     toaddrs = addy
     msg = \
         ("Subject: New Diffscussion in %s\r\n\r\n"
-         "You have %s new diffscussions in %s (%s).") % (repo_name,
-                                                         count,
-                                                         repo_name,
-                                                         repo_url)
+         "You have %s new diffscussions in %s (%s):\n\n%s") % (
+        repo_name,
+        len(reviews),
+        repo_name,
+        repo_url,
+        "\n".join(reviews))
 
     server = smtplib.SMTP(os.environ['DIFFSCUSS_NOTIFY_SMTP_SERVER'])
     server.starttls()
@@ -68,7 +70,8 @@ class ServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         global diffscuss_user_dir
         global domain
 
-        folks_with_diffscussions = defaultdict(int)
+        # username -> list of added reviews
+        folks_with_diffscussions = defaultdict(list)
 
         form = cgi.FieldStorage(
             fp=self.rfile,
@@ -81,14 +84,15 @@ class ServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             for fpath in commit[u"added"]:
                 fpath = fpath.encode('utf-8')
                 if fpath.startswith(diffscuss_user_dir):
-                    user = os.path.split(fpath[len(diffscuss_user_dir):])[0]
-                    folks_with_diffscussions[user] += 1
+                    user, review = os.path.split(
+                        fpath[len(diffscuss_user_dir):])
+                    folks_with_diffscussions[user].append(review)
 
-        for (user, count) in folks_with_diffscussions.items():
+        for (user, reviews) in folks_with_diffscussions.items():
             notify("%s@%s" % (user, domain),
                    payload["repository"]["name"],
                    payload["repository"]["url"],
-                   count)
+                   reviews)
 
 
         self.do_GET()

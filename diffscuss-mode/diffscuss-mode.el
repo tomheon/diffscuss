@@ -823,7 +823,9 @@ and old or new is 'new'."
      "-e")
     (with-current-buffer outbuf
       (beginning-of-buffer)
-      (compilation-mode))
+      (let ((compilation-error-regexp-alist
+             '(("\\(/.*\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3))))
+        (compilation-mode)))
     (pop-to-buffer outbuf)))
 
 (defun diffscuss-mb-cmd-impl (recips verb cmd)

@@ -1,25 +1,54 @@
 ;;; diffscuss-mode.el --- Major mode for diffscuss files.
 
+;; Copyright (c) 2014 Hut 8 Labs, LLC
+
+;; Author: Edmund Jorgensen <tomheon@gmail.com>
+;; Keywords: tools
+
+;; The MIT License (MIT)
+
+;; Permission is hereby granted, free of charge, to any person obtaining
+;; a copy of this software and associated documentation files (the
+;; "Software"), to deal in the Software without restriction, including
+;; without limitation the rights to use, copy, modify, merge, publish,
+;; distribute, sublicense, and/or sell copies of the Software, and to
+;; permit persons to whom the Software is furnished to do so, subject to
+;; the following conditions:
+
+;; The above copyright notice and this permission notice shall be
+;; included in all copies or substantial portions of the Software.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+;; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 ;;; Commentary:
+
+;;; Code:
 
 ;;; Config variables
 
-;; By default, diffscuss will use your git config user.name for new
-;; comments.  You can override that here.
-(defvar diffscuss-author nil)
+(defvar diffscuss-author nil
+  "Author name for new comments.
+By default, diffscuss will use your git config user.name for new
+comments.  You can override that here.")
 
-;; By default, diffscuss will use your git config user.email for new
-;; comments.  You can override that here.
-(defvar diffscuss-email nil)
+(defvar diffscuss-email nil
+  "Email address for new comments.
+By default, diffscuss will use your git config user.email for new
+comments.  You can override that here.")
 
-;; Where to find git, by default assume it's whatever version is in
-;; the path.
-(defvar diffscuss-git-exe "git")
+(defvar diffscuss-git-exe (executable-find "git")
+  "Path to git executable.")
 
-;; The top-level diffscuss command to run.  If you haven't installed
-;; diffscuss somewhere in your path, you can override this to provide
-;; the full path to it.
-(defvar diffscuss-exe "diffscuss")
+(defvar diffscuss-exe "diffscuss"
+  "The top-level diffscuss command to run.
+If you haven't installed diffscuss somewhere in your path, you
+can override this to provide the full path to it.")
 
 ;;; Code:
 
@@ -62,6 +91,7 @@
     map)
   "Keymap for diffscuss mode.")
 
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.diffscuss\\'" . diffscuss-mode))
 
 ;; Font-lock support
@@ -79,88 +109,60 @@
 
 (defgroup diffscuss-faces nil
   "Faces in diffscuss-mode."
-  :tag "Diffscuss Faces")
+  :tag "Diffscuss Faces"
+  :group 'diffscuss)
 
 (defface diffscuss-level-1 ;; originally copied from font-lock-function-name-face
-    '((((class color) (min-colors 88) (background light)) (:foreground "Blue1"))
-      (((class color) (min-colors 88) (background dark)) (:foreground "LightSkyBlue"))
-      (((class color) (min-colors 16) (background light)) (:foreground "Blue"))
-      (((class color) (min-colors 16) (background dark)) (:foreground "LightSkyBlue"))
-      (((class color) (min-colors 8)) (:foreground "blue" :bold t))
-      (t (:bold t)))
+    '((t (:inherit outline-1)))
   "Face used for diffscuss level 1 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-1 'diffscuss-level-1)
 
 (defface diffscuss-level-2 ;; originally copied from font-lock-variable-name-face
-    '((((class color) (min-colors 16) (background light)) (:foreground "DarkGoldenrod"))
-      (((class color) (min-colors 16) (background dark))  (:foreground "LightGoldenrod"))
-      (((class color) (min-colors 8)  (background light)) (:foreground "yellow"))
-      (((class color) (min-colors 8)  (background dark))  (:foreground "yellow" :bold t))
-      (t (:bold t)))
+    '((t (:inherit outline-2)))
   "Face used for diffscuss level 2 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-2 'diffscuss-level-2)
 
 (defface diffscuss-level-3 ;; originally copied from font-lock-keyword-face
-    '((((class color) (min-colors 88) (background light)) (:foreground "Purple"))
-      (((class color) (min-colors 88) (background dark))  (:foreground "Cyan1"))
-      (((class color) (min-colors 16) (background light)) (:foreground "Purple"))
-      (((class color) (min-colors 16) (background dark))  (:foreground "Cyan"))
-      (((class color) (min-colors 8)  (background light)) (:foreground "purple" :bold t))
-      (((class color) (min-colors 8)  (background dark))  (:foreground "cyan" :bold t))
-      (t (:bold t)))
+    '((t (:inherit outline-3)))
   "Face used for diffscuss level 3 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-3 'diffscuss-level-3)
 
 (defface diffscuss-level-4   ;; originally copied from font-lock-comment-face
-    '((((class color) (min-colors 88) (background light)) (:foreground "Firebrick"))
-      (((class color) (min-colors 88) (background dark))  (:foreground "chocolate1"))
-      (((class color) (min-colors 16) (background light)) (:foreground "red"))
-      (((class color) (min-colors 16) (background dark))  (:foreground "red1"))
-      (((class color) (min-colors 8) (background light))  (:foreground "red" :bold t))
-      (((class color) (min-colors 8) (background dark))   (:foreground "red" :bold t))
-      (t (:bold t)))
+    '((t (:inherit outline-4)))
   "Face used for difscuss level 4 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-4 'diffscuss-level-4)
 
 (defface diffscuss-level-5 ;; originally copied from font-lock-type-face
-    '((((class color) (min-colors 16) (background light)) (:foreground "ForestGreen"))
-      (((class color) (min-colors 16) (background dark)) (:foreground "PaleGreen"))
-      (((class color) (min-colors 8)) (:foreground "green")))
+    '((t (:inherit outline-5)))
   "Face used for diffscuss level 5 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-5 'diffscuss-level-5)
 
 (defface diffscuss-level-6 ;; originally copied from font-lock-constant-face
-    '((((class color) (min-colors 16) (background light)) (:foreground "CadetBlue"))
-      (((class color) (min-colors 16) (background dark)) (:foreground "Aquamarine"))
-      (((class color) (min-colors 8)) (:foreground "magenta")))
+    '((t (:inherit outline-6)))
   "Face used for diffscuss level 6 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-6 'diffscuss-level-6)
 
 (defface diffscuss-level-7 ;; originally copied from font-lock-builtin-face
-    '((((class color) (min-colors 16) (background light)) (:foreground "Orchid"))
-      (((class color) (min-colors 16) (background dark)) (:foreground "LightSteelBlue"))
-      (((class color) (min-colors 8)) (:foreground "blue")))
+    '((t (:inherit outline-7)))
   "Face used for diffscuss level 8 comments."
   :group 'diffscuss-faces)
 
 (defvar diffscuss-level-7 'diffscuss-level-7)
 
 (defface diffscuss-level-8 ;; originally copied from font-lock-string-face
-    '((((class color) (min-colors 16) (background light)) (:foreground "RosyBrown"))
-      (((class color) (min-colors 16) (background dark)) (:foreground "LightSalmon"))
-      (((class color) (min-colors 8)) (:foreground "green")))
+    '((t (:inherit outline-8)))
   "Face used for diffscuss level 8 comments."
   :group 'diffscuss-faces)
 
@@ -190,7 +192,7 @@
 ;; Utility functions
 
 (defun diffscuss-parse-leader ()
-  "Parse the leading %[*-]+ from the current line"
+  "Parse the leading %[*-]+ from the current line."
   (save-excursion
     (beginning-of-line)
     (if (looking-at "^%\\([*]+\\|[-]+\\)")
@@ -199,17 +201,17 @@
         nil)))
 
 (defun diffscuss-comment-part-regexp (parse-leader from-string to-string)
-  "Utility function to help make header / body regexps"
+  "Utility function to help make header / body regexps."
   (concat "^"
           (regexp-quote (replace-regexp-in-string from-string to-string parse-leader))
           "\\([ ]\\|\n\\|$\\)"))
 
 (defun diffscuss-comment-body-regexp (parse-leader)
-  "Return a regexp matching the begging of a body line leading with parse-leader"
+  "Return a regexp matching the begging of a body line leading with parse-leader."
   (diffscuss-comment-part-regexp parse-leader "*" "-"))
 
 (defun diffscuss-comment-header-regexp (parse-leader)
-  "Return a regexp matching the begging of a body line leading with parse-leader"
+  "Return a regexp matching the begging of a body line leading with parse-leader."
   (diffscuss-comment-part-regexp parse-leader "-" "*"))
 
 (defun diffscuss-find-body-start ()
@@ -278,7 +280,7 @@
       (point))))
 
 (defun diffscuss-find-paragraph-start ()
-  "Return the beginning of the current comment paragraph"
+  "Return the beginning of the current comment paragraph."
   (let ((leader (diffscuss-parse-leader)))
     (if (diffscuss-is-body-leader leader)
         (save-excursion
@@ -297,7 +299,7 @@
       nil)))
 
 (defun diffscuss-find-paragraph-end ()
-  "Return the beginning of the current comment paragraph"
+  "Return the beginning of the current comment paragraph."
   (let ((leader (diffscuss-parse-leader)))
     (if (diffscuss-is-body-leader leader)
         (save-excursion
@@ -343,9 +345,9 @@
 (defun diffscuss-get-git-config (config-name)
   (with-temp-buffer
     (call-process diffscuss-git-exe nil t nil "config" "--get" config-name)
-    (trim-string (buffer-string))))
+    (diffscuss-trim-string (buffer-string))))
 
-(defun trim-string (string)
+(defun diffscuss-trim-string (string)
   "Remove white spaces in beginning and ending of STRING.
 White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
 (replace-regexp-in-string "\\`[ \t\n]*" ""
@@ -465,7 +467,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
 (defun diffscuss-insert-file-comment ()
   "Insert a file-level comment."
   (interactive)
-  (beginning-of-buffer)
+  (goto-char (point-min))
   ;; either there's already a file level comment, in which case we
   ;; want to jump in at the bottom of the thread, or not.
   (let ((existing-comment (diffscuss-parse-leader)))
@@ -675,7 +677,8 @@ and old or new is 'new'."
     (if source-file-name
         (progn
           (let ((source-buffer-name (concat "*" source-file-name "*" rev "*")))
-            (let ((source-buffer (get-buffer source-buffer-name)))
+            (let ((source-buffer (get-buffer source-buffer-name))
+                  got-source)
               (if source-buffer
                   ;; we assume that if the buffer already exists, we
                   ;; had a successful run earlier.
@@ -737,7 +740,7 @@ and old or new is 'new'."
   (diffscuss-get-rev "^index \\([^.]+\\)\\.\\."))
 
 (defun diffscuss-get-new-rev ()
-    (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. \n\r]+\\)"))
+  (diffscuss-get-rev "^index [^.]+\\.\\.\\([^. \n\r]+\\)"))
 
 ;; navigation
 
@@ -822,7 +825,7 @@ and old or new is 'new'."
      "check"
      "-e")
     (with-current-buffer outbuf
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (let ((compilation-error-regexp-alist
              '(("\\(/.*\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3))))
         (compilation-mode)))
@@ -851,12 +854,12 @@ and old or new is 'new'."
                          orig-file
                          (split-string recips " "))))
         (if (= 0 exe-res)
-            (progn (setq new-file (trim-string (buffer-string)))
+            (progn (setq new-file (diffscuss-trim-string (buffer-string)))
                    (message "%s successful" verb))
           (message "Could not %s, got error: %s" verb (buffer-string)))))
     (if (not (string= buffer-file-name new-file))
         (progn (set-visited-file-name new-file)
-               (message "Visiting new review file." "")))))
+               (message "Visiting new review file.")))))
 
 (defun diffscuss-mb-post (recips)
   (interactive "sEnter post recipients separated by space: ")
@@ -872,17 +875,12 @@ and old or new is 'new'."
 
 ;; Define the mode.
 
-(defun diffscuss-mode ()
+;;;###autoload
+(define-derived-mode diffscuss-mode fundamental-mode "Diffscuss"
   "Major mode for inter-diff code review."
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map diffscuss-mode-map)
-  (set (make-local-variable 'font-lock-defaults) '(diffscuss-font-lock-keywords t))
-  (set (make-local-variable 'fill-paragraph-function) 'diffscuss-fill-paragraph)
-  (setq major-mode 'diffscuss-mode)
-  (setq mode-name "Diffscuss")
-  (run-hooks 'diffscuss-mode-hook))
+  (setq font-lock-defaults '(diffscuss-font-lock-keywords t))
+  (set (make-local-variable 'fill-paragraph-function) 'diffscuss-fill-paragraph))
+
 
 (provide 'diffscuss-mode)
-
 ;;; diffscuss-mode.el ends here

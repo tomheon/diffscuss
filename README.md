@@ -1,5 +1,18 @@
 # Diffscuss: Code Reviews.  In Plain Text.
 
+## Hello!
+
+Hello, recent stargazers and users!
+
+We're excited that you're interested in checking out diffscuss.
+
+We'd be delighted to hear about any snafus you hit as you're getting
+up and running, or any feedback you have in general.  Feel free to
+reach out to us: we're edmund, matt, or dan @hut8labs.com.  (Or, if
+you hit a bug etc., feel free to open up an issue).
+
+Cheers!
+
 ## What is Diffscuss?
 
 Diffscuss is:

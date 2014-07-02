@@ -14,7 +14,8 @@ Diffscuss is:
 
 * a set of command line tools to support generating and managing
   reviews in the diffscuss format with a simple, directory based tool
-  for posting and managing code reviews
+  for posting and managing code reviews, as well as to import reviews
+  from github pull requests (experimental)
 
 We at Hut 8 Labs originally developed diffscuss to help us do code
 reviews when we were onsite with a client who didn't have their own
@@ -181,6 +182,13 @@ In Vim:
   reviews in your inbox. You can use ```gf``` with your cursor on a
   filename in the list to open the review (or e.g. ```C-w gf``` to open it
   in a new tab).
+
+## Github Pull Request Import (Experimental)
+
+You can import a pull request (or series of) from github into
+local diffscuss files.
+
+See ```diffscuss github-import``` for more.
 
 ## Getting help
 

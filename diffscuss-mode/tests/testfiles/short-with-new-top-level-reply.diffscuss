@@ -1,24 +1,24 @@
-%*
-%* author: Edmund Jorgensen
-%* email: tomheon@gmail.com
-%* date: 2013-04-05T16:17:27-0400
-%*
-%- Testing 1.
-%-
-%**
-%** author: Edmund Jorgensen
-%** email: tomheon@gmail.com
-%** date: 2013-04-05T16:17:58-0400
-%**
-%-- Testing 2.
-%--
-%**
-%** author: Edmund Jorgensen
-%** email: tomheon@gmail.com
-%** date: 2013-04-05T19:47:07-0400
-%**
-%-- NEW COMMENT TEXT
-%--
+#*
+#* author: Edmund Jorgensen
+#* email: tomheon@gmail.com
+#* date: 2013-04-05T16:17:27-0400
+#*
+#- Testing 1.
+#-
+#**
+#** author: Edmund Jorgensen
+#** email: tomheon@gmail.com
+#** date: 2013-04-05T16:17:58-0400
+#**
+#-- Testing 2.
+#--
+#**
+#** author: Edmund Jorgensen
+#** email: tomheon@gmail.com
+#** date: 2013-04-05T19:47:07-0400
+#**
+#-- NEW COMMENT TEXT
+#--
 diff --git a/.gitignore b/.gitignore
 index 4e59ca6..11a78a5 100644
 --- a/.gitignore

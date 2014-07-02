@@ -27,7 +27,7 @@ nnoremap <buffer> <silent> ]T :<c-u>call DiffscussNextThreadEnd()<cr>
 nnoremap <buffer> <silent> [T :<c-u>call DiffscussPrevThreadEnd()<cr>
 
 " Auto-formatting
-set comments=nb:%-,nb:%*,nb:%--,nb:%**,nb:%---,nb:%***,nb:%----,nb:%****,nb:%-----,nb:%******,nb:%------,nb:%*******,nb:%-------,nb:%********
+set comments=nb:#-,nb:#*,nb:#--,nb:#**,nb:#---,nb:#***,nb:#----,nb:#****,nb:#-----,nb:#******,nb:#------,nb:#*******,nb:#-------,nb:#********
 set formatoptions=tcqron
 
 " Folding
@@ -35,7 +35,7 @@ set formatoptions=tcqron
 set foldexpr=DiffscussFold(v:lnum)
 
 function! DiffscussFold(lnum)
-    let match = matchlist(getline(a:lnum), "^%[*-]\\+")
+    let match = matchlist(getline(a:lnum), "^#[*-]\\+")
     if match != []
         return string(len(match[0]) - 1)
     else

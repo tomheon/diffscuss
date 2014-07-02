@@ -93,14 +93,14 @@ def _write_diffscuss_header(output_f, author, email, git_exe):
                     "email: %s" % email,
                     "date: %s" % iso_time,
                     '']
-    header_lines = ['%%* %s' % s for s in header_lines]
+    header_lines = ['#* %s' % s for s in header_lines]
 
     output_f.write('\n'.join(header_lines))
     output_f.write('\n')
 
 
 def _write_diffscuss_body(output_f, revision, git_exe):
-    log_lines = ['%%- %s' % s for s in _git_log(revision, git_exe)]
+    log_lines = ['#- %s' % s for s in _git_log(revision, git_exe)]
     output_f.write('\n'.join(log_lines))
     output_f.write('\n')
 

@@ -61,7 +61,7 @@ def walk(fil):
 
     # allow the normal magic header lines (such as encoding), but
     # don't consider them part of the diffscuss file.
-    while line.startswith("#"):
+    while line.startswith("#") and not _is_diffscuss_line(line):
         line = fil.readline()
 
     while True:
@@ -109,7 +109,9 @@ def _check_body(body_lines):
 
 
 def _check_header(header_lines):
+    print "HERE EWJ"
     for line in header_lines:
+        print line
         if _is_author_line(line):
             return
         if not _is_empty_header(line):
@@ -152,8 +154,8 @@ def _read_comment_part(line, fil, pred):
     return part_lines, line
 
 
-HEADER_RE = re.compile(r'^(%[*]+)( |$)')
-EMPTY_HEADER_RE = re.compile(r'^(%[*]+)\s*$')
+HEADER_RE = re.compile(r'^(#[*]+)( |$)')
+EMPTY_HEADER_RE = re.compile(r'^(#[*]+)\s*$')
 
 
 def _is_header(line):
@@ -164,14 +166,14 @@ def _is_empty_header(line):
     return EMPTY_HEADER_RE.match(line)
 
 
-AUTHOR_RE = re.compile(r'^(%[*]+) author: ')
+AUTHOR_RE = re.compile(r'^(#[*]+) author: ')
 
 
 def _is_author_line(line):
     return AUTHOR_RE.match(line)
 
 
-BODY_RE = re.compile(r'^(%[-]+)( |$)')
+BODY_RE = re.compile(r'^(#[-]+)( |$)')
 
 
 def _is_body(line):
@@ -183,7 +185,7 @@ def _is_range_line(line):
 
 
 def _is_diffscuss_line(line):
-    return line.startswith('%')
+    return line.startswith('#*') or line.startswith('#-')
 
 
 # legal starts to a unified diff line inside a hunk

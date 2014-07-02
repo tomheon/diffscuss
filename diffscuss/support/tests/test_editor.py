@@ -117,22 +117,22 @@ TEST_LINE_PROPERTIES = [
     (' diff line',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=False, is_body=False, is_diffscuss=False, depth=0)),
-    ('%* Header',
+    ('#* Header',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=True, is_body=False, is_diffscuss=True, depth=1)),
-    ('%- Body',
+    ('#- Body',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=False, is_body=True, is_diffscuss=True, depth=1)),
-    ('%***** Deep header',
+    ('#***** Deep header',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=True, is_body=False, is_diffscuss=True, depth=5)),
-    ('%----- Deep body',
+    ('#----- Deep body',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=False, is_body=True, is_diffscuss=True, depth=5)),
-    ('%*- Strange header',
+    ('#*- Strange header',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=True, is_body=False, is_diffscuss=True, depth=1)),
-    ('%-* Strange body',
+    ('#-* Strange body',
      dict(is_diff_meta=False, is_diff_range=False,
           is_header=False, is_body=True, is_diffscuss=True, depth=1))
 ]
@@ -161,20 +161,20 @@ index rev1..rev2 100644
 """.strip().split('\n')
 
 TEST_BUFFER_FILE = """
-%*
-%* author: Test
-%* email: test@example.com
-%* date: 2013-01-01T00:00:00-0500
-%*
-%- This is a test comment.
-%-
-%**
-%** author: Test
-%** email: test@example.com
-%** date: 2013-01-01T00:01:00-0500
-%**
-%-- This is a test reply.
-%--
+#*
+#* author: Test
+#* email: test@example.com
+#* date: 2013-01-01T00:00:00-0500
+#*
+#- This is a test comment.
+#-
+#**
+#** author: Test
+#** email: test@example.com
+#** date: 2013-01-01T00:01:00-0500
+#**
+#-- This is a test reply.
+#--
 diff --git a/some/file b/some/file
 index rev1..rev2 100644
 --- a/some/file
@@ -192,20 +192,20 @@ index rev1..rev2 100644
 +++ b/some/file
 @@ -1,1 +1,2 @@
 +diff1
-%*
-%* author: Test
-%* email: test@example.com
-%* date: 2013-01-01T00:00:00-0500
-%*
-%- This is a test comment.
-%-
-%**
-%** author: Test
-%** email: test@example.com
-%** date: 2013-01-01T00:01:00-0500
-%**
-%-- This is a test reply.
-%--
+#*
+#* author: Test
+#* email: test@example.com
+#* date: 2013-01-01T00:00:00-0500
+#*
+#- This is a test comment.
+#-
+#**
+#** author: Test
+#** email: test@example.com
+#** date: 2013-01-01T00:01:00-0500
+#**
+#-- This is a test reply.
+#--
  diff2
  diff3
 """.strip().split('\n')
@@ -219,13 +219,13 @@ index rev1..rev2 100644
 +diff1
  diff2
  diff3
-%*
-%* author: Test
-%* email: test@example.com
-%* date: 2013-01-01T00:00:00-0500
-%*
-%- This is a test comment.
-%-
+#*
+#* author: Test
+#* email: test@example.com
+#* date: 2013-01-01T00:00:00-0500
+#*
+#- This is a test comment.
+#-
 """.strip().split('\n')
 
 
@@ -236,7 +236,7 @@ def test_find_header_start():
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
         result = editor.find_header_start(TEST_BUFFER_FILE, (i, 1))
-        if i <= TEST_BUFFER_FILE.index('%**'):
+        if i <= TEST_BUFFER_FILE.index('#**'):
             yield eq_, (1, 1), result
         elif i <= TEST_BUFFER_FILE.index('diff --git a/some/file b/some/file'):
             yield eq_, (7, 1), result
@@ -245,9 +245,9 @@ def test_find_header_start():
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
         result = editor.find_header_start(TEST_BUFFER_BODY, (i, 1))
-        if i <= TEST_BUFFER_BODY.index('%*'):
+        if i <= TEST_BUFFER_BODY.index('#*'):
             yield eq_, (i, 1), result
-        elif i <= TEST_BUFFER_BODY.index('%**'):
+        elif i <= TEST_BUFFER_BODY.index('#**'):
             yield eq_, (6, 1), result
         elif i <= TEST_BUFFER_BODY.index(' diff2'):
             yield eq_, (13, 1), result
@@ -266,7 +266,7 @@ def test_find_body_end():
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
         result = editor.find_body_end(TEST_BUFFER_FILE, (i, 1))
-        if i <= TEST_BUFFER_FILE.index('%**'):
+        if i <= TEST_BUFFER_FILE.index('#**'):
             yield eq_, (7, 1), result
         elif i <= TEST_BUFFER_FILE.index('diff --git a/some/file b/some/file'):
             yield eq_, (14, 1), result
@@ -275,9 +275,9 @@ def test_find_body_end():
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
         result = editor.find_body_end(TEST_BUFFER_BODY, (i, 1))
-        if i <= TEST_BUFFER_BODY.index('%*'):
+        if i <= TEST_BUFFER_BODY.index('#*'):
             yield eq_, (i, 1), result
-        elif i <= TEST_BUFFER_BODY.index('%**'):
+        elif i <= TEST_BUFFER_BODY.index('#**'):
             yield eq_, (13, 1), result
         elif i <= TEST_BUFFER_BODY.index(' diff2'):
             yield eq_, (20, 1), result
@@ -296,7 +296,7 @@ def test_find_subthread_end():
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
         result = editor.find_subthread_end(TEST_BUFFER_FILE, (i, 1))
-        if i <= TEST_BUFFER_FILE.index('%**'):
+        if i <= TEST_BUFFER_FILE.index('#**'):
             yield eq_, (14, 1), result
         elif i <= TEST_BUFFER_FILE.index('diff --git a/some/file b/some/file'):
             yield eq_, (14, 1), result
@@ -305,9 +305,9 @@ def test_find_subthread_end():
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
         result = editor.find_subthread_end(TEST_BUFFER_BODY, (i, 1))
-        if i <= TEST_BUFFER_BODY.index('%*'):
+        if i <= TEST_BUFFER_BODY.index('#*'):
             yield eq_, (i, 1), result
-        elif i <= TEST_BUFFER_BODY.index('%**'):
+        elif i <= TEST_BUFFER_BODY.index('#**'):
             yield eq_, (20, 1), result
         elif i <= TEST_BUFFER_BODY.index(' diff2'):
             yield eq_, (20, 1), result
@@ -322,7 +322,7 @@ def test_find_thread_end():
 
     for i in range(1, len(TEST_BUFFER_FILE) + 1):
         result = editor.find_thread_end(TEST_BUFFER_FILE, (i, 1))
-        if i <= TEST_BUFFER_FILE.index('%**'):
+        if i <= TEST_BUFFER_FILE.index('#**'):
             yield eq_, (14, 1), result
         elif i <= TEST_BUFFER_FILE.index('diff --git a/some/file b/some/file'):
             yield eq_, (14, 1), result
@@ -331,9 +331,9 @@ def test_find_thread_end():
 
     for i in range(1, len(TEST_BUFFER_BODY) + 1):
         result = editor.find_thread_end(TEST_BUFFER_BODY, (i, 1))
-        if i <= TEST_BUFFER_BODY.index('%*'):
+        if i <= TEST_BUFFER_BODY.index('#*'):
             yield eq_, (i, 1), result
-        elif i <= TEST_BUFFER_BODY.index('%**'):
+        elif i <= TEST_BUFFER_BODY.index('#**'):
             yield eq_, (20, 1), result
         elif i <= TEST_BUFFER_BODY.index(' diff2'):
             yield eq_, (20, 1), result
@@ -353,19 +353,19 @@ def test_find_range():
 
 @patch(editor.time, 'strftime', lambda arg: '2013-01-01T01:01:01-0500')
 def test_make_comment():
-    eq_(['%*', '%* author: Test', '%* email: test@example.com',
-         '%* date: 2013-01-01T01:01:01-0500', '%*', '%- ', '%-'],
+    eq_(['#*', '#* author: Test', '#* email: test@example.com',
+         '#* date: 2013-01-01T01:01:01-0500', '#*', '#- ', '#-'],
         editor.make_comment(depth=1))
-    eq_(['%**', '%** author: Test', '%** email: test@example.com',
-         '%** date: 2013-01-01T01:01:01-0500', '%**', '%-- ', '%--'],
+    eq_(['#**', '#** author: Test', '#** email: test@example.com',
+         '#** date: 2013-01-01T01:01:01-0500', '#**', '#-- ', '#--'],
         editor.make_comment(depth=2))
-    eq_(['%*', '%* author: Test', '%* email: test@example.com',
-         '%* date: 2013-01-01T01:01:01-0500', '%*', '%- ', '%-'],
+    eq_(['#*', '#* author: Test', '#* email: test@example.com',
+         '#* date: 2013-01-01T01:01:01-0500', '#*', '#- ', '#-'],
         editor.make_comment(depth=0))
 
     with patch(editor, 'config', lambda: dict()):
-        eq_(['%*', '%* author: Unknown', '%* email: Unknown',
-             '%* date: 2013-01-01T01:01:01-0500', '%*', '%- ', '%-'],
+        eq_(['#*', '#* author: Unknown', '#* email: Unknown',
+             '#* date: 2013-01-01T01:01:01-0500', '#*', '#- ', '#-'],
             editor.make_comment(depth=1))
 
 
@@ -380,13 +380,13 @@ def test_inject_comment():
          '+++ b/some/file',
          '@@ -1,1 +1,2 @@',
          '+diff1',
-         '%*',
-         '%* author: Test',
-         '%* email: test@example.com',
-         '%* date: 2013-01-01T00:00:00-0500',
-         '%*',
-         '%- ',
-         '%-',
+         '#*',
+         '#* author: Test',
+         '#* email: test@example.com',
+         '#* date: 2013-01-01T00:00:00-0500',
+         '#*',
+         '#- ',
+         '#-',
          ' diff2',
          ' diff3'], new_buf)
 
@@ -402,26 +402,26 @@ def test_insert_comment():
          '+++ b/some/file',
          '@@ -1,1 +1,2 @@',
          '+diff1',
-         '%*',
-         '%* author: Test',
-         '%* email: test@example.com',
-         '%* date: 2013-01-01T00:00:00-0500',
-         '%*',
-         '%- This is a test comment.',
-         '%-',
-         '%**',
-         '%** author: Test',
-         '%** email: test@example.com',
-         '%** date: 2013-01-01T00:01:00-0500',
-         '%**',
-         '%-- This is a test reply.',
-         '%--',
-         '%*',
-         '%* author: Test',
-         '%* email: test@example.com',
-         '%* date: 2013-01-01T00:00:00-0500',
-         '%*',
-         '%- ',
-         '%-',
+         '#*',
+         '#* author: Test',
+         '#* email: test@example.com',
+         '#* date: 2013-01-01T00:00:00-0500',
+         '#*',
+         '#- This is a test comment.',
+         '#-',
+         '#**',
+         '#** author: Test',
+         '#** email: test@example.com',
+         '#** date: 2013-01-01T00:01:00-0500',
+         '#**',
+         '#-- This is a test reply.',
+         '#--',
+         '#*',
+         '#* author: Test',
+         '#* email: test@example.com',
+         '#* date: 2013-01-01T00:00:00-0500',
+         '#*',
+         '#- ',
+         '#-',
          ' diff2',
          ' diff3'], new_buf)

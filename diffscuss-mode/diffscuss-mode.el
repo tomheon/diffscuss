@@ -2,7 +2,7 @@
 
 ;; Copyright (c) 2014 Hut 8 Labs, LLC
 
-;; Author: Edmund Jorgensen <tomheon@gmail.com>
+;; Author: Edmund Jorgensen <edmund@hut8labs.com>
 ;; Keywords: tools
 
 ;; The MIT License (MIT)
@@ -102,7 +102,7 @@ can override this to provide the full path to it.")
 ;; TODO: Need to investigate whether I can just front-load the
 ;; diffscuss font lock rules and then append the diff ones like this,
 ;; and have that work in some of the weirder circumstances
-;; (e.g. leading %'s in header material) or whether that even matters.
+;; (e.g. leading #'s in header material) or whether that even matters.
 ;; Alternatively, could duplicate all the definitions here.  But that
 ;; would suck.
 ;;
@@ -171,31 +171,31 @@ can override this to provide the full path to it.")
 (defvar diffscuss-font-lock-keywords
   (append
    (list
-     '("^%\\*\\([ ].*\n\\|\n\\)" . diffscuss-level-1) ;; level 1 header
-     '("^%-\\([ ]\\|\n\\|$\\)" . diffscuss-level-1) ;; level 1 body
-     '("^%[*]\\{2\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-2) ;; level 2 header
-     '("^%[-]\\{2\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-2) ;; level 2 body
-     '("^%[*]\\{3\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-3) ;; level 3 header
-     '("^%[-]\\{3\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-3) ;; level 3 body
-     '("^%[*]\\{4\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-4) ;; level 4 header
-     '("^%[-]\\{4\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-4) ;; level 4 body
-     '("^%[*]\\{5\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-5) ;; level 5 header
-     '("^%[-]\\{5\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-5) ;; level 5 body
-     '("^%[*]\\{6\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-6) ;; level 6 header
-     '("^%[-]\\{6\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-6) ;; level 6 body
-     '("^%[*]\\{7\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-7) ;; level 7 header
-     '("^%[-]\\{7\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-7) ;; level 7 body
-     '("^%[*]\\{8\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-8) ;; level 8 header
-     '("^%[-]\\{8\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-8)) ;; level 8 body
+     '("^#\\*\\([ ].*\n\\|\n\\)" . diffscuss-level-1) ;; level 1 header
+     '("^#-\\([ ]\\|\n\\|$\\)" . diffscuss-level-1) ;; level 1 body
+     '("^#[*]\\{2\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-2) ;; level 2 header
+     '("^#[-]\\{2\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-2) ;; level 2 body
+     '("^#[*]\\{3\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-3) ;; level 3 header
+     '("^#[-]\\{3\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-3) ;; level 3 body
+     '("^#[*]\\{4\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-4) ;; level 4 header
+     '("^#[-]\\{4\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-4) ;; level 4 body
+     '("^#[*]\\{5\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-5) ;; level 5 header
+     '("^#[-]\\{5\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-5) ;; level 5 body
+     '("^#[*]\\{6\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-6) ;; level 6 header
+     '("^#[-]\\{6\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-6) ;; level 6 body
+     '("^#[*]\\{7\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-7) ;; level 7 header
+     '("^#[-]\\{7\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-7) ;; level 7 body
+     '("^#[*]\\{8\\}\\([ ].*\n\\|\n\\)" . diffscuss-level-8) ;; level 8 header
+     '("^#[-]\\{8\\}\\([ ]\\|\n\\|$\\)" . diffscuss-level-8)) ;; level 8 body
    diff-font-lock-keywords))
 
 ;; Utility functions
 
 (defun diffscuss-parse-leader ()
-  "Parse the leading %[*-]+ from the current line."
+  "Parse the leading #[*-]+ from the current line."
   (save-excursion
     (beginning-of-line)
-    (if (looking-at "^%\\([*]+\\|[-]+\\)")
+    (if (looking-at "^#\\([*]+\\|[-]+\\)")
         (buffer-substring (match-beginning 0)
                           (match-end 0))
         nil)))
@@ -357,7 +357,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
 (defun diffscuss-is-body-leader (leader)
   "Non-nil if leader is a body leader."
   (if leader
-      (string-prefix-p "%-" leader)
+      (string-prefix-p "#-" leader)
     nil))
 
 ;; string-prefix-p isn't defined in Emacs 22.3.2, found this snippet online,
@@ -460,7 +460,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
   (diffscuss-jump-to-end-of-thread)
   (end-of-line)
   (newline)
-  (insert (diffscuss-make-comment "%*"))
+  (insert (diffscuss-make-comment "#*"))
   (forward-line -1)
   (end-of-line))
 
@@ -474,7 +474,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
     (if existing-comment
         (progn (diffscuss-jump-to-end-of-thread)
                (newline)))
-    (insert (diffscuss-make-comment "%*"))
+    (insert (diffscuss-make-comment "#*"))
     (if existing-comment
         ;; we're already positioned at the end of the comment, we only
         ;; need to move back 1.
@@ -566,7 +566,7 @@ White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
   "Non nil if the current line is part of hunk's meta data."
   (save-excursion
       (beginning-of-line)
-      (not (looking-at "^[% +\n\\-]"))))
+      (not (looking-at "^[# +\n\\-]"))))
 
 (defun diffscuss-get-source-file (old-or-new)
   "Get the name of the source file."

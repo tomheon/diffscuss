@@ -17,8 +17,9 @@ Cheers!
 
 Diffscuss is:
 
-* a file format, built on the the unified diff format, that allows
-  threaded code reviews to exist inline with the diffs they address
+* a file format threaded code reviews to exist inline with the unified
+  diffs they address (any legal diffscuss file is also a legal unified
+  diff)
 
 * an Emacs mode and Vim plugin to support responding to / managing
   code reviews in that format (including jumping directly to the
@@ -60,13 +61,25 @@ Vimmortal, Vim).
 
 ## What Does a Diffscuss Review Look Like?
 
-Screenshot of a Diffscuss review in Emacs:
+Here's a diffscuss file newly created by "Edmund Jorgensen,"
+requesting review for a trivial python file.  Note the comment at the
+top of the file describing the review as a whole.
 
-![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-reading-review.png?raw=true)
+![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-created-review.png?raw=true)
 
-After jumping to source:
+In this screenshot, "Someone Else" has read the review and commented
+on the ```print "hello world"``` line.
+
+![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-added-comment.png?raw=true)
+
+Now "Edmund Jorgensen", while reading the comment, decides to take
+"Someone Else's" suggestion.  He hits ```C-c s``` in Emacs with his
+cursor on "Someone Else's" comment...
 
 ![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-jump-to-source.png?raw=true)
+
+And Emacs opens up a new buffer with the cursor positioned right on
+the line to which "Someone Else's" comment applied.
 
 ## Why Might You Want to Use Diffscuss?
 
@@ -210,9 +223,11 @@ subcommand.
 
 ## The Format in a Nutshell
 
-Diffscuss adds a single beginning-of-line character to the unified
-diff format: %, which marks the beginning of a comment line.  Lines
-beginning with %* are comment headers, and lines beginning with %- are
+Diffscuss piggybacks on unified diff comments (which are indicated by
+a leading #), with the consequence that a legal diffscuss file is
+still a legal diff, just with some extra comments (which ```patch```
+and related should ignore).  Lines beginning with #* are considered
+diffscuss comment headers, and lines beginning with #- are diffscuss
 comment bodies.  The number of * or - characters indicates reply
 threading.
 
@@ -409,7 +424,7 @@ know--or even better, contribute!
 
 ### Beginning of Line Marker
 
-All Diffscuss lines begin with one '%'.
+All Diffscuss lines begin with either '#*' (for a header) or '#-' (for a body).
 
 There's no limit to the length of a Diffscuss line, but keeping them
 80 chars or less when possible is probably good citizenship, since
@@ -422,11 +437,11 @@ header lines, followed by at least one body line.
 
 ### Header Lines
 
-A header line one '%' followed by at least one '*', followed by a
-space, followed by a header of the format 'field-name: value'.
+A header line is one '#' followed by at least one '*', followed by a space,
+followed by a header of the format 'field-name: value'.
 
-Header lines may also be empty, containing no 'field-name: value', in
-which case the space after the * is also optional.
+Header lines may also be empty, for spacing purposes, containing no
+'field-name: value', in which case the space after the * is also optional.
 
 A header line must always begin a comment or follow another header
 line.
@@ -434,15 +449,15 @@ line.
 For example, all three of these are valid header lines:
 
 ```
-%* author: Bob Jones
+#* author: Bob Jones
 ```
 
 ```
-%**
+#**
 ```
 
 ```
-%*** x-github-version: 1
+#*** x-github-version: 1
 ```
 
 The field name cannot contain whitespace.  The value cannot contain a
@@ -466,13 +481,13 @@ An author line is a standard header line with a field of 'author' and
 a value indicating who authored the comment.  For example:
 
 ```
-%* author: ejorgensen
+#* author: ejorgensen
 ```
 
 Or
 
 ```
-%** author: bsmith
+#** author: bsmith
 ```
 
 Every comment must begin with an author line.  All other headers are
@@ -485,7 +500,7 @@ time zone offset, e.g. 2013-11-22T23:11:21-0400.
 
 ### Body Lines
 
-A body line is one '%' character followed by at least one -, followed
+A body line is one '#' character followed by at least one -, followed
 by a space, followed by arbitrary text.
 
 Exception: for an empty body line, the space is optional.
@@ -493,17 +508,17 @@ Exception: for an empty body line, the space is optional.
 For example:
 
 ```
-%- This is a body line.
+#- This is a body line.
 ```
 
 ```
-%-- And so is *this*.
+#-- And so is *this*.
 ```
 
 ```
-%- and this next body line
-%-
-%- is empty, so doesn't need a space, but could have one.
+#- and this next body line
+#-
+#- is empty, so doesn't need a space, but could have one.
 ```
 
 A body line must always follow a header line or another body line.
@@ -515,26 +530,26 @@ A thread is one or more adjacent comments, properly threaded.
 For example, this is a thread:
 
 ```
-%* author: ejorgensen
-%- I'm a one comment thread.
+#* author: ejorgensen
+#- I'm a one comment thread.
 ```
 
 And so is this:
 
 ```
-%* author: ejorgensen
-%- I'm a two comment thread.
-%* author: bsmith
-%- With no replies, just two top level comments.
+#* author: ejorgensen
+#- I'm a two comment thread.
+#* author: bsmith
+#- With no replies, just two top level comments.
 ```
 
 And so is this:
 
 ```
-%* author: ejorgensen
-%- I'm a two comment thread.
-%** author: bsmith
-%-- With a reply.
+#* author: ejorgensen
+#- I'm a two comment thread.
+#** author: bsmith
+#-- With a reply.
 ```
 
 To be explicit: the nesting / reply level of a thread is determined by
@@ -550,18 +565,18 @@ the closest previous comment with one less level of nesting.  For
 example:
 
 ```
-%* author: ejorgensen
-%- I'm a top-level comment.
-%** author: bsmith
-%-- And I'm a reply.
-%*** author: sjones
-%--- And I'm a reply to the reply.
-%** author: jkidd
-%-- And I'm a second reply to the original top-level comment.
-%* author: mdarks
-%- And I'm another top-level comment.
-%** author: lbutterman
-%-- And I'm a reply to the second top-level comment.
+#* author: ejorgensen
+#- I'm a top-level comment.
+#** author: bsmith
+#-- And I'm a reply.
+#*** author: sjones
+#--- And I'm a reply to the reply.
+#** author: jkidd
+#-- And I'm a second reply to the original top-level comment.
+#* author: mdarks
+#- And I'm another top-level comment.
+#** author: lbutterman
+#-- And I'm a reply to the second top-level comment.
 ```
 #### Position / Target of Threads
 
@@ -570,9 +585,9 @@ above them, so for example in this snippet:
 
 ```
 +It's only just a test
-%* author: ejorgensen
-%- I have grave doubts about this change.  To me it appears foolhardy
-%- and dangerous.
+#* author: ejorgensen
+#- I have grave doubts about this change.  To me it appears foolhardy
+#- and dangerous.
 ```
 
 The comment applies to the line
@@ -589,8 +604,8 @@ assumed to be the entire hunk, for example:
 --- 1.txt	2013-03-07 20:18:10.000000000 -0500
 +++ 2.txt	2013-03-07 20:18:35.000000000 -0500
 @@ -1,5 +1,7 @@
-%* author: ejorgensen
-%- I love this hunk.
+#* author: ejorgensen
+#- I love this hunk.
  This is a test.
 
 -It's just a test
@@ -604,5 +619,5 @@ introductory remarks about what the changes are attempting to achieve,
 "ship it" remarks, etc.).
 
 Every Diffscuss file must begin with such a changeset level thread
-(optionally preceded by any number of "magic" comment lines, e.g. "#
--*- coding: utf-8 -*-").
+(optionally preceded by any number of "magic" comment lines, e.g.
+```# -*- coding: utf-8 -*-```").

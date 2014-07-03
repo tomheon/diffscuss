@@ -109,9 +109,7 @@ def _check_body(body_lines):
 
 
 def _check_header(header_lines):
-    print "HERE EWJ"
     for line in header_lines:
-        print line
         if _is_author_line(line):
             return
         if not _is_empty_header(line):

@@ -1,6 +1,6 @@
 import re
 
-HEADER_LINE_RE = re.compile("^%[*]+ (\w+): (.*)$")
+HEADER_LINE_RE = re.compile("^#[*]+ (\w+): (.*)$")
 
 
 def parse_header(header_line):

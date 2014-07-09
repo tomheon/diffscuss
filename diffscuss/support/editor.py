@@ -40,12 +40,12 @@ class LineProperties(object):
         True
         >>> LineProperties('diff --git a/some/file').is_diff_meta
         True
-        >>> LineProperties('%* This is a header line').is_diff_meta
+        >>> LineProperties('#* This is a header line').is_diff_meta
         False
         """
         if self.line.startswith(('---', '+++')):
             return True
-        return not self.line.startswith((' ', '%', '\n', '-', '+'))
+        return not self.line.startswith((' ', '#', '\n', '-', '+'))
 
     @property
     def is_diff_range(self):
@@ -64,33 +64,33 @@ class LineProperties(object):
         """
         Returns True if the line is a diffscuss header line.
 
-        >>> LineProperties('%* This is a header line').is_header
+        >>> LineProperties('#* This is a header line').is_header
         True
-        >>> LineProperties('%- This is a body line').is_header
+        >>> LineProperties('#- This is a body line').is_header
         False
         """
-        return self.line.startswith('%*')
+        return self.line.startswith('#*')
 
     @property
     def is_body(self):
         """
         Returns True if the line is a diffscuss body line.
 
-        >>> LineProperties('%* This is a header line').is_body
+        >>> LineProperties('#* This is a header line').is_body
         False
-        >>> LineProperties('%- This is a body line').is_body
+        >>> LineProperties('#- This is a body line').is_body
         True
         """
-        return self.line.startswith('%-')
+        return self.line.startswith('#-')
 
     @property
     def is_diffscuss(self):
         """
         Returns True if the line is a diffscuss header or body line.
 
-        >>> LineProperties('%* This is a header line').is_diffscuss
+        >>> LineProperties('#* This is a header line').is_diffscuss
         True
-        >>> LineProperties('%- This is a body line').is_diffscuss
+        >>> LineProperties('#- This is a body line').is_diffscuss
         True
         """
         return self.depth > 0
@@ -104,10 +104,10 @@ class LineProperties(object):
 
         >>> LineProperties('@@ -0,0 +1,2 @@').depth
         0
-        >>> LineProperties('%---- This is a deep reply body line').depth
+        >>> LineProperties('#---- This is a deep reply body line').depth
         4
         """
-        match = re.search(r'^%((\*|-)\2*)', self.line)
+        match = re.search(r'^#((\*|-)\2*)', self.line)
         if match:
             return len(match.group(1))
         return 0
@@ -206,8 +206,8 @@ def make_comment(depth=1):
     `depth`.
     """
     depth = max(depth, 1)
-    header = '%' + '*' * depth
-    body = '%' + '-' * depth
+    header = '#' + '*' * depth
+    body = '#' + '-' * depth
 
     fields = config()
     fields['date'] = time.strftime('%Y-%m-%dT%T%z')

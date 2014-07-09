@@ -1,30 +1,30 @@
-%*
-%* author: Edmund Jorgensen
-%* email: tomheon@gmail.com
-%* date: 2013-04-05T16:17:27-0400
-%*
-%- Check for python 2.6+ in emacs mode.
-%-
-%- And tell the user in more friendly fashion if it's not found.
-%-
-%- Closes #16.
-%-
-%-
-%- Remove useless utility.
-%-
-%-
-%- Add logging (include debug logging) to gh-export.py.
-%-
-%- Closes #28.
-%-
-%-
-%**
-%** author: Edmund Jorgensen
-%** email: tomheon@gmail.com
-%** date: 2013-04-05T16:17:58-0400
-%**
-%-- Testing 2.
-%--
+#*
+#* author: Edmund Jorgensen
+#* email: tomheon@gmail.com
+#* date: 2013-04-05T16:17:27-0400
+#*
+#- Check for python 2.6+ in emacs mode.
+#-
+#- And tell the user in more friendly fashion if it's not found.
+#-
+#- Closes #16.
+#-
+#-
+#- Remove useless utility.
+#-
+#-
+#- Add logging (include debug logging) to gh-export.py.
+#-
+#- Closes #28.
+#-
+#-
+#**
+#** author: Edmund Jorgensen
+#** email: tomheon@gmail.com
+#** date: 2013-04-05T16:17:58-0400
+#**
+#-- Testing 2.
+#--
 diff --git a/.gitignore b/.gitignore
 index 4e59ca6..11a78a5 100644
 --- a/.gitignore

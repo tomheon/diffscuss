@@ -33,9 +33,9 @@ You can see more at issue #36, but the short version is:
 
 Diffscuss is:
 
-* a file format threaded code reviews to exist inline with the unified
-  diffs they address (any legal diffscuss file is also a legal unified
-  diff)
+* a file format that allows threaded code reviews to exist inline with
+  the unified diffs they address (any legal diffscuss file is also a
+  legal unified diff)
 
 * an Emacs mode and Vim plugin to support responding to / managing
   code reviews in that format (including jumping directly to the

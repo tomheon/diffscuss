@@ -13,6 +13,22 @@ you hit a bug etc., feel free to open up an issue).
 
 Cheers!
 
+## Note: v2 of diffscuss introduces an incompatible format change
+
+Because there were so few v1 users (mainly just Hut 8), we made a
+clean break rather than saddle everyone with backwards compatibility
+forever.
+
+You can see more at issue #36, but the short version is:
+
+- diffscuss now uses # instead of % as the beginning of line marker
+
+- reviews produced with v1 can be converted by simply replacing those
+  %'s with #
+
+- there is a script/convert_percent_to_pound.sh if you'd like to use
+  that
+
 ## What is Diffscuss?
 
 Diffscuss is:

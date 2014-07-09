@@ -10,7 +10,8 @@ setup(
     scripts=['bin/diffscuss'],
     url='http://github.com/hut8labs/diffscuss/',
     license='LICENSE.txt',
-    description='Plain-text code review format, version 2.',
+    description='Plain-text code review format and tools.',
+    long_description='Version 2 introduces a breaking format change (use # instead of % to introduce diffscuss lines).',
     install_requires=[
         "PyGithub==1.14.2",
         "argparse==1.2.1",

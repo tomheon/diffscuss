@@ -72,11 +72,11 @@ def _git_log(revision, git_exe):
                                   "--reverse", revision])).split('\n')
 
 
-def _write_diff(revision, lines_context, output_f, git_exe):
+def _write_diff(revision, path, lines_context, output_f, git_exe):
     output_f.write(check_output(_git_cmd(git_exe,
                                          ["diff",
                                           "--unified=%d" % lines_context,
-                                          revision])))
+                                          revision] + path)))
 
 
 def _write_diffscuss_header(output_f, author, email, git_exe):
@@ -106,6 +106,7 @@ def _write_diffscuss_body(output_f, revision, git_exe):
 
 def _main(args):
     revision = args.git_revision_range
+    path = args.path
     lines_context = args.lines_context
     output_fname = args.output_file
     author = args.author
@@ -119,7 +120,7 @@ def _main(args):
 
     _write_diffscuss_header(output_f, author, email, git_exe)
     _write_diffscuss_body(output_f, revision, git_exe)
-    _write_diff(revision, lines_context, output_f, git_exe)
+    _write_diff(revision, path, lines_context, output_f, git_exe)
 
     if output_fname is not None and output_fname != '-':
         output_f.close()

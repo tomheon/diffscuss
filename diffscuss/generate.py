@@ -1,7 +1,6 @@
 import subprocess
 import sys
 import time
-from textwrap import dedent
 
 
 def _check_output(*popenargs, **kwargs):

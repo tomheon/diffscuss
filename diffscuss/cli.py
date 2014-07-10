@@ -54,6 +54,11 @@ def _add_gen_subparser(subparsers):
                                help="The revisions to include in the "
                                "review, in a form recognizable to git log "
                                "or diff (e.g. HEAD~3..HEAD)")
+    gen_subparser.add_argument("path", default=[],
+                               help="Paths to include in review. Defaults to "
+                               "every file changed in the revision. Works "
+                               "exactly as 'git log <revision> -- <path>'",
+                               nargs='*')
 
 
 def _add_find_local_subparser(subparsers):

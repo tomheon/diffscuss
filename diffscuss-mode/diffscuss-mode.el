@@ -50,6 +50,10 @@ comments.  You can override that here.")
 If you haven't installed diffscuss somewhere in your path, you
 can override this to provide the full path to it.")
 
+(defvar diffscuss-prefix-key "\C-c\C-d"
+  "The key prefix used for diffscuss. This prefixes the entire
+keyboard map for use in diffscuss-mode.")
+
 ;;; Code:
 
 ;; we need to make sure diff mode is present and loaded so we can get
@@ -58,35 +62,38 @@ can override this to provide the full path to it.")
 (require 'diff-mode)
 
 (defvar diffscuss-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let* ((map (make-sparse-keymap)))
+    (defun define-diffscuss-key (keys func)
+      (define-key map (concat diffscuss-prefix-key keys) func))
+    
     ;; insert comments
-    (define-key map "\C-c\C-r" 'diffscuss-reply-to-comment)
-    (define-key map "\C-c\C-i" 'diffscuss-insert-comment)
-    (define-key map "\C-c\C-f" 'diffscuss-insert-file-comment)
-    (define-key map "\C-c\C-c" 'diffscuss-insert-contextual-comment)
-
+    (define-diffscuss-key "\C-r" 'diffscuss-reply-to-comment)
+    (define-diffscuss-key "\C-i" 'diffscuss-insert-comment)
+    (define-diffscuss-key "\C-f" 'diffscuss-insert-file-comment)
+    (define-diffscuss-key "\C-c" 'diffscuss-insert-contextual-comment)
+    
     ;; showing source
-    (define-key map "\C-cs" 'diffscuss-goto-local-source)
-    (define-key map "\C-c+" 'diffscuss-show-new-source)
-    (define-key map "\C-c-" 'diffscuss-show-old-source)
-
+    (define-diffscuss-key "s" 'diffscuss-goto-local-source)
+    (define-diffscuss-key "+" 'diffscuss-show-new-source)
+    (define-diffscuss-key "-" 'diffscuss-show-old-source)
+    
     ;; newline stuff
     (define-key map "\C-j" 'diffscuss-newline-and-indent)
     (define-key map (kbd "RET") 'diffscuss-newline-and-indent)
     (define-key map "\C-o" 'diffscuss-open-line)
-
+    
     ;; navigation
-    (define-key map "\C-cf" 'diffscuss-next-comment)
-    (define-key map "\C-cb" 'diffscuss-previous-comment)
-    (define-key map "\C-cn" 'diffscuss-next-thread)
-    (define-key map "\C-cp" 'diffscuss-previous-thread)
-    (define-key map "\C-ca" 'diffscuss-jump-to-beginning-of-thread)
-    (define-key map "\C-ce" 'diffscuss-jump-to-end-of-thread)
-
+    (define-diffscuss-key "f" 'diffscuss-next-comment)
+    (define-diffscuss-key "b" 'diffscuss-previous-comment)
+    (define-diffscuss-key "n" 'diffscuss-next-thread)
+    (define-diffscuss-key "p" 'diffscuss-previous-thread)
+    (define-diffscuss-key "a" 'diffscuss-jump-to-beginning-of-thread)
+    (define-diffscuss-key "e" 'diffscuss-jump-to-end-of-thread)
+    
     ;; diffscuss mailbox integration
-    (define-key map "\C-cmp" 'diffscuss-mb-post)
-    (define-key map "\C-cmb" 'diffscuss-mb-bounce)
-    (define-key map "\C-cmd" 'diffscuss-mb-done)
+    (define-diffscuss-key "mp" 'diffscuss-mb-post)
+    (define-diffscuss-key "mb" 'diffscuss-mb-bounce)
+    (define-diffscuss-key "md" 'diffscuss-mb-done)
 
     map)
   "Keymap for diffscuss mode.")

@@ -89,8 +89,8 @@ on the ```print "hello world"``` line.
 ![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-added-comment.png?raw=true)
 
 Now "Edmund Jorgensen", while reading the comment, decides to take
-"Someone Else's" suggestion.  He hits ```C-c s``` in Emacs with his
-cursor on "Someone Else's" comment...
+"Someone Else's" suggestion.  He hits ```C-c C-d s``` in Emacs with
+his cursor on "Someone Else's" comment...
 
 ![Emacs Screenshot](https://github.com/hut8labs/diffscuss/blob/master/doc/diffscuss-jump-to-source.png?raw=true)
 
@@ -194,16 +194,16 @@ posting, bouncing, and marking reviews done right from your editor.
 
 In Emacs:
 
-* ```C-c m p``` prompts for recipients and posts the current Diffscuss
+* ```C-c C-d m p``` prompts for recipients and posts the current Diffscuss
   file for their review
 
-* ```C-c m b``` prompts for recipients and bounces the review to them,
+* ```C-c C-d m b``` prompts for recipients and bounces the review to them,
   removing the review from your inbox.
 
-* ```C-c m d``` marks the review as done, removing it from your inbox.
+* ```C-c C-d m d``` marks the review as done, removing it from your inbox.
 
 * ```M-x diffscuss-mb-check``` checks your inbox and lists all
-  incoming reviews.  You may wish to bind it globally to ```C-c m c```
+  incoming reviews.  You may wish to bind it globally to ```C-c C-d m c```
   with:
 
 ```
@@ -276,22 +276,22 @@ addition it helps with:
 
 ### Inserting Comments
 
-The main command you need to know is ```C-c C-c```, which generally
+The main command you need to know is ```C-c C-d C-c```, which generally
 "does the right thing" based on the position of the cursor.  To wit:
 
 * If the cursor is at the very top of the buffer, it will insert a new
   review-level comment (this function is available anywhere in the
-  buffer with ```C-c C-f```).
+  buffer with ```C-c C-d C-f```).
 
 * If the cursor is inside another comment, it will create a reply to
-  that comment (this can also be invoked with ```C-c C-r```).
+  that comment (this can also be invoked with ```C-c C-d C-r```).
 
 * If the cursor is inside the diff index information for a file /
   hunk, it will insert a comment after the "range line" (the line
   beginning with @@).
 
 * If the cursor is on a diff line, it will create a comment directly
-  below that line (this is also available with ```C-c C-i```).
+  below that line (this is also available with ```C-c C-d C-i```).
 
 ### Jumping to Source
 
@@ -304,17 +304,17 @@ file was generated.
 If you position the cursor on one of the diff lines in a Diffscuss
 file, then:
 
-* ```C-c s``` will attempt to find the local source file / line in
+* ```C-c C-d s``` will attempt to find the local source file / line in
   that file that's the best candidate to match up with the Diffscuss
   line the cursor is currently on.
 
 #### Repository Versions of the Source
 
-* ```C-c -``` will open up a temporary buffer containing the old
+* ```C-c C-d -``` will open up a temporary buffer containing the old
   version of the source (if it's available locally), with the cursor
   positioned on the same line.
 
-* ```C-c +``` will open up a temporary buffer containing the new
+* ```C-c C-d +``` will open up a temporary buffer containing the new
   version of the source (if it's available locally), with the cursor
   positioned on the same line.
 
@@ -322,17 +322,17 @@ file, then:
 
 You can move around the Diffscussion quickly using:
 
-* ```C-c f``` to move forward one comment.
+* ```C-c C-d f``` to move forward one comment.
 
-* ```C-c b``` to move back one comment.
+* ```C-c C-d b``` to move back one comment.
 
-* ```C-c n``` to move to the next thread.
+* ```C-c C-d n``` to move to the next thread.
 
-* ```C-c p``` to move to the previous thread.
+* ```C-c C-d p``` to move to the previous thread.
 
-* ```C-c a``` to move to the beginning of the current thread.
+* ```C-c C-d a``` to move to the beginning of the current thread.
 
-* ```C-c e``` to move to the end of the current thread.
+* ```C-c C-d e``` to move to the end of the current thread.
 
 ## The Vim Plugin
 
@@ -380,16 +380,16 @@ let g:diffscuss_config = {
 
 ### Inserting Comments
 
-* `<leader>dd`: insert a new comment contextually (Emacs `C-c C-c`)
-* `<leader>df`: insert a new review-level comment (Emacs `C-c C-f`)
-* `<leader>dr`: insert a new reply (Emacs `C-c C-r`)
-* `<leader>di`: insert a new comment (Emacs `C-c C-i`)
+* `<leader>dd`: insert a new comment contextually (Emacs `C-c C-d C-c`)
+* `<leader>df`: insert a new review-level comment (Emacs `C-c C-d C-f`)
+* `<leader>dr`: insert a new reply (Emacs `C-c C-d C-r`)
+* `<leader>di`: insert a new comment (Emacs `C-c C-d C-i`)
 
 ### Showing the Source
 
-* `<leader>do`: show the old source version (Emacs `C-c -`)
-* `<leader>dn`: show the new source version (Emacs `C-c +`)
-* `<leader>ds`: show the local source version (Emacs `C-c s`)
+* `<leader>do`: show the old source version (Emacs `C-c C-d -`)
+* `<leader>dn`: show the new source version (Emacs `C-c C-d +`)
+* `<leader>ds`: show the local source version (Emacs `C-c C-d s`)
 
 ### Navigation
 

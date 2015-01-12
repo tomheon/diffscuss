@@ -202,7 +202,7 @@ def main(args):
     inbox_path = get_inbox_path(inbox, args.git_exe)
     if not os.path.exists(inbox_path):
         _exit("Inbox '%s' doesn't exist, create it "
-              "with 'diffscuss mailbox make-inbox'" % inbox, 2)
+              "with 'diffscuss mailbox make-inbox'" % inbox_path, 2)
     for review in os.listdir(inbox_path):
         if review != '.gitkeep':
             print _format_listing(os.path.join(inbox_path, review),

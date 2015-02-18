@@ -169,7 +169,7 @@ def _add_make_inbox_subparser(mb_subparser):
                                  help="The path to the git executable"
                                  " (defaults to '/usr/bin/env git')")
     inbox_subparser.add_argument("inbox",
-                                 help="The inbox to make the default")
+                                 help="The name of the inbox to create")
 
 
 def _add_init_subparser(mb_subparser):
@@ -285,4 +285,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     mod = mod_map.get(args.subcommand_name)
     mod.main(args)
-

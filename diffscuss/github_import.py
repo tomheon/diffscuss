@@ -116,12 +116,12 @@ def _gh_time_to_diffscuss_time(gh_time):
 
 def _make_header_line(depth, header, value):
     if header is None:
-        return u"%%%s \n" % (u'*' * depth)
-    return u"%%%s %s: %s\n" % (u'*' * depth, header, value)
+        return u"#%s \n" % (u'*' * depth)
+    return u"#%s %s: %s\n" % (u'*' * depth, header, value)
 
 
 def _make_body_line(depth, body):
-    return u"%%%s %s\n" % (u'-' * depth, body)
+    return u"#%s %s\n" % (u'-' * depth, body)
 
 
 def _make_comment(depth, body, headers):
@@ -181,19 +181,8 @@ def _overlay_pr_comments(composer, pull_request):
     logging.info("Overlaying review comments for pr %s",
                  pull_request.url)
     _overlay_comments(composer,
-                      pull_request.get_review_comments())
+                      list(pull_request.get_review_comments()) + list(pull_request.get_reviews()))
 
-
-def _overlay_review_comments(composer, pull_request):
-    """
-    Get the inline comments into the diffscuss file (github makes
-    these contextual comments available as "review comments" as
-    opposed to "issue comments."
-    """
-    logging.info("Overlaying review comments for pr %s",
-                 pull_request.url)
-    _overlay_comments(composer,
-                      pull_request.get_reviews())
 
 
 def _overlay_comments(composer, comments):
@@ -218,7 +207,7 @@ def _overlay_review_level_comments(composer, comments):
     logging.info("Overlaying %d review level comments",
                  len(comments))
     thread = _make_thread(sorted(comments,
-                                 key=lambda ic: getattr(ic, 'created_at', None)))
+                                 key=lambda ic: getattr(ic, 'created_at', None) or getattr(ic._rawData,'submitted_at', None)))
     # note that we're assuming here that the pr thread has already
     # been created.
     logging.debug("Thread is %s", thread)
@@ -265,8 +254,8 @@ def _make_thread(gh_comments, init_offset=0):
             body=(gh_comment.body),
             headers=[(u'author', gh_comment.user.login),
                      (u'email', gh_comment.user.email),
-                     (u'date', _gh_time_to_diffscuss_time(getattr(gh_comment, 'created_at', None))),
-                     (u'x-github-comment-url', getattr(gh_comment, 'url', None) or getattr(gh_comment, 'html_url', None)),
+                     (u'date', _gh_time_to_diffscuss_time(getattr(gh_comment, 'created_at', None) or getattr(gh_comment._rawData, 'submitted_at', None))),
+                     (u'x-github-comment-url', getattr(gh_comment, 'html_url', None) or getattr(gh_comment, 'url', None)),
                      (u'x-github-updated-at',
                       _gh_time_to_diffscuss_time(getattr(gh_comment, 'updated_at', None))),])
         comments.append(comment)
@@ -341,7 +330,6 @@ def _import_to_diffscuss(gh, username, password, repo,
     composer = DiffscussComposer(diff_text)
     _overlay_encoding(composer)
     _overlay_pr_top_level(composer, gh, pull_request)
-    _overlay_review_comments(composer, pull_request)
     _overlay_pr_comments(composer, pull_request)
     _overlay_commit_comments(composer, pull_request)
 

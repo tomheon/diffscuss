@@ -109,7 +109,9 @@ def _get_diff_text(username, password, pull_request):
 def _gh_time_to_diffscuss_time(gh_time):
     # gh times are all zulu, and come in w/out timezones through
     # PyGithub, so we hardcode the offset
-    return unicode(gh_time.strftime("%Y-%m-%dT%T-0000"))
+    if gh_time:
+        return unicode(gh_time.strftime("%Y-%m-%dT%T-0000"))
+    return ''
 
 
 def _make_header_line(depth, header, value):
@@ -169,6 +171,7 @@ def _overlay_pr_top_level(composer, gh, pull_request):
     composer.append_at(-1, init_thread)
 
 
+
 def _overlay_pr_comments(composer, pull_request):
     """
     Get the inline comments into the diffscuss file (github makes
@@ -181,10 +184,22 @@ def _overlay_pr_comments(composer, pull_request):
                       pull_request.get_review_comments())
 
 
+def _overlay_review_comments(composer, pull_request):
+    """
+    Get the inline comments into the diffscuss file (github makes
+    these contextual comments available as "review comments" as
+    opposed to "issue comments."
+    """
+    logging.info("Overlaying review comments for pr %s",
+                 pull_request.url)
+    _overlay_comments(composer,
+                      pull_request.get_reviews())
+
+
 def _overlay_comments(composer, comments):
     comments = list(comments)
     logging.info("Overlaying %d total comments", len(comments))
-    get_path = lambda rc: rc.path
+    get_path = lambda rc: getattr(rc, 'path', None)
     for (path, path_comments) in itertools.groupby(sorted(comments,
                                                           key=get_path),
                                                    get_path):
@@ -203,12 +218,11 @@ def _overlay_review_level_comments(composer, comments):
     logging.info("Overlaying %d review level comments",
                  len(comments))
     thread = _make_thread(sorted(comments,
-                                 key=lambda ic: ic.created_at))
+                                 key=lambda ic: getattr(ic, 'created_at', None)))
     # note that we're assuming here that the pr thread has already
     # been created.
     logging.debug("Thread is %s", thread)
     composer.append_at(-1, thread)
-
 
 def _is_range_line(tagged_line):
     return tagged_line[0] == DIFF_HEADER and tagged_line[1].startswith(u'@@')
@@ -251,10 +265,10 @@ def _make_thread(gh_comments, init_offset=0):
             body=(gh_comment.body),
             headers=[(u'author', gh_comment.user.login),
                      (u'email', gh_comment.user.email),
-                     (u'date', _gh_time_to_diffscuss_time(gh_comment.created_at)),
-                     (u'x-github-comment-url', gh_comment.url),
+                     (u'date', _gh_time_to_diffscuss_time(getattr(gh_comment, 'created_at', None))),
+                     (u'x-github-comment-url', getattr(gh_comment, 'url', None) or getattr(gh_comment, 'html_url', None)),
                      (u'x-github-updated-at',
-                      _gh_time_to_diffscuss_time(gh_comment.updated_at)),])
+                      _gh_time_to_diffscuss_time(getattr(gh_comment, 'updated_at', None))),])
         comments.append(comment)
     return u''.join(comments)
 
@@ -327,6 +341,7 @@ def _import_to_diffscuss(gh, username, password, repo,
     composer = DiffscussComposer(diff_text)
     _overlay_encoding(composer)
     _overlay_pr_top_level(composer, gh, pull_request)
+    _overlay_review_comments(composer, pull_request)
     _overlay_pr_comments(composer, pull_request)
     _overlay_commit_comments(composer, pull_request)
 

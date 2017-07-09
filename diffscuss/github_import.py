@@ -77,76 +77,29 @@ def _password(passfile):
         return passfil.read().rstrip()
 
 
-def _pull_requests_from_repo(repo):
-    logging.debug("Finding all pull requests in repo %s",
-                  repo.url)
-    for state in ['open', 'closed']:
-        logging.debug("Finding %s pull requests in repo %s",
-                      state,
-                      repo.url)
-        for pull_request in repo.get_pulls(state=state):
-            logging.debug("Found pull request %s",
-                          pull_request.url)
-            yield pull_request
-
-
-def _user_or_org(gh, user_or_org_name):
-    # note that gh will not return private users for an org, even if
-    # the api user has access, unless you access the organization as
-    # an organization, so first try to treat the name as an org, and
-    # fall back to user.
-    logging.debug("Finding user or org with name %s", user_or_org_name)
-    try:
-        logging.debug("Trying org %s", user_or_org_name)
-        user_or_org = gh.get_organization(user_or_org_name)
-        logging.debug("Found org %s", user_or_org_name)
-    except GithubException, e:
-        if e.status == 404:
-            logging.debug("No org %s, trying user", user_or_org_name)
-            user_or_org = gh.get_user(user_or_org_name)
-        else:
-            raise
-    return user_or_org
-
-
 def _pull_requests_from_spec(gh, spec):
     logging.info("Parsing spec %s", spec)
-    if ':' in spec:
-        repo_name, pr_id = spec.split(':')
-        repo = gh.get_repo(repo_name)
-        user_or_org = _user_or_org(gh, repo_name.split('/')[0])
-        logging.info("Spec is for pr #%s in repo %s",
-                     pr_id,
-                     repo_name)
-        yield user_or_org, repo, repo.get_pull(int(pr_id))
-    elif '/' in spec:
-        repo = gh.get_repo(spec)
-        user_or_org = _user_or_org(gh, spec.split('/')[0])
-        logging.info("Spec is for all prs in repo %s",
-                     repo.url)
-        for pull_request in _pull_requests_from_repo(repo):
-            yield user_or_org, repo, pull_request
-    else:
-        user_or_org = _user_or_org(gh, spec)
-        logging.info("Spec is for all prs in all repos for user/org %s",
-                     spec)
-        for repo in user_or_org.get_repos():
-            for pull_request in _pull_requests_from_repo(repo):
-                yield user_or_org, repo, pull_request
+
+    repo_name, pr_id = spec.split(':')
+    repo = gh.get_repo(repo_name)
+    logging.info("Spec is for pr #%s in repo %s",
+                 pr_id,
+                 repo_name)
+    yield repo, repo.get_pull(int(pr_id))
 
 
 def _pull_requests_from_specs(gh, args):
     for spec in args:
-        for user_or_org, repo, pull_request in _pull_requests_from_spec(gh, spec):
+        for repo, pull_request in _pull_requests_from_spec(gh, spec):
             logging.info("Found pull request %s",
                          pull_request.url)
-            yield user_or_org, repo, pull_request
+            yield repo, pull_request
 
 
 def _get_diff_text(username, password, pull_request):
     logging.info("Requesting diff from url %s",
                  pull_request.diff_url)
-    resp = requests.get(pull_request.diff_url, auth=(username, password))
+    resp = requests.get(pull_request.url, headers={'accept': 'application/vnd.github.v3.diff'}, auth=(username, password))
     if not resp.ok:
         raise Exception("Error pulling %s: %s" % (pull_request.diff_url,
                                                   resp))
@@ -367,7 +320,7 @@ def _overlay_commit_comments(composer, pull_request):
                 _overlay_comments(composer, repo_commit.get_comments())
 
 
-def _import_to_diffscuss(gh, username, password, user_or_org, repo,
+def _import_to_diffscuss(gh, username, password, repo,
                          pull_request, output_dir):
     logging.info("Getting diff text for pull request %s", pull_request.url)
     diff_text = _get_diff_text(username, password, pull_request)
@@ -377,20 +330,9 @@ def _import_to_diffscuss(gh, username, password, user_or_org, repo,
     _overlay_pr_comments(composer, pull_request)
     _overlay_commit_comments(composer, pull_request)
 
-    dest_dir = os.path.join(output_dir, user_or_org.login, repo.name)
-    logging.debug("Destination dir is %s", dest_dir)
-    _mkdir_p(dest_dir)
-    dest_fname = os.path.join(dest_dir, u"%s.diffscuss" % pull_request.number)
-    logging.debug("Destination filename is %s", dest_fname)
-    dest_fname_partial = u"%s.partial" % dest_fname
-    logging.debug("Writing partial results to %s", dest_fname_partial)
+    for line in composer.render():
+        sys.stdout.write(line.encode('utf-8'))
 
-    with open(dest_fname_partial, 'wb') as dest_fil:
-        for line in composer.render():
-            dest_fil.write(line.encode('utf-8'))
-
-    logging.info("Moving final results to %s", dest_fname)
-    shutil.move(dest_fname_partial, dest_fname)
 
 
 def main(args):
@@ -405,17 +347,13 @@ def main(args):
     password = _password(args.passfile)
     gh = Github(args.username, password)
 
-    for (user_or_org,
-         repo,
+    for (repo,
          pull_request) in _pull_requests_from_specs(gh,
                                                     [args.pull_request_spec]):
-        logging.info("Importing %s/%s:%s",
-                     user_or_org.login,
+        logging.info("Importing %s:%s",
                      repo.name,
                      pull_request.number)
         _import_to_diffscuss(gh, args.username, password,
-                             user_or_org, repo, pull_request,
+                             repo, pull_request,
                              args.output_dir)
     sys.exit(0)
-
-

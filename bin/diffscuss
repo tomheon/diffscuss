@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [ "$DIFFSCUSS_PYTHON" == "" ]; then
-   DIFFSCUSS_PYTHON="python"
-fi
-
-$DIFFSCUSS_PYTHON -m diffscuss.cli "$@"

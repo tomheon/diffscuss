@@ -1,18 +1,4 @@
-* use the head/sha to make sure we're getting a consistent view of the world
-we don't care if new comments etc. come in during the api calls, but we do care
-if we're referring potentially to different positions in files etc.
+* pass a max depth of 2 for creating comment in ghA
 
-so call the top level pr once at the beginning, get the sha, once at the end,
-bail if different
 
-* raw gh pr
-
-which is the jsons in various spots, gets translated into the cooked one
-
-that way we can construct a cooked one for tests
-
-* for pagination
-
-use a paginated struct, which is just the paginated link, return the jsons
-
-* pass a max depth of 2 for creating comment in gh
+* add timeout to the client

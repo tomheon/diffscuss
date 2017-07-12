@@ -14,8 +14,11 @@ const (
 	urlBase       = "https://api.github.com"
 	ghTimeFormat  = "2006-01-02T15:04:05Z"
 	diffMediaType = "application/vnd.github.v3.diff"
-	githubTimeout = time.Duration(5 * time.Second)
 )
+
+type LimitedHttpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type rawPR struct {
 	Url  string
@@ -28,10 +31,6 @@ type rawPR struct {
 	Number            int
 	IssueCommentsUrl  string `json:"comments_url"`
 	ReviewCommentsUrl string `json:"review_comments_url"`
-}
-
-type LimitedHttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
 }
 
 type comment struct {
@@ -57,6 +56,42 @@ type fullPR struct {
 type paginatedBytes struct {
 	Bytes []byte
 	Err   error
+}
+
+type commentsMaker func([]byte) ([]comment, error)
+
+type rawIssueComment struct {
+	HtmlUrl string `json:"html_url"`
+	User    struct {
+		Login string
+	}
+	CreatedAt string `json:"created_at"`
+	Body      string
+}
+
+type rawReviewComment struct {
+	HtmlUrl string `json:"html_url"`
+	User    struct {
+		Login string
+	}
+	CreatedAt string `json:"created_at"`
+	Body      string
+	Path      string
+	// TODO clarify position vs. original position, but original_position is
+	// what seems to be right in the case you're commenting on areas of the
+	// diff that aren't changed as well
+	Position int `json:"original_position"`
+}
+
+type rawReview struct {
+	HtmlUrl string `json:"html_url"`
+	User    struct {
+		Login string
+	}
+	CreatedAt   string `json:"created_at"`
+	Body        string
+	State       string
+	SubmittedAt string `json:"submitted_at"`
 }
 
 func parseNextPage(resp *http.Response) (string, error) {
@@ -165,17 +200,6 @@ func generateReviewsUrl(pr *rawPR) string {
 	return generateApiUrl(fmt.Sprintf("repos/%s/pulls/%d/reviews", pr.Head.Repo.FullName, pr.Number))
 }
 
-type commentsMaker func([]byte) ([]comment, error)
-
-type rawIssueComment struct {
-	HtmlUrl string `json:"html_url"`
-	User    struct {
-		Login string
-	}
-	CreatedAt string `json:"created_at"`
-	Body      string
-}
-
 func timeFromGithub(ghTime string) (time.Time, error) {
 	return time.Parse(ghTimeFormat, ghTime)
 }
@@ -194,20 +218,6 @@ func makeIssueComments(bytes []byte) ([]comment, error) {
 	return comments, nil
 }
 
-type rawReviewComment struct {
-	HtmlUrl string `json:"html_url"`
-	User    struct {
-		Login string
-	}
-	CreatedAt string `json:"created_at"`
-	Body      string
-	Path      string
-	// TODO clarify position vs. original position, but original_position is
-	// what seems to be right in the case you're commenting on areas of the
-	// diff that aren't changed as well
-	Position int `json:"original_position"`
-}
-
 func makeReviewComments(bytes []byte) ([]comment, error) {
 	rawReviewComments := make([]rawReviewComment, 0)
 	json.Unmarshal(bytes, &rawReviewComments)
@@ -220,17 +230,6 @@ func makeReviewComments(bytes []byte) ([]comment, error) {
 		comments[i] = comment{Author: raw.User.Login, Body: raw.Body, GithubUrl: raw.HtmlUrl, Path: raw.Path, Position: raw.Position, CreatedAt: createdAt}
 	}
 	return comments, nil
-}
-
-type rawReview struct {
-	HtmlUrl string `json:"html_url"`
-	User    struct {
-		Login string
-	}
-	CreatedAt   string `json:"created_at"`
-	Body        string
-	State       string
-	SubmittedAt string `json:"submitted_at"`
 }
 
 func makeReviews(bytes []byte) ([]comment, error) {

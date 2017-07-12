@@ -1,6 +1,5 @@
 * pass a max depth of 2 for creating comment in ghA
 
+maybe put settings at top of diffscussion?
 
-* add timeout to the client
-
-* make the diff from gh bytes
+* comments in github.go

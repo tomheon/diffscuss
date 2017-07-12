@@ -2,9 +2,11 @@ package diffscuss
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"path"
+	"path/filepath"
 	"sync"
 	"testing"
 )
@@ -13,6 +15,7 @@ type RequestSpec struct {
 	ExpectedUsername string
 	ExpectedToken    string
 	ExpectedHeaders  map[string]string
+	ExpectedMethod   string
 
 	ResponseHeaders    map[string]string
 	ResponseStatusCode int
@@ -22,10 +25,14 @@ type RequestSpec struct {
 }
 
 func NewRequestSpec(username string, token string, basePath string) *RequestSpec {
-	return &RequestSpec{ExpectedHeaders: make(map[string]string), ResponseHeaders: make(map[string]string), ResponseBasePath: basePath, ExpectedUsername: username, ExpectedToken: token, ResponseStatusCode: 200, ResponseSuffix: ".json"}
+	return &RequestSpec{ExpectedHeaders: make(map[string]string), ResponseHeaders: make(map[string]string), ResponseBasePath: basePath, ExpectedUsername: username, ExpectedToken: token, ResponseStatusCode: 200, ResponseSuffix: ".json", ExpectedMethod: "GET"}
 }
 
 func (reqSpec *RequestSpec) Match(req *http.Request, t *testing.T) (*http.Response, error) {
+	if reqSpec.ExpectedMethod != req.Method {
+		t.Fatalf("Expected http method %s, got %s", reqSpec.ExpectedMethod, req.Method)
+	}
+
 	username, password, _ := req.BasicAuth()
 	if reqSpec.ExpectedUsername != username {
 		t.Fatalf("Expected username %s, got %s", reqSpec.ExpectedUsername, username)
@@ -120,43 +127,101 @@ func (client *TestClient) Do(req *http.Request) (*http.Response, error) {
 	return client.Matcher.Match(req, client.T)
 }
 
-func TestSomething(t *testing.T) {
-	user := "someuser"
-	token := "sometoken"
-	basePath := path.Join("testfiles", "simple_pull")
+func generateCommentUrl(repo string, prId int, topType string, commentType string, page int) string {
+	pageParam := ""
+	if page > 1 {
+		pageParam = fmt.Sprintf("?page=%d", page)
+	}
+	return fmt.Sprintf("https://api.github.com/repos/%s/%s/%d/%s%s", repo, topType, prId, commentType, pageParam)
+}
+
+func generatePaginatedSpecs(username string, token string, repo string, prId int, basePath string, topType string, commentType string) (map[string][]*RequestSpec, error) {
+	// specs := []*RequestSpec{NewRequestSpec(username, token, basePath)}
+	jsonDir := path.Join(basePath, "repos", repo, topType, fmt.Sprint(prId), commentType)
+	glob := fmt.Sprintf("%s.*", jsonDir)
+
+	matches, err := filepath.Glob(glob)
+	if err != nil {
+		return nil, err
+	}
+
+	numSpecs := len(matches)
+	specs := make(map[string][]*RequestSpec)
+	workingSpecs := make([]*RequestSpec, numSpecs)
+
+	for i := 0; i < numSpecs; i++ {
+		spec := NewRequestSpec(username, token, basePath)
+		workingSpecs[i] = spec
+		specs[generateCommentUrl(repo, prId, topType, commentType, i+1)] = []*RequestSpec{spec}
+	}
+
+	for i := 1; i < numSpecs; i++ {
+		lastSpec := workingSpecs[i-1]
+		thisSpec := workingSpecs[i]
+		lastSpec.ResponseHeaders["Link"] = generateLinkHeader(repo, prId, topType, commentType, i+1, numSpecs)
+		thisSpec.ResponseSuffix = fmt.Sprintf(".%d.json", i+1)
+	}
+
+	return specs, nil
+}
+
+func generateLinkHeader(repo string, prId int, topType string, commentType string, nextPage int, lastPage int) string {
+	return fmt.Sprintf("<https://api.github.com/repos/%s/%s/%d/%s?page=%d>; rel=\"next\", <https://api.github.com/repos/%s/%s/%d/%s?page=%d>; rel=\"last\"", repo, topType, prId, commentType, nextPage, repo, topType, prId, commentType, lastPage)
+}
+
+func createPRTestClient(t *testing.T, repo string, prId int, username string, token string, basePath string) *TestClient {
 	client := &TestClient{T: t}
 	matcher := NewRequestMatcher()
 
-	pullSpec := NewRequestSpec(user, token, basePath)
+	pullSpec := NewRequestSpec(username, token, basePath)
 
-	diffSpec := NewRequestSpec(user, token, basePath)
+	diffSpec := NewRequestSpec(username, token, basePath)
 	diffSpec.ExpectedHeaders["Accept"] = "application/vnd.github.v3.diff"
 	diffSpec.ResponseSuffix = ".diff"
 
-	reviewsSpec := NewRequestSpec(user, token, basePath)
+	reviewsSpecs, err := generatePaginatedSpecs(username, token, repo, prId, basePath, "pulls", "reviews")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	pullsCommentsSpec := NewRequestSpec(user, token, basePath)
+	pullsCommentsSpecs, err := generatePaginatedSpecs(username, token, repo, prId, basePath, "pulls", "comments")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	issueCommentsSpec := NewRequestSpec(user, token, basePath)
-	issueCommentsSpec.ResponseHeaders["Link"] = "<https://api.github.com/repos/tomheon/scratch/issues/1/comments?page=2>; rel=\"next\", <https://api.github.com/repos/tomheon/scratch/issues/1/comments?page=2>; rel=\"last\""
+	issueCommentsSpecs, err := generatePaginatedSpecs(username, token, repo, prId, basePath, "issues", "comments")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	issueComments2Spec := NewRequestSpec(user, token, basePath)
-	issueComments2Spec.ResponseSuffix = ".2.json"
+	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/pulls/1"] = []*RequestSpec{pullSpec, diffSpec, pullSpec}
+	for url, specs := range reviewsSpecs {
+		matcher.RequestSpecs[url] = specs
+	}
 
-	pullSpecs := []*RequestSpec{pullSpec, diffSpec, pullSpec}
-	reviewsSpecs := []*RequestSpec{reviewsSpec}
-	pullsCommentsSpecs := []*RequestSpec{pullsCommentsSpec}
-	issueCommentsSpecs := []*RequestSpec{issueCommentsSpec}
-	issueComments2Specs := []*RequestSpec{issueComments2Spec}
+	for url, specs := range pullsCommentsSpecs {
+		matcher.RequestSpecs[url] = specs
+	}
 
-	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/pulls/1"] = pullSpecs
-	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/pulls/1/reviews"] = reviewsSpecs
-	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/pulls/1/comments"] = pullsCommentsSpecs
-	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/issues/1/comments"] = issueCommentsSpecs
-	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/issues/1/comments?page=2"] = issueComments2Specs
+	for url, specs := range issueCommentsSpecs {
+		matcher.RequestSpecs[url] = specs
+	}
 
 	client.Matcher = matcher
+
+	return client
+}
+
+func TestSomething(t *testing.T) {
+	username := "someuser"
+	token := "sometoken"
+	basePath := path.Join("testfiles", "simple_pull")
+	repo := "tomheon/scratch"
+	prId := 1
+
+	client := createPRTestClient(t, repo, prId, username, token, basePath)
+
 	FromGithubPR("tomheon/scratch", 1, client, "someuser", "sometoken")
 
-	matcher.CheckCounts(t)
+	client.Matcher.CheckCounts(t)
 }

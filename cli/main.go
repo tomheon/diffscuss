@@ -5,6 +5,7 @@ import "io/ioutil"
 import "log"
 import "net/http"
 import "strings"
+import "time"
 
 import "diffscuss.com/diffscuss"
 
@@ -23,5 +24,6 @@ func main() {
 	token := strings.TrimSpace(string(tokenbytes))
 
 	client := &http.Client{}
+	client.Timeout = time.Duration(5 * time.Second)
 	diffscuss.FromGithubPR("tomheon/scratch", 1, client, *username, token)
 }

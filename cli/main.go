@@ -9,7 +9,6 @@ import "time"
 
 import "diffscuss.com/diffscuss"
 
-
 func main() {
 	username := flag.String("username", "gh-username", "Your github user name")
 	tokenfile := flag.String("tokenfile", "tokenfile.txt", "A file containing a github token")

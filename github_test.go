@@ -11,14 +11,14 @@ import (
 
 type RequestSpec struct {
 	ExpectedUsername string
-	ExpectedToken string
-	ExpectedHeaders map[string]string
+	ExpectedToken    string
+	ExpectedHeaders  map[string]string
 
-	ResponseHeaders map[string]string
+	ResponseHeaders    map[string]string
 	ResponseStatusCode int
-	ResponseBasePath string
-	ResponseError error
-	ResponseSuffix string
+	ResponseBasePath   string
+	ResponseError      error
+	ResponseSuffix     string
 }
 
 func NewRequestSpec(username string, token string, basePath string) *RequestSpec {
@@ -83,7 +83,7 @@ func (matcher *RequestMatcher) Match(req *http.Request, t *testing.T) (*http.Res
 
 	matcher.RequestCounts[url] = callCount
 
-	return requestSpecs[callCount - 1].Match(req, t)
+	return requestSpecs[callCount-1].Match(req, t)
 }
 
 func (matcher *RequestMatcher) CheckCounts(t *testing.T) {
@@ -103,8 +103,8 @@ func (matcher *RequestMatcher) CheckCounts(t *testing.T) {
 
 type RequestMatcher struct {
 	RequestCounts map[string]int
-	RequestSpecs map[string][]*RequestSpec
-	Mutex *sync.Mutex
+	RequestSpecs  map[string][]*RequestSpec
+	Mutex         *sync.Mutex
 }
 
 func NewRequestMatcher() *RequestMatcher {
@@ -113,7 +113,7 @@ func NewRequestMatcher() *RequestMatcher {
 
 type TestClient struct {
 	Matcher *RequestMatcher
-	T *testing.T
+	T       *testing.T
 }
 
 func (client *TestClient) Do(req *http.Request) (*http.Response, error) {

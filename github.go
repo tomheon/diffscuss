@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	urlBase      = "https://api.github.com"
-	ghTimeFormat = "2006-01-02T15:04:05Z"
+	urlBase       = "https://api.github.com"
+	ghTimeFormat  = "2006-01-02T15:04:05Z"
 	diffMediaType = "application/vnd.github.v3.diff"
 	githubTimeout = time.Duration(5 * time.Second)
 )
 
 type rawPR struct {
-	Url string
+	Url  string
 	Head struct {
 		Sha  string
 		Repo struct {
@@ -276,7 +276,7 @@ func checkedClientReq(client LimitedHttpClient, req *http.Request) ([]byte, *htt
 		return nil, nil, errors.New(fmt.Sprintf("Status code %d", resp.StatusCode))
 	}
 
-	body, err :=  ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}

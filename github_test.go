@@ -20,8 +20,8 @@ type RequestSpec struct {
 	ResponseSuffix string
 }
 
-func NewRequestSpec() *RequestSpec {
-	return &RequestSpec{ExpectedHeaders: make(map[string]string), ResponseHeaders: make(map[string]string)}
+func NewRequestSpec(username string, token string, basePath string) *RequestSpec {
+	return &RequestSpec{ExpectedHeaders: make(map[string]string), ResponseHeaders: make(map[string]string), ResponseBasePath: basePath, ExpectedUsername: username, ExpectedToken: token, ResponseStatusCode: 200, ResponseSuffix: ".json"}
 }
 
 func (reqSpec *RequestSpec) Match(req *http.Request, t *testing.T) (*http.Response, error) {
@@ -113,52 +113,26 @@ func (client *TestClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestSomething(t *testing.T) {
+	user := "someuser"
+	token := "sometoken"
 	basePath := path.Join("testfiles", "simple_pull")
 	client := &TestClient{T: t}
 	matcher := NewRequestMatcher()
 
-	pullSpec := NewRequestSpec()
-	pullSpec.ExpectedUsername = "someuser"
-	pullSpec.ExpectedToken = "sometoken"
-	pullSpec.ResponseStatusCode = 200
-	pullSpec.ResponseBasePath = basePath
-	pullSpec.ResponseSuffix = ".json"
+	pullSpec := NewRequestSpec(user, token, basePath)
 
-	diffSpec := NewRequestSpec()
-	diffSpec.ExpectedUsername = "someuser"
-	diffSpec.ExpectedToken = "sometoken"
+	diffSpec := NewRequestSpec(user, token, basePath)
 	diffSpec.ExpectedHeaders["Accept"] = "application/vnd.github.v3.diff"
-	diffSpec.ResponseStatusCode = 200
-	diffSpec.ResponseBasePath = basePath
 	diffSpec.ResponseSuffix = ".diff"
 
-	reviewsSpec := NewRequestSpec()
-	reviewsSpec.ExpectedUsername = "someuser"
-	reviewsSpec.ExpectedToken = "sometoken"
-	reviewsSpec.ResponseStatusCode = 200
-	reviewsSpec.ResponseBasePath = basePath
-	reviewsSpec.ResponseSuffix = ".json"
+	reviewsSpec := NewRequestSpec(user, token, basePath)
 
-	pullsCommentsSpec := NewRequestSpec()
-	pullsCommentsSpec.ExpectedUsername = "someuser"
-	pullsCommentsSpec.ExpectedToken = "sometoken"
-	pullsCommentsSpec.ResponseStatusCode = 200
-	pullsCommentsSpec.ResponseBasePath = basePath
-	pullsCommentsSpec.ResponseSuffix = ".json"
+	pullsCommentsSpec := NewRequestSpec(user, token, basePath)
 
-	issueCommentsSpec := NewRequestSpec()
-	issueCommentsSpec.ExpectedUsername = "someuser"
-	issueCommentsSpec.ExpectedToken = "sometoken"
-	issueCommentsSpec.ResponseStatusCode = 200
-	issueCommentsSpec.ResponseBasePath = basePath
+	issueCommentsSpec := NewRequestSpec(user, token, basePath)
 	issueCommentsSpec.ResponseHeaders["Link"] = "<https://api.github.com/repos/tomheon/scratch/issues/1/comments?page=2>; rel=\"next\", <https://api.github.com/repos/tomheon/scratch/issues/1/comments?page=2>; rel=\"last\""
-	issueCommentsSpec.ResponseSuffix = ".json"
 
-	issueComments2Spec := NewRequestSpec()
-	issueComments2Spec.ExpectedUsername = "someuser"
-	issueComments2Spec.ExpectedToken = "sometoken"
-	issueComments2Spec.ResponseStatusCode = 200
-	issueComments2Spec.ResponseBasePath = basePath
+	issueComments2Spec := NewRequestSpec(user, token, basePath)
 	issueComments2Spec.ResponseSuffix = ".2.json"
 
 	pullSpecs := []*RequestSpec{pullSpec, diffSpec, pullSpec}

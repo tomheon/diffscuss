@@ -51,7 +51,7 @@ type fullPR struct {
 	Reviews        []comment
 	ReviewComments []comment
 	IssueComments  []comment
-	Diff           string
+	Diff           []byte
 }
 
 type paginatedBytes struct {
@@ -284,20 +284,20 @@ func checkedClientReq(client LimitedHttpClient, req *http.Request) ([]byte, *htt
 	return body, resp, nil
 }
 
-func getDiff(rawPR *rawPR, client LimitedHttpClient, username string, token string) (string, error) {
+func getDiff(rawPR *rawPR, client LimitedHttpClient, username string, token string) ([]byte, error) {
 	req, err := generateRequest(rawPR.Url, username, token)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Set("Accept", diffMediaType)
 
 	body, _, err := checkedClientReq(client, req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(body), err
+	return body, err
 }
 
 func getFullPR(rawPR *rawPR, client LimitedHttpClient, username string, token string) (*fullPR, error) {

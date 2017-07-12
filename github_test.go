@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path"
+	"sync"
 	"testing"
 )
 
@@ -61,6 +62,9 @@ func (reqSpec *RequestSpec) Match(req *http.Request, t *testing.T) (*http.Respon
 }
 
 func (matcher *RequestMatcher) Match(req *http.Request, t *testing.T) (*http.Response, error) {
+	matcher.Mutex.Lock()
+	defer matcher.Mutex.Unlock()
+
 	url := req.URL.String()
 	callCount, ok := matcher.RequestCounts[url]
 	if !ok {
@@ -83,6 +87,9 @@ func (matcher *RequestMatcher) Match(req *http.Request, t *testing.T) (*http.Res
 }
 
 func (matcher *RequestMatcher) CheckCounts(t *testing.T) {
+	matcher.Mutex.Lock()
+	defer matcher.Mutex.Unlock()
+
 	for url, specs := range matcher.RequestSpecs {
 		callCount, ok := matcher.RequestCounts[url]
 		if !ok {
@@ -97,10 +104,11 @@ func (matcher *RequestMatcher) CheckCounts(t *testing.T) {
 type RequestMatcher struct {
 	RequestCounts map[string]int
 	RequestSpecs map[string][]*RequestSpec
+	Mutex *sync.Mutex
 }
 
 func NewRequestMatcher() *RequestMatcher {
-	return &RequestMatcher{RequestCounts: make(map[string]int), RequestSpecs: make(map[string][]*RequestSpec)}
+	return &RequestMatcher{RequestCounts: make(map[string]int), RequestSpecs: make(map[string][]*RequestSpec), Mutex: &sync.Mutex{}}
 }
 
 type TestClient struct {

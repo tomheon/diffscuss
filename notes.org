@@ -2,3 +2,5 @@
 
 
 * add timeout to the client
+
+* make the diff from gh bytes

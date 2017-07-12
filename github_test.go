@@ -166,7 +166,9 @@ func generatePaginatedSpecs(username string, token string, repo string, prId int
 }
 
 func generateLinkHeader(repo string, prId int, topType string, commentType string, nextPage int, lastPage int) string {
-	return fmt.Sprintf("<https://api.github.com/repos/%s/%s/%d/%s?page=%d>; rel=\"next\", <https://api.github.com/repos/%s/%s/%d/%s?page=%d>; rel=\"last\"", repo, topType, prId, commentType, nextPage, repo, topType, prId, commentType, lastPage)
+	nextUrl := generateCommentUrl(repo, prId, topType, commentType, nextPage)
+	lastUrl := generateCommentUrl(repo, prId, topType, commentType, lastPage)
+	return fmt.Sprintf("<%s>; rel=\"next\", <%s>; rel=\"last\"", nextUrl, lastUrl)
 }
 
 func createPRTestClient(t *testing.T, repo string, prId int, username string, token string, basePath string) *TestClient {
@@ -195,6 +197,7 @@ func createPRTestClient(t *testing.T, repo string, prId int, username string, to
 	}
 
 	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/pulls/1"] = []*RequestSpec{pullSpec, diffSpec, pullSpec}
+
 	for url, specs := range reviewsSpecs {
 		matcher.RequestSpecs[url] = specs
 	}
@@ -212,16 +215,25 @@ func createPRTestClient(t *testing.T, repo string, prId int, username string, to
 	return client
 }
 
-func TestSomething(t *testing.T) {
+func checkedFromGithubPR(t *testing.T, repo string, prId int, username string, token string, basePath string) (*Diffscussion, error) {
+	client := createPRTestClient(t, repo, prId, username, token, basePath)
+
+	diffscussion, err := FromGithubPR("tomheon/scratch", 1, client, username, token)
+
+	client.Matcher.CheckCounts(t)
+
+	return diffscussion, err
+}
+
+func TestSimplePull(t *testing.T) {
 	username := "someuser"
 	token := "sometoken"
 	basePath := path.Join("testfiles", "simple_pull")
 	repo := "tomheon/scratch"
 	prId := 1
 
-	client := createPRTestClient(t, repo, prId, username, token, basePath)
-
-	FromGithubPR("tomheon/scratch", 1, client, "someuser", "sometoken")
-
-	client.Matcher.CheckCounts(t)
+	_, err := checkedFromGithubPR(t, repo, prId, username, token, basePath)
+	if err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 }

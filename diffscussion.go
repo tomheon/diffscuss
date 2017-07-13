@@ -1,6 +1,7 @@
 package diffscuss
 
 import (
+	"bytes"
 	"time"
 )
 
@@ -16,6 +17,7 @@ type Line struct {
 
 type HunkSection struct {
 	Header []string
+	Threads []Thread
 	Lines []Line
 }
 
@@ -42,4 +44,13 @@ type Diffscussion struct {
 	Options []Option
 	Threads []Thread
 	Files []FileSection
+}
+
+func NewDiffscussion() *Diffscussion {
+	return &Diffscussion{LeadingLines: make([]string, 0), Options: make([]Option, 0), Threads: make([]Thread, 0), Files: make([]FileSection, 0)}
+}
+
+func FromBytes(bs []byte) (*Diffscussion, error) {
+	reader := bytes.NewReader(bs)
+	return Parse(reader)
 }

@@ -333,13 +333,23 @@ func getFullPR(rawPR *rawPR, client LimitedHttpClient, username string, token st
 	return &fullPR{RepoFullName: rawPR.Head.Repo.FullName, Sha: rawPR.Head.Sha, Number: rawPR.Number, Reviews: reviews, ReviewComments: reviewComments, IssueComments: issueComments, Diff: diff}, nil
 }
 
+func fromFullPR(fullPR *fullPR) (*Diffscussion, error) {
+	diffscussion, err := FromBytes(fullPR.Diff)
+	if err != nil {
+		return nil, err
+	}
+	// todo assert no existing threads, as that would screw everything up
+	// todo overlay threads
+	return diffscussion, err
+}
+
 func FromGithubPR(repo string, pullRequestId int, client LimitedHttpClient, username string, token string) (*Diffscussion, error) {
 	rawPR, err := getRawPR(repo, pullRequestId, client, username, token)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = getFullPR(rawPR, client, username, token)
+	fullPR, err := getFullPR(rawPR, client, username, token)
 	if err != nil {
 		return nil, err
 	}
@@ -356,5 +366,5 @@ func FromGithubPR(repo string, pullRequestId int, client LimitedHttpClient, user
 		return nil, errors.New(fmt.Sprintf("New commit pushed to PR while retrieving (%s => %s)", rawPR.Head.Sha, checkRawPR.Head.Sha))
 	}
 
-	return nil, err
+	return fromFullPR(fullPR)
 }

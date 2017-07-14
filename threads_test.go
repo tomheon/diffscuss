@@ -9,9 +9,9 @@ import (
 
 const (
 	defaultNumThreads = 2
-	defaultNumFiles = 2
-	defaultNumHunks = 2
-	defaultNumLines = 2
+	defaultNumFiles   = 2
+	defaultNumHunks   = 2
+	defaultNumLines   = 2
 )
 
 func makeComment(curDepth int, maxDepth int, grist int) Comment {
@@ -22,7 +22,7 @@ func makeThreads(curDepth int, maxDepth int, numThreads int) []Thread {
 	if curDepth < maxDepth {
 		results := make([]Thread, numThreads)
 		for i := range results {
-			results[i] = Thread{Top: makeComment(curDepth, maxDepth, i), Replies: makeThreads(curDepth + 1, maxDepth, numThreads)}
+			results[i] = Thread{Top: makeComment(curDepth, maxDepth, i), Replies: makeThreads(curDepth+1, maxDepth, numThreads)}
 		}
 		return results
 	} else {
@@ -79,7 +79,6 @@ func createTestDiffscussion(depth int, numThreads int) *Diffscussion {
 	return diffscussion
 }
 
-
 func checkThreads(t *testing.T, threads []Thread, expectedDepth int, originalDepth int, expectedNumThreads int) {
 	checkThreadsRecursive(t, threads, expectedDepth, originalDepth, expectedDepth, expectedNumThreads)
 }
@@ -93,7 +92,7 @@ func sumExponents(base int, from int, to int) int {
 }
 
 func calculateTerminalNumThreads(originalNumThreads int, originalDepth int, newDepth int) int {
-	return sumExponents(originalNumThreads, newDepth, originalDepth) / int(math.Pow(float64(originalNumThreads), float64(newDepth - 1)))
+	return sumExponents(originalNumThreads, newDepth, originalDepth) / int(math.Pow(float64(originalNumThreads), float64(newDepth-1)))
 }
 
 func checkThreadsRecursive(t *testing.T, threads []Thread, expectedDepth int, originalDepth int, depthLeft int, originalNumThreads int) {
@@ -108,7 +107,7 @@ func checkThreadsRecursive(t *testing.T, threads []Thread, expectedDepth int, or
 		}
 
 		for i := range threads {
-			checkThreadsRecursive(t, threads[i].Replies, expectedDepth, originalDepth, depthLeft -1, originalNumThreads)
+			checkThreadsRecursive(t, threads[i].Replies, expectedDepth, originalDepth, depthLeft-1, originalNumThreads)
 		}
 	} else {
 		for i := range threads {
@@ -185,7 +184,7 @@ func TestRethreadingTwoLevelsWorks(t *testing.T) {
 	checkAllDepths(t, diffscussion, 1, 3, defaultNumThreads)
 }
 
-func TestRepeatedRethreadingWorks(t	*testing.T) {
+func TestRepeatedRethreadingWorks(t *testing.T) {
 	diffscussion := createTestDiffscussion(3, defaultNumThreads)
 	checkAllDepths(t, diffscussion, 3, 3, defaultNumThreads)
 	diffscussion.Rethread(2)

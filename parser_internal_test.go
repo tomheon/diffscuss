@@ -73,7 +73,6 @@ func TestScanLinePairsTwoLines(t *testing.T) {
 	checkLinePair(t, results[1], "two lines", "", false, false)
 }
 
-
 func TestScanLinePairsThreeLines(t *testing.T) {
 	scanner := bufio.NewScanner(strings.NewReader("one line\ntwo lines\nthree lines"))
 	scannedLinePairs := make(chan *scannedLinePair)

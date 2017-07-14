@@ -6,10 +6,10 @@ import (
 )
 
 type scannedLinePair struct {
-	first string
-	second string
+	first     string
+	second    string
 	hasSecond bool
-	err error
+	err       error
 }
 
 func scanLinePairs(scanner *bufio.Scanner, scannedLinePairs chan<- *scannedLinePair) {

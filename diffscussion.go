@@ -6,44 +6,44 @@ import (
 )
 
 type Option struct {
-	Name string
+	Name  string
 	Value string
 }
 
 type Line struct {
-	Text string
+	Text    string
 	Threads []Thread
 }
 
 type HunkSection struct {
-	Header []string
+	Header  []string
 	Threads []Thread
-	Lines []Line
+	Lines   []Line
 }
 
 type FileSection struct {
-	Header []string
+	Header  []string
 	Threads []Thread
-	Hunks []HunkSection
+	Hunks   []HunkSection
 }
 
 type Comment struct {
-	Author string
-	MadeAt time.Time
+	Author  string
+	MadeAt  time.Time
 	Headers map[string]string
-	Body string
+	Body    string
 }
 
 type Thread struct {
-	Top Comment
+	Top     Comment
 	Replies []Thread
 }
 
 type Diffscussion struct {
 	LeadingLines []string
-	Options []Option
-	Threads []Thread
-	Files []FileSection
+	Options      []Option
+	Threads      []Thread
+	Files        []FileSection
 }
 
 func NewDiffscussion() *Diffscussion {

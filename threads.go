@@ -50,7 +50,7 @@ func (diffscussion *Diffscussion) SortThreads() {
 func (thread *Thread) Rethread(curDepth int, maxDepth int) []Thread {
 	unthreadedReplies := make([]Thread, 0)
 	for i := range thread.Replies {
-		unthreadedReplies = append(unthreadedReplies, thread.Replies[i].Rethread(curDepth + 1, maxDepth)...)
+		unthreadedReplies = append(unthreadedReplies, thread.Replies[i].Rethread(curDepth+1, maxDepth)...)
 	}
 
 	if curDepth < maxDepth {
@@ -110,7 +110,7 @@ func (diffscussion *Diffscussion) Rethread(maxDepth int) {
 	diffscussion.SortThreads()
 }
 
-func (diffscussion *Diffscussion) Rethreaded(maxDepth int) (*Diffscussion) {
+func (diffscussion *Diffscussion) Rethreaded(maxDepth int) *Diffscussion {
 	newDiffscussion := *diffscussion
 	newDiffscussion.Rethread(maxDepth)
 	return &newDiffscussion

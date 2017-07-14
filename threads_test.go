@@ -1,83 +1,9 @@
 package diffscuss
 
 import (
-	"fmt"
 	"math"
 	"testing"
-	"time"
 )
-
-const (
-	defaultNumThreads = 2
-	defaultNumFiles   = 2
-	defaultNumHunks   = 2
-	defaultNumLines   = 2
-)
-
-func makeComment(curDepth int, maxDepth int, grist int) Comment {
-	return Comment{Author: "author", MadeAt: time.Now(), Headers: make(map[string]string), Body: fmt.Sprintf("comment %d %d %d", curDepth, maxDepth, grist)}
-}
-
-func makeThreads(curDepth int, maxDepth int, numThreads int) []Thread {
-	if curDepth < maxDepth {
-		results := make([]Thread, numThreads)
-		for i := range results {
-			results[i] = Thread{Top: makeComment(curDepth, maxDepth, i), Replies: makeThreads(curDepth+1, maxDepth, numThreads)}
-		}
-		return results
-	} else {
-		return make([]Thread, 0)
-	}
-}
-
-func makeFile(fileNum int, depth int, numThreads int) FileSection {
-	return FileSection{Header: []string{fmt.Sprintf("file %d", fileNum)}, Hunks: make([]HunkSection, 0), Threads: makeThreads(0, depth, numThreads)}
-}
-
-func makeFiles(numFiles int, depth int, numThreads int) []FileSection {
-	results := make([]FileSection, numFiles)
-	for i := range results {
-		results[i] = makeFile(i, depth, numThreads)
-	}
-	return results
-}
-
-func makeHunk(hunkNum int, depth int, numThreads int) HunkSection {
-	return HunkSection{Header: []string{fmt.Sprintf("hunk %d", hunkNum)}, Lines: make([]Line, 0), Threads: makeThreads(0, depth, numThreads)}
-}
-
-func makeHunks(numHunks int, depth int, numThreads int) []HunkSection {
-	results := make([]HunkSection, numHunks)
-	for i := range results {
-		results[i] = makeHunk(i, depth, numThreads)
-	}
-	return results
-}
-
-func makeLine(lineNum int, depth int, numThreads int) Line {
-	return Line{Text: fmt.Sprintf("line %d", lineNum), Threads: makeThreads(0, depth, numThreads)}
-}
-
-func makeLines(numLines int, depth int, numThreads int) []Line {
-	results := make([]Line, numLines)
-	for i := range results {
-		results[i] = makeLine(i, depth, numThreads)
-	}
-	return results
-}
-
-func createTestDiffscussion(depth int, numThreads int) *Diffscussion {
-	diffscussion := NewDiffscussion()
-	diffscussion.Threads = makeThreads(0, depth, numThreads)
-	diffscussion.Files = makeFiles(defaultNumFiles, depth, numThreads)
-	for i := range diffscussion.Files {
-		diffscussion.Files[i].Hunks = makeHunks(defaultNumHunks, depth, numThreads)
-		for j := range diffscussion.Files[i].Hunks {
-			diffscussion.Files[i].Hunks[j].Lines = makeLines(defaultNumLines, depth, numThreads)
-		}
-	}
-	return diffscussion
-}
 
 func checkThreads(t *testing.T, threads []Thread, expectedDepth int, originalDepth int, expectedNumThreads int) {
 	checkThreadsRecursive(t, threads, expectedDepth, originalDepth, expectedDepth, expectedNumThreads)
@@ -135,7 +61,6 @@ func checkHunks(t *testing.T, hunks []HunkSection, expectedDepth int, originalDe
 	}
 	for j := range hunks {
 		h := hunks[j]
-
 		checkThreads(t, h.Threads, expectedDepth, originalDepth, originalNumThreads)
 		checkLines(t, h.Lines, expectedDepth, originalDepth, originalNumThreads)
 	}
@@ -158,37 +83,55 @@ func checkAllDepths(t *testing.T, diffscussion *Diffscussion, expectedDepth int,
 }
 
 func TestRethreadingNoOpsOnShallowThreads(t *testing.T) {
-	diffscussion1 := createTestDiffscussion(1, defaultNumThreads)
-	diffscussion2 := createTestDiffscussion(2, defaultNumThreads)
+	params := newTestDiffscussionParams()
+	params.depth = 1
+	diffscussion1 := createTestDiffscussion(params)
+	params.depth = 2
+	diffscussion2 := createTestDiffscussion(params)
+
 	checkAllDepths(t, diffscussion1, 1, 1, defaultNumThreads)
 	checkAllDepths(t, diffscussion2, 2, 2, defaultNumThreads)
+
 	diffscussion1.Rethread(2)
 	diffscussion2.Rethread(2)
+
 	checkAllDepths(t, diffscussion1, 1, 1, defaultNumThreads)
 	checkAllDepths(t, diffscussion2, 2, 2, defaultNumThreads)
+
 	diffscussion1.Rethread(1)
 	checkAllDepths(t, diffscussion1, 1, 1, defaultNumThreads)
 }
 
 func TestRethreadingOneLevelWorks(t *testing.T) {
-	diffscussion := createTestDiffscussion(2, defaultNumThreads)
+	params := newTestDiffscussionParams()
+	params.depth = 2
+	diffscussion := createTestDiffscussion(params)
+
 	checkAllDepths(t, diffscussion, 2, 2, defaultNumThreads)
 	diffscussion.Rethread(1)
 	checkAllDepths(t, diffscussion, 1, 2, defaultNumThreads)
 }
 
 func TestRethreadingTwoLevelsWorks(t *testing.T) {
-	diffscussion := createTestDiffscussion(3, defaultNumThreads)
+	params := newTestDiffscussionParams()
+	params.depth = 3
+	diffscussion := createTestDiffscussion(params)
 	checkAllDepths(t, diffscussion, 3, 3, defaultNumThreads)
 	diffscussion.Rethread(1)
 	checkAllDepths(t, diffscussion, 1, 3, defaultNumThreads)
 }
 
 func TestRepeatedRethreadingWorks(t *testing.T) {
-	diffscussion := createTestDiffscussion(3, defaultNumThreads)
+	params := newTestDiffscussionParams()
+	params.depth = 3
+	diffscussion := createTestDiffscussion(params)
 	checkAllDepths(t, diffscussion, 3, 3, defaultNumThreads)
 	diffscussion.Rethread(2)
 	checkAllDepths(t, diffscussion, 2, 3, defaultNumThreads)
 	diffscussion.Rethread(1)
 	checkAllDepths(t, diffscussion, 1, 3, defaultNumThreads)
+}
+
+func TestRethreadingResorts(t *testing.T) {
+	t.Fail()
 }

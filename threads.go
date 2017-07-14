@@ -1,10 +1,67 @@
 package diffscuss
 
 import (
+	"errors"
 	"sort"
 )
 
 // Sorting
+
+type ThreadSortable interface {
+	SortThreads()
+}
+
+func (diffscussion *Diffscussion) SortThreads() {
+	sort.Sort(ByMadeAt(diffscussion.Threads))
+
+	for i := range diffscussion.Threads {
+		diffscussion.Threads[i].SortThreads()
+	}
+
+	for i := range diffscussion.Files {
+		diffscussion.Files[i].SortThreads()
+	}
+}
+
+func (fileSection *FileSection) SortThreads() {
+	sort.Sort(ByMadeAt(fileSection.Threads))
+
+	for i := range fileSection.Threads {
+		fileSection.Threads[i].SortThreads()
+	}
+
+	for i := range fileSection.Hunks {
+		fileSection.Hunks[i].SortThreads()
+	}
+}
+
+func (hunkSection *HunkSection) SortThreads() {
+	sort.Sort(ByMadeAt(hunkSection.Threads))
+
+	for i := range hunkSection.Threads {
+		hunkSection.Threads[i].SortThreads()
+	}
+
+	for i := range hunkSection.Lines {
+		hunkSection.Lines[i].SortThreads()
+	}
+}
+
+func (line *Line) SortThreads() {
+	sort.Sort(ByMadeAt(line.Threads))
+
+	for i := range line.Threads {
+		line.Threads[i].SortThreads()
+	}
+}
+
+func (thread *Thread) SortThreads() {
+	sort.Sort(ByMadeAt(thread.Replies))
+
+	for i := range thread.Replies {
+		thread.Replies[i].SortThreads()
+	}
+}
 
 type ByMadeAt []Thread
 
@@ -18,31 +75,6 @@ func (t ByMadeAt) Swap(i int, j int) {
 
 func (t ByMadeAt) Less(i int, j int) bool {
 	return t[i].Top.MadeAt.Before(t[j].Top.MadeAt)
-}
-
-func (line *Line) SortThreads() {
-	sort.Sort(ByMadeAt(line.Threads))
-}
-
-func (hunkSection *HunkSection) SortThreads() {
-	sort.Sort(ByMadeAt(hunkSection.Threads))
-	for i := range hunkSection.Lines {
-		hunkSection.Lines[i].SortThreads()
-	}
-}
-
-func (fileSection *FileSection) SortThreads() {
-	sort.Sort(ByMadeAt(fileSection.Threads))
-	for i := range fileSection.Hunks {
-		fileSection.Hunks[i].SortThreads()
-	}
-}
-
-func (diffscussion *Diffscussion) SortThreads() {
-	sort.Sort(ByMadeAt(diffscussion.Threads))
-	for i := range diffscussion.Files {
-		diffscussion.Files[i].SortThreads()
-	}
 }
 
 // Rethreading
@@ -95,7 +127,11 @@ func (fileSection *FileSection) Rethread(maxDepth int) {
 	}
 }
 
-func (diffscussion *Diffscussion) Rethread(maxDepth int) {
+func (diffscussion *Diffscussion) Rethread(maxDepth int) error {
+	if maxDepth < 1 {
+		return errors.New("Threads require a positive depth")
+	}
+
 	newThreads := make([]Thread, 0)
 	for _, thread := range diffscussion.Threads {
 		newThreads = append(newThreads, thread.Rethread(1, maxDepth)...)
@@ -108,10 +144,6 @@ func (diffscussion *Diffscussion) Rethread(maxDepth int) {
 	}
 
 	diffscussion.SortThreads()
-}
 
-func (diffscussion *Diffscussion) Rethreaded(maxDepth int) *Diffscussion {
-	newDiffscussion := *diffscussion
-	newDiffscussion.Rethread(maxDepth)
-	return &newDiffscussion
+	return nil
 }

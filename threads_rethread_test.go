@@ -3,6 +3,7 @@ package diffscuss
 import (
 	"math"
 	"testing"
+	"time"
 )
 
 func checkThreads(t *testing.T, threads []Thread, expectedDepth int, originalDepth int, expectedNumThreads int) {
@@ -92,13 +93,20 @@ func TestRethreadingNoOpsOnShallowThreads(t *testing.T) {
 	checkAllDepths(t, diffscussion1, 1, 1, defaultNumThreads)
 	checkAllDepths(t, diffscussion2, 2, 2, defaultNumThreads)
 
-	diffscussion1.Rethread(2)
-	diffscussion2.Rethread(2)
+	if err := diffscussion1.Rethread(2); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
+
+	if err := diffscussion2.Rethread(2); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 
 	checkAllDepths(t, diffscussion1, 1, 1, defaultNumThreads)
 	checkAllDepths(t, diffscussion2, 2, 2, defaultNumThreads)
 
-	diffscussion1.Rethread(1)
+	if err := diffscussion1.Rethread(1); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 	checkAllDepths(t, diffscussion1, 1, 1, defaultNumThreads)
 }
 
@@ -108,7 +116,9 @@ func TestRethreadingOneLevelWorks(t *testing.T) {
 	diffscussion := createTestDiffscussion(params)
 
 	checkAllDepths(t, diffscussion, 2, 2, defaultNumThreads)
-	diffscussion.Rethread(1)
+	if err := diffscussion.Rethread(1); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 	checkAllDepths(t, diffscussion, 1, 2, defaultNumThreads)
 }
 
@@ -117,7 +127,9 @@ func TestRethreadingTwoLevelsWorks(t *testing.T) {
 	params.depth = 3
 	diffscussion := createTestDiffscussion(params)
 	checkAllDepths(t, diffscussion, 3, 3, defaultNumThreads)
-	diffscussion.Rethread(1)
+	if err := diffscussion.Rethread(1); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 	checkAllDepths(t, diffscussion, 1, 3, defaultNumThreads)
 }
 
@@ -126,12 +138,40 @@ func TestRepeatedRethreadingWorks(t *testing.T) {
 	params.depth = 3
 	diffscussion := createTestDiffscussion(params)
 	checkAllDepths(t, diffscussion, 3, 3, defaultNumThreads)
-	diffscussion.Rethread(2)
+
+	if err := diffscussion.Rethread(2); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 	checkAllDepths(t, diffscussion, 2, 3, defaultNumThreads)
-	diffscussion.Rethread(1)
+	if err := diffscussion.Rethread(1); err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
 	checkAllDepths(t, diffscussion, 1, 3, defaultNumThreads)
 }
 
+func TestBadDepthsErr(t *testing.T) {
+	params := newTestDiffscussionParams()
+	params.depth = 2
+	diffscussion := createTestDiffscussion(params)
+	err := diffscussion.Rethread(0)
+	if err == nil {
+		t.Fatalf("Expected error on 0 rethread, got nil")
+	}
+
+	err = diffscussion.Rethread(-1)
+	if err == nil {
+		t.Fatalf("Expected error on -1 rethread, got nil")
+	}
+}
+
 func TestRethreadingResorts(t *testing.T) {
-	t.Fail()
+	params := newTestDiffscussionParams()
+	params.numThreads = 3
+	params.depth = 2
+	diffscussion := createTestDiffscussion(params)
+
+	setAllThreadTimes(diffscussion, []time.Time{defaultMadeAtTime, latestMadeAtTime, laterMadeAtTime})
+	checkSorted(t, diffscussion, false)
+	diffscussion.Rethread(1)
+	checkSorted(t, diffscussion, true)
 }

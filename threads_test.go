@@ -119,33 +119,43 @@ func checkThreadsRecursive(t *testing.T, threads []Thread, expectedDepth int, or
 	}
 }
 
+func checkLines(t *testing.T, lines []Line, expectedDepth int, originalDepth int, originalNumThreads int) {
+	if len(lines) != defaultNumLines {
+		t.Fatalf("Expected %d lines, found %d", defaultNumLines, len(lines))
+	}
+
+	for k := range lines {
+		l := lines[k]
+		checkThreads(t, l.Threads, expectedDepth, originalDepth, originalNumThreads)
+	}
+}
+
+func checkHunks(t *testing.T, hunks []HunkSection, expectedDepth int, originalDepth int, originalNumThreads int) {
+	if len(hunks) != defaultNumHunks {
+		t.Fatalf("Expected %d hunks, found %d", defaultNumHunks, len(hunks))
+	}
+	for j := range hunks {
+		h := hunks[j]
+
+		checkThreads(t, h.Threads, expectedDepth, originalDepth, originalNumThreads)
+		checkLines(t, h.Lines, expectedDepth, originalDepth, originalNumThreads)
+	}
+}
+
+func checkFiles(t *testing.T, files []FileSection, expectedDepth int, originalDepth int, originalNumThreads int) {
+	if len(files) != defaultNumFiles {
+		t.Fatalf("Expected %d files, found %d", defaultNumFiles, len(files))
+	}
+	for i := range files {
+		f := files[i]
+		checkThreads(t, f.Threads, expectedDepth, originalDepth, originalNumThreads)
+		checkHunks(t, f.Hunks, expectedDepth, originalDepth, originalNumThreads)
+	}
+}
+
 func checkAllDepths(t *testing.T, diffscussion *Diffscussion, expectedDepth int, originalDepth int, originalNumThreads int) {
 	checkThreads(t, diffscussion.Threads, expectedDepth, originalDepth, originalNumThreads)
-	if len(diffscussion.Files) != defaultNumFiles {
-		t.Fatalf("Expected %d files, found %d", defaultNumFiles, len(diffscussion.Files))
-	}
-	for i := range diffscussion.Files {
-		f := diffscussion.Files[i]
-		checkThreads(t, f.Threads, expectedDepth, originalDepth, originalNumThreads)
-
-		if len(f.Hunks) != defaultNumHunks {
-			t.Fatalf("Expected %d hunks, found %d", defaultNumHunks, len(f.Hunks))
-		}
-		for j := range f.Hunks {
-			h := f.Hunks[j]
-
-			checkThreads(t, h.Threads, expectedDepth, originalDepth, originalNumThreads)
-
-			if len(h.Lines) != defaultNumLines {
-				t.Fatalf("Expected %d lines, found %d", defaultNumLines, len(h.Lines))
-			}
-
-			for k := range h.Lines {
-				l := h.Lines[k]
-				checkThreads(t, l.Threads, expectedDepth, originalDepth, originalNumThreads)
-			}
-		}
-	}
+	checkFiles(t, diffscussion.Files, expectedDepth, originalDepth, originalNumThreads)
 }
 
 func TestRethreadingNoOpsOnShallowThreads(t *testing.T) {

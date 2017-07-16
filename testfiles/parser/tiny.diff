@@ -1,0 +1,24 @@
+diff --git a/file3.txt b/file3.txt
+index 5db4c05..81212b6 100644
+--- a/file3.txt
++++ b/file3.txt
+@@ -4,6 +4,9 @@ fun
+ 
+ exciting!
+ 
++
++fiejwofwej
++
+ fun
+ 
+ somethign at the end
+diff --git a/hi.txt b/hi.txt
+index b39fd4b..f17f59b 100644
+--- a/hi.txt
++++ b/hi.txt
+@@ -8,3 +8,5 @@ hi
+ hi
+ hi
+ hi
++this is a test
++of the emergency broadcast system

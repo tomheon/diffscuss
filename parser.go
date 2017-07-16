@@ -28,7 +28,7 @@ type parseWorkingState struct {
 	// finishes
 	deferredState parseState
 	diffscussion *Diffscussion
-	curThreads []Thread
+	curThreads *[]Thread
 	err error
 }
 
@@ -48,20 +48,33 @@ func findLastFile(diffscussion *Diffscussion) *FileSection {
 	return &diffscussion.Files[len(diffscussion.Files) - 1]
 }
 
+func findLastHunk(diffscussion *Diffscussion) *HunkSection {
+	fileSection := findLastFile(diffscussion)
+	return &fileSection.Hunks[len(fileSection.Hunks) - 1]
+}
+
 func addFileHeaderLine(diffscussion *Diffscussion, line string) {
 	lastFile := findLastFile(diffscussion)
 	lastFile.Header = append(lastFile.Header, line)
 }
 
+func addHunkHeaderLine(diffscussion *Diffscussion, line string) {
+	lastHunk := findLastHunk(diffscussion)
+	lastHunk.Header = append(lastHunk.Header, line)
+}
+
 // inits
 
 func initInitialState(workingState *parseWorkingState, line string) {
+	workingState.curThreads = &workingState.diffscussion.Threads
 }
 
 func initInTopMatterState(workingState *parseWorkingState, line string) {
+	// this space inentionally left blank
 }
 
 func initInOptionsState(workingState *parseWorkingState, line string) {
+	// this space inentionally left blank
 }
 
 func initInFileHeaderState(workingState *parseWorkingState, line string) {
@@ -70,9 +83,16 @@ func initInFileHeaderState(workingState *parseWorkingState, line string) {
 }
 
 func initInHunkHeaderState(workingState *parseWorkingState, line string) {
+	fileSection := findLastFile(workingState.diffscussion)
+	fileSection.Hunks = append(fileSection.Hunks, HunkSection{})
+	addHunkHeaderLine(workingState.diffscussion, line)
 }
 
 func initInHunkState(workingState *parseWorkingState, line string) {
+	newLine := newLine()
+	newLine.Text = line
+	lastHunk := findLastHunk(workingState.diffscussion)
+	lastHunk.Lines = append(lastHunk.Lines, *newLine)
 }
 
 func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
@@ -100,9 +120,14 @@ func continueInFileHeaderState(workingState *parseWorkingState, line string) {
 }
 
 func continueInHunkHeaderState(workingState *parseWorkingState, line string) {
+	addHunkHeaderLine(workingState.diffscussion, line)
 }
 
 func continueInHunkState(workingState *parseWorkingState, line string) {
+	newLine := newLine()
+	newLine.Text = line
+	lastHunk := findLastHunk(workingState.diffscussion)
+	lastHunk.Lines = append(lastHunk.Lines, *newLine)
 }
 
 func continueInDiffscussHeaderState(workingState *parseWorkingState, line string) {

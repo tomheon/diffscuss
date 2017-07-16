@@ -15,6 +15,10 @@ type Line struct {
 	Threads []Thread
 }
 
+func newLine() *Line {
+	return &Line{Threads: make([]Thread, 0)}
+}
+
 type HunkSection struct {
 	Header  []string
 	Threads []Thread

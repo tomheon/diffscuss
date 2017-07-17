@@ -1,10 +1,10 @@
 package diffscuss
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path"
+	"reflect"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func getTestFileReader(diffName string) (io.Reader, error) {
 	return os.Open(filePath)
 }
 
-func TestParser(t *testing.T) {
+func TestParseTinyDiff(t *testing.T) {
 	diffFile, err := getTestFileReader("tiny.diff")
 	if err != nil {
 		t.Fatal(err)
@@ -24,6 +24,24 @@ func TestParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Println(diffscussion.Files)
+	if len(diffscussion.Files) != 2 {
+		t.Fatalf("Expected 2 files, got %d", len(diffscussion.Files))
+	}
 
+	firstFile := diffscussion.Files[0]
+
+	expectedFirstFileHeader := []string{
+		"diff --git a/file3.txt b/file3.txt",
+		"index 5db4c05..81212b6 100644",
+		"--- a/file3.txt",
+		"+++ b/file3.txt",
+	}
+
+	if !reflect.DeepEqual(expectedFirstFileHeader, firstFile.Header) {
+		t.Fatalf("Expected header lines %s, got %s", expectedFirstFileHeader, firstFile.Header)
+	}
 }
+
+// TODO one deep test with diffscussion comments, then round trip tests rather
+// than specific deep tests.  Update tiny .diff to have all edge cases
+// (e.g. binary files differ, missing newlines)

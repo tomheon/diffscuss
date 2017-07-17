@@ -130,7 +130,6 @@ func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
 		lastThread := findLastThread(workingState)
 		workingState.curThreads = append(workingState.curThreads, &lastThread.Replies)
 	} else if headerLevel < curThreadsLevel {
-		// resize curThreads to headerLevel length, then push on to the end
 		workingState.curThreads = workingState.curThreads[:headerLevel]
 	}
 
@@ -187,7 +186,8 @@ func continueInHunkState(workingState *parseWorkingState, line string) {
 }
 
 func continueInDiffscussHeaderState(workingState *parseWorkingState, line string) {
-	// TODO
+	thread := findLastThread(workingState)
+	parseDiffscussHeaderLine(&thread.Top, line)
 }
 
 func continueInDiffscussBodyState(workingState *parseWorkingState, line string) {

@@ -24,8 +24,8 @@ func TestParseTinyDiff(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(diffscussion.Files) != 2 {
-		t.Fatalf("Expected 2 files, got %d", len(diffscussion.Files))
+	if len(diffscussion.Files) != 3 {
+		t.Fatalf("Expected 3 files, got %d", len(diffscussion.Files))
 	}
 
 	firstFile := diffscussion.Files[0]
@@ -43,5 +43,4 @@ func TestParseTinyDiff(t *testing.T) {
 }
 
 // TODO one deep test with diffscussion comments, then round trip tests rather
-// than specific deep tests.  Update tiny .diff to have all edge cases
-// (e.g. binary files differ, missing newlines)
+// than specific deep tests.

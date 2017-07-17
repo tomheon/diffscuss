@@ -345,6 +345,7 @@ const (
 	newFilePrefix      = "+++"
 	diffCmdPrefix      = "diff"
 	indexPrefix        = "index"
+	binaryFilesPrefix  = "Binary files"
 
 	noNewlinePrefix   = "\\"
 	addedLinePrefix   = "+"
@@ -369,7 +370,8 @@ func inferState(line string) (parseState, error) {
 	} else if strings.HasPrefix(line, originalFilePrefix) ||
 		strings.HasPrefix(line, newFilePrefix) ||
 		strings.HasPrefix(line, diffCmdPrefix) ||
-		strings.HasPrefix(line, indexPrefix) {
+		strings.HasPrefix(line, indexPrefix) ||
+		strings.HasPrefix(line, binaryFilesPrefix) {
 		return inFileHeader, nil
 	} else if strings.HasPrefix(line, noNewlinePrefix) ||
 		strings.HasPrefix(line, addedLinePrefix) ||

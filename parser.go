@@ -27,9 +27,9 @@ type parseWorkingState struct {
 	// set when we start a diffscuss thread so we know where we were when it
 	// finishes
 	deferredState parseState
-	diffscussion *Diffscussion
-	curThreads *[]Thread
-	err error
+	diffscussion  *Diffscussion
+	curThreads    []*[]Thread
+	err           error
 }
 
 func initialState(diffscussion *Diffscussion) *parseWorkingState {
@@ -37,20 +37,21 @@ func initialState(diffscussion *Diffscussion) *parseWorkingState {
 	s.curState = initial
 	s.deferredState = initial
 	s.diffscussion = diffscussion
+	s.curThreads = []*[]Thread{&s.diffscussion.Threads}
 	return s
 }
 
-type initStateFunc func (*parseWorkingState, string)
-type continueStateFunc func (*parseWorkingState, string)
-type closeStateFunc func (*parseWorkingState)
+type initStateFunc func(*parseWorkingState, string)
+type continueStateFunc func(*parseWorkingState, string)
+type closeStateFunc func(*parseWorkingState)
 
 func findLastFile(diffscussion *Diffscussion) *FileSection {
-	return &diffscussion.Files[len(diffscussion.Files) - 1]
+	return &diffscussion.Files[len(diffscussion.Files)-1]
 }
 
 func findLastHunk(diffscussion *Diffscussion) *HunkSection {
 	fileSection := findLastFile(diffscussion)
-	return &fileSection.Hunks[len(fileSection.Hunks) - 1]
+	return &fileSection.Hunks[len(fileSection.Hunks)-1]
 }
 
 func addFileHeaderLine(diffscussion *Diffscussion, line string) {
@@ -66,11 +67,11 @@ func addHunkHeaderLine(diffscussion *Diffscussion, line string) {
 // inits
 
 func initInitialState(workingState *parseWorkingState, line string) {
-	workingState.curThreads = &workingState.diffscussion.Threads
+	// this space intentionally left blank
 }
 
 func initInTopMatterState(workingState *parseWorkingState, line string) {
-	// this space inentionally left blank
+	workingState.diffscussion.LeadingLines = append(workingState.diffscussion.LeadingLines, line)
 }
 
 func initInOptionsState(workingState *parseWorkingState, line string) {
@@ -95,24 +96,79 @@ func initInHunkState(workingState *parseWorkingState, line string) {
 	lastHunk.Lines = append(lastHunk.Lines, *newLine)
 }
 
+func parseHeaderLevel(line string) (int, error) {
+	if !strings.HasPrefix(line, diffscussHeaderPrefix) {
+		return 0, fmt.Errorf("Programmer error, parsing as header: %s", line)
+	}
+
+	headerDepth := 0
+
+	for index, r := range line[1:] {
+		if r != '*' {
+			break
+		}
+		headerDepth = index + 1
+	}
+
+	return headerDepth, nil
+}
+
 func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
+	curThreadsLevel := len(workingState.curThreads)
+	headerLevel, err := parseHeaderLevel(line)
+	if err != nil {
+		workingState.err = err
+		return
+	}
+	if headerLevel > curThreadsLevel+1 {
+		// TODO better error
+		workingState.err = errors.New("Illegal increase of comment depth")
+		return
+	}
+
+	if headerLevel == curThreadsLevel+1 {
+		lastThread := findLastThread(workingState)
+		workingState.curThreads = append(workingState.curThreads, &lastThread.Replies)
+	} else if headerLevel < curThreadsLevel {
+		// resize curThreads to headerLevel length, then push on to the end
+		workingState.curThreads = workingState.curThreads[:headerLevel]
+	}
+
+	thread := newThread()
+	parseDiffscussHeaderLine(&thread.Top, line)
+	curThreadsLen := len(workingState.curThreads)
+	*workingState.curThreads[curThreadsLen-1] = append(*workingState.curThreads[curThreadsLen-1], *thread)
+}
+
+func parseDiffscussHeaderLine(comment *Comment, line string) {
+	// TODO
+}
+
+func findLastThread(workingState *parseWorkingState) *Thread {
+	curThreadsLen := len(workingState.curThreads)
+	lastThreadsLen := len(*workingState.curThreads[curThreadsLen-1])
+	return &(*workingState.curThreads[curThreadsLen-1])[lastThreadsLen-1]
 }
 
 func initInDiffscussBodyState(workingState *parseWorkingState, line string) {
 }
 
 func initInDoneState(workingState *parseWorkingState, line string) {
+	// TODO?
 }
 
 // continues
 
 func continueInitialState(workingState *parseWorkingState, line string) {
+	// this space intentionally left blank
 }
 
 func continueInTopMatterState(workingState *parseWorkingState, line string) {
+	workingState.diffscussion.LeadingLines = append(workingState.diffscussion.LeadingLines, line)
 }
 
 func continueInOptionsState(workingState *parseWorkingState, line string) {
+	// TODO
 }
 
 func continueInFileHeaderState(workingState *parseWorkingState, line string) {
@@ -131,48 +187,60 @@ func continueInHunkState(workingState *parseWorkingState, line string) {
 }
 
 func continueInDiffscussHeaderState(workingState *parseWorkingState, line string) {
+	// TODO
 }
 
 func continueInDiffscussBodyState(workingState *parseWorkingState, line string) {
+	// TODO
 }
 
 func continueInDoneState(workingState *parseWorkingState, line string) {
+	// this space intentionally left blank
 }
 
 // closes
 
 func closeInitialState(workingState *parseWorkingState) {
+	// this space intentionally left blank
 }
 
 func closeInTopMatterState(workingState *parseWorkingState) {
+	// this space intentionally left blank
 }
 
 func closeInOptionsState(workingState *parseWorkingState) {
+	// this space intentionally left blank
 }
 
 func closeInFileHeaderState(workingState *parseWorkingState) {
+	// TODO validate hader
 }
 
 func closeInHunkHeaderState(workingState *parseWorkingState) {
+	// TODO validate header
 }
 
 func closeInHunkState(workingState *parseWorkingState) {
+	// this space intentionally left balnk
 }
 
 func closeInDiffscussHeaderState(workingState *parseWorkingState) {
+	// TODO
 }
 
 func closeInDiffscussBodyState(workingState *parseWorkingState) {
+	// TODO
 }
 
 func closeInDoneState(workingState *parseWorkingState) {
+	// this space intentionally left blank
 }
 
 type parser struct {
-	transitions map[parseState][]parseState
-	initStateFuncs map[parseState]initStateFunc
+	transitions        map[parseState][]parseState
+	initStateFuncs     map[parseState]initStateFunc
 	continueStateFuncs map[parseState]continueStateFunc
-	closeStateFuncs map[parseState]closeStateFunc
+	closeStateFuncs    map[parseState]closeStateFunc
 }
 
 // closes will be the ones checking logic of specific parts, e.g. that enough
@@ -181,52 +249,52 @@ type parser struct {
 func newParser() *parser {
 	p := &parser{}
 
-	p.transitions = map[parseState][]parseState {
-		initial: []parseState{inTopMatter, inOptions, inFileHeader, inDiffscussHeader, done},
-		inTopMatter: []parseState{inOptions, inFileHeader, inDiffscussHeader, done},
-		inOptions: []parseState{inFileHeader, inDiffscussHeader, done},
-		inFileHeader: []parseState{inHunkHeader, inDiffscussHeader, done},
-		inHunkHeader: []parseState{inHunk, inDiffscussHeader, done},
-		inHunk: []parseState{inDiffscussHeader, inHunkHeader, inFileHeader, done},
+	p.transitions = map[parseState][]parseState{
+		initial:           []parseState{inTopMatter, inOptions, inFileHeader, inDiffscussHeader, done},
+		inTopMatter:       []parseState{inOptions, inFileHeader, inDiffscussHeader, done},
+		inOptions:         []parseState{inFileHeader, inDiffscussHeader, done},
+		inFileHeader:      []parseState{inHunkHeader, inDiffscussHeader, done},
+		inHunkHeader:      []parseState{inHunk, inDiffscussHeader, done},
+		inHunk:            []parseState{inDiffscussHeader, inHunkHeader, inFileHeader, done},
 		inDiffscussHeader: []parseState{inDiffscussBody, done},
-		inDiffscussBody: []parseState{inDiffscussHeader, inHunkHeader, inHunk, inFileHeader, done},
-		done: []parseState{},
+		inDiffscussBody:   []parseState{inDiffscussHeader, inHunkHeader, inHunk, inFileHeader, done},
+		done:              []parseState{},
 	}
 
-	p.initStateFuncs = map[parseState]initStateFunc {
-		initial: initInitialState,
-		inTopMatter: initInTopMatterState,
-		inOptions: initInOptionsState,
-		inFileHeader: initInFileHeaderState,
-		inHunkHeader: initInHunkHeaderState,
-		inHunk: initInHunkState,
+	p.initStateFuncs = map[parseState]initStateFunc{
+		initial:           initInitialState,
+		inTopMatter:       initInTopMatterState,
+		inOptions:         initInOptionsState,
+		inFileHeader:      initInFileHeaderState,
+		inHunkHeader:      initInHunkHeaderState,
+		inHunk:            initInHunkState,
 		inDiffscussHeader: initInDiffscussHeaderState,
-		inDiffscussBody: initInDiffscussBodyState,
-		done: initInDoneState,
+		inDiffscussBody:   initInDiffscussBodyState,
+		done:              initInDoneState,
 	}
 
-	p.continueStateFuncs = map[parseState]continueStateFunc {
-		initial: continueInitialState,
-		inTopMatter: continueInTopMatterState,
-		inOptions: continueInOptionsState,
-		inFileHeader: continueInFileHeaderState,
-		inHunkHeader: continueInHunkHeaderState,
-		inHunk: continueInHunkState,
+	p.continueStateFuncs = map[parseState]continueStateFunc{
+		initial:           continueInitialState,
+		inTopMatter:       continueInTopMatterState,
+		inOptions:         continueInOptionsState,
+		inFileHeader:      continueInFileHeaderState,
+		inHunkHeader:      continueInHunkHeaderState,
+		inHunk:            continueInHunkState,
 		inDiffscussHeader: continueInDiffscussHeaderState,
-		inDiffscussBody: continueInDiffscussBodyState,
-		done: continueInDoneState,
+		inDiffscussBody:   continueInDiffscussBodyState,
+		done:              continueInDoneState,
 	}
 
-	p.closeStateFuncs = map[parseState]closeStateFunc {
-		initial: closeInitialState,
-		inTopMatter: closeInTopMatterState,
-		inOptions: closeInOptionsState,
-		inFileHeader: closeInFileHeaderState,
-		inHunkHeader: closeInHunkHeaderState,
-		inHunk: closeInHunkState,
+	p.closeStateFuncs = map[parseState]closeStateFunc{
+		initial:           closeInitialState,
+		inTopMatter:       closeInTopMatterState,
+		inOptions:         closeInOptionsState,
+		inFileHeader:      closeInFileHeaderState,
+		inHunkHeader:      closeInHunkHeaderState,
+		inHunk:            closeInHunkState,
 		inDiffscussHeader: closeInDiffscussHeaderState,
-		inDiffscussBody: closeInDiffscussBodyState,
-		done: closeInDoneState,
+		inDiffscussBody:   closeInDiffscussBodyState,
+		done:              closeInDoneState,
 	}
 
 	return p
@@ -268,18 +336,18 @@ func (p *parser) checkLegalTransition(parseWorkingState *parseWorkingState, line
 }
 
 const (
-	optionPrefix = "#@"
+	optionPrefix          = "#@"
 	diffscussHeaderPrefix = "#*"
-	diffscussBodyPrefix = "#-"
-	commentPrefix = "#"
+	diffscussBodyPrefix   = "#-"
+	commentPrefix         = "#"
 
 	originalFilePrefix = "---"
-	newFilePrefix = "+++"
-	diffCmdPrefix = "diff"
-	indexPrefix = "index"
+	newFilePrefix      = "+++"
+	diffCmdPrefix      = "diff"
+	indexPrefix        = "index"
 
-	noNewlinePrefix = "\\"
-	addedLinePrefix = "+"
+	noNewlinePrefix   = "\\"
+	addedLinePrefix   = "+"
 	removedLinePrefix = "-"
 	contextLinePrefix = " "
 

@@ -43,6 +43,10 @@ type Thread struct {
 	Replies []Thread
 }
 
+func newThread() *Thread {
+	return &Thread{Replies: make([]Thread, 0)}
+}
+
 type Diffscussion struct {
 	LeadingLines []string
 	Options      []Option

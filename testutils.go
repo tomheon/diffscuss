@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	defaultDepth = 2
+	defaultDepth      = 2
 	defaultNumThreads = 2
 	defaultNumFiles   = 2
 	defaultNumHunks   = 2
@@ -70,11 +70,11 @@ func makeLines(numLines int, depth int, numThreads int) []Line {
 }
 
 type testDiffscussionParams struct {
-	depth int
+	depth      int
 	numThreads int
-	numHunks int
-	numFiles int
-	numLines int
+	numHunks   int
+	numFiles   int
+	numLines   int
 }
 
 func newTestDiffscussionParams() *testDiffscussionParams {

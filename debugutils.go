@@ -9,7 +9,7 @@ func printThreadsAtLevel(threads []Thread, curLevel int) {
 	for i := range threads {
 		thread := threads[i]
 		fmt.Printf("%s%+v\n", strings.Repeat("*", curLevel), thread)
-		printThreadsAtLevel(thread.Replies, curLevel + 1)
+		printThreadsAtLevel(thread.Replies, curLevel+1)
 	}
 }
 

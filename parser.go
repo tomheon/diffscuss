@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
+	"time"
 )
 
 type parseState int
@@ -134,13 +136,53 @@ func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
 	}
 
 	thread := newThread()
-	parseDiffscussHeaderLine(&thread.Top, line)
+	if err := parseDiffscussHeaderLine(&thread.Top, line); err != nil {
+		workingState.err = err
+		return
+	}
 	curThreadsLen := len(workingState.curThreads)
 	*workingState.curThreads[curThreadsLen-1] = append(*workingState.curThreads[curThreadsLen-1], *thread)
 }
 
-func parseDiffscussHeaderLine(comment *Comment, line string) {
-	// TODO
+const diffscussTimeFormat = "2006-01-02T15:04:05-0700"
+
+func parseDiffscussDate(date string) (time.Time, error) {
+	return time.Parse(diffscussTimeFormat, date)
+}
+
+var authorLineRe = regexp.MustCompile("author: (?P<author>.*)")
+var dateLineRe = regexp.MustCompile("date: (?P<date>.*)")
+
+func parseDiffscussHeaderLine(comment *Comment, line string) error {
+
+	trimmedLine := strings.TrimPrefix(line, "#*")
+	trimmedLine = strings.TrimLeft(trimmedLine, "*")
+	trimmedLine = strings.TrimLeft(trimmedLine, " ")
+
+	if trimmedLine == "" {
+		return nil
+	}
+
+	authorMatch := authorLineRe.FindStringSubmatch(trimmedLine)
+	if authorMatch != nil {
+		comment.Author = authorMatch[1]
+		return nil
+	}
+
+	dateMatch := dateLineRe.FindStringSubmatch(trimmedLine)
+	if dateMatch != nil {
+		parsedDate, err := parseDiffscussDate(dateMatch[1])
+		if err != nil {
+			return err
+		}
+		comment.MadeAt = parsedDate
+		return nil
+	}
+
+	// otherwise blank trimmedLine
+
+	return fmt.Errorf("Unparseable header line %s", line)
+
 }
 
 func findLastThread(workingState *parseWorkingState) *Thread {
@@ -187,7 +229,9 @@ func continueInHunkState(workingState *parseWorkingState, line string) {
 
 func continueInDiffscussHeaderState(workingState *parseWorkingState, line string) {
 	thread := findLastThread(workingState)
-	parseDiffscussHeaderLine(&thread.Top, line)
+	if err := parseDiffscussHeaderLine(&thread.Top, line); err != nil {
+		workingState.err = err
+	}
 }
 
 func continueInDiffscussBodyState(workingState *parseWorkingState, line string) {

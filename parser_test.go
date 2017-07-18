@@ -1,6 +1,7 @@
 package diffscuss
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -100,6 +101,20 @@ func TestParseTinyDiff(t *testing.T) {
 		"diff --git a/t.jpg b/t.jpg",
 		"index d2d8abc..212305d 100644",
 		"Binary files a/t.jpg and b/t.jpg differ")
+}
+
+func TestParseWithDiffscussions(t *testing.T) {
+	diffscussionFile, err := getTestFileReader("tiny-with-diffscussion.diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	diffscussion, err := Parse(diffscussionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(diffscussion.Threads)
 }
 
 // TODO one deep test with diffscussion comments, then round trip tests rather

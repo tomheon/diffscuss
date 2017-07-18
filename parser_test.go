@@ -93,6 +93,9 @@ func TestParseTinyDiff(t *testing.T) {
 		"- bye",
 		"\\ No newline at end of file")
 
+	if len(diffscussion.Files[2].Hunks) != 0 {
+		t.Fatalf("Expected 0 hunks, found %d", len(diffscussion.Files[2].Hunks))
+	}
 	checkHeader(t, diffscussion.Files[2].Header,
 		"diff --git a/t.jpg b/t.jpg",
 		"index d2d8abc..212305d 100644",

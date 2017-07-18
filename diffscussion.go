@@ -44,7 +44,7 @@ type Thread struct {
 }
 
 func newThread() *Thread {
-	return &Thread{Replies: make([]Thread, 0)}
+	return &Thread{Top: Comment{Headers: make(map[string]string)}, Replies: make([]Thread, 0)}
 }
 
 type Diffscussion struct {

@@ -150,8 +150,13 @@ func parseDiffscussDate(date string) (time.Time, error) {
 	return time.Parse(diffscussTimeFormat, date)
 }
 
-var authorLineRe = regexp.MustCompile("author: (?P<author>.*)")
-var dateLineRe = regexp.MustCompile("date: (?P<date>.*)")
+var headerKeyValueRe = regexp.MustCompile("(?P<key>[^:]+): (?P<value>.*)")
+
+const (
+	authorHeader       = "author"
+	dateHeader         = "date"
+	customHeaderPrefix = "x-"
+)
 
 func parseDiffscussHeaderLine(comment *Comment, line string) error {
 
@@ -163,26 +168,28 @@ func parseDiffscussHeaderLine(comment *Comment, line string) error {
 		return nil
 	}
 
-	authorMatch := authorLineRe.FindStringSubmatch(trimmedLine)
-	if authorMatch != nil {
-		comment.Author = authorMatch[1]
-		return nil
+	headerMatch := headerKeyValueRe.FindStringSubmatch(trimmedLine)
+	if headerMatch == nil {
+		return fmt.Errorf("Unparseable header line %s", line)
 	}
 
-	dateMatch := dateLineRe.FindStringSubmatch(trimmedLine)
-	if dateMatch != nil {
-		parsedDate, err := parseDiffscussDate(dateMatch[1])
+	key, value := headerMatch[1], headerMatch[2]
+
+	if key == authorHeader {
+		comment.Author = value
+	} else if key == dateHeader {
+		parsedDate, err := parseDiffscussDate(value)
 		if err != nil {
 			return err
 		}
 		comment.MadeAt = parsedDate
-		return nil
+	} else if strings.HasPrefix(key, customHeaderPrefix) {
+		comment.Headers[key] = value
+	} else {
+		return fmt.Errorf("Unrecognized header in line %s", line)
 	}
 
-	// otherwise blank trimmedLine
-
-	return fmt.Errorf("Unparseable header line %s", line)
-
+	return nil
 }
 
 func findLastThread(workingState *parseWorkingState) *Thread {

@@ -6,6 +6,7 @@
 #* author: edmund
 #* date: 2017-08-16T21:23:24-0400
 #* x-custom-header: custom value
+#* x-custom-header2: custom value 2
 #*
 #- this is a comment
 #- across two lines with one blank trailing

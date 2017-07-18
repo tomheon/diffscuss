@@ -18,7 +18,8 @@ var laterMadeAtTime = time.Unix(1376611800, 0)
 var latestMadeAtTime = time.Unix(1376612800, 0)
 
 func makeComment(curDepth int, maxDepth int, grist int) Comment {
-	return Comment{Author: "author", MadeAt: defaultMadeAtTime, Headers: make(map[string]string), Body: fmt.Sprintf("comment %d %d %d", curDepth, maxDepth, grist)}
+	return Comment{Author: "author", MadeAt: defaultMadeAtTime, Headers: make(map[string]string),
+		Body: []string{fmt.Sprintf("comment %d %d %d", curDepth, maxDepth, grist)}}
 }
 
 func makeThreads(curDepth int, maxDepth int, numThreads int) []Thread {

@@ -4,3 +4,5 @@ maybe put settings at top of diffscussion?
 
 * comments in github.go
 * what to do about email header?  put it in and tolerate but not set it?
+* add line numbers in parsing errors
+* extract constants for #, -, *, etc.

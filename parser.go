@@ -66,38 +66,6 @@ func addHunkHeaderLine(diffscussion *Diffscussion, line string) {
 	lastHunk.Header = append(lastHunk.Header, line)
 }
 
-// inits
-
-func initInitialState(workingState *parseWorkingState, line string) {
-	// this space intentionally left blank
-}
-
-func initInTopMatterState(workingState *parseWorkingState, line string) {
-	workingState.diffscussion.LeadingLines = append(workingState.diffscussion.LeadingLines, line)
-}
-
-func initInOptionsState(workingState *parseWorkingState, line string) {
-	// this space inentionally left blank
-}
-
-func initInFileHeaderState(workingState *parseWorkingState, line string) {
-	workingState.diffscussion.Files = append(workingState.diffscussion.Files, FileSection{})
-	addFileHeaderLine(workingState.diffscussion, line)
-}
-
-func initInHunkHeaderState(workingState *parseWorkingState, line string) {
-	fileSection := findLastFile(workingState.diffscussion)
-	fileSection.Hunks = append(fileSection.Hunks, HunkSection{})
-	addHunkHeaderLine(workingState.diffscussion, line)
-}
-
-func initInHunkState(workingState *parseWorkingState, line string) {
-	newLine := newLine()
-	newLine.Text = line
-	lastHunk := findLastHunk(workingState.diffscussion)
-	lastHunk.Lines = append(lastHunk.Lines, *newLine)
-}
-
 func parseHeaderLevel(line string) (int, error) {
 	if !strings.HasPrefix(line, diffscussHeaderPrefix) {
 		return 0, fmt.Errorf("Programmer error, parsing as header: %s", line)
@@ -115,35 +83,6 @@ func parseHeaderLevel(line string) (int, error) {
 	return headerDepth, nil
 }
 
-func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
-	curThreadsLevel := len(workingState.curThreads)
-	headerLevel, err := parseHeaderLevel(line)
-	if err != nil {
-		workingState.err = err
-		return
-	}
-	if headerLevel > curThreadsLevel+1 {
-		// TODO better error
-		workingState.err = errors.New("Illegal increase of comment depth")
-		return
-	}
-
-	if headerLevel == curThreadsLevel+1 {
-		lastThread := findLastThread(workingState)
-		workingState.curThreads = append(workingState.curThreads, &lastThread.Replies)
-	} else if headerLevel < curThreadsLevel {
-		workingState.curThreads = workingState.curThreads[:headerLevel]
-	}
-
-	thread := newThread()
-	if err := parseDiffscussHeaderLine(&thread.Top, line); err != nil {
-		workingState.err = err
-		return
-	}
-	curThreadsLen := len(workingState.curThreads)
-	*workingState.curThreads[curThreadsLen-1] = append(*workingState.curThreads[curThreadsLen-1], *thread)
-}
-
 const diffscussTimeFormat = "2006-01-02T15:04:05-0700"
 
 func parseDiffscussDate(date string) (time.Time, error) {
@@ -159,7 +98,6 @@ const (
 )
 
 func parseDiffscussHeaderLine(comment *Comment, line string) error {
-
 	trimmedLine := strings.TrimPrefix(line, "#*")
 	trimmedLine = strings.TrimLeft(trimmedLine, "*")
 	trimmedLine = strings.TrimLeft(trimmedLine, " ")
@@ -198,7 +136,79 @@ func findLastThread(workingState *parseWorkingState) *Thread {
 	return &(*workingState.curThreads[curThreadsLen-1])[lastThreadsLen-1]
 }
 
+// inits
+
+func initInitialState(workingState *parseWorkingState, line string) {
+	// this space intentionally left blank
+}
+
+func initInTopMatterState(workingState *parseWorkingState, line string) {
+	workingState.diffscussion.LeadingLines = append(workingState.diffscussion.LeadingLines, line)
+}
+
+func initInOptionsState(workingState *parseWorkingState, line string) {
+	// this space inentionally left blank
+}
+
+func initInFileHeaderState(workingState *parseWorkingState, line string) {
+	workingState.diffscussion.Files = append(workingState.diffscussion.Files, FileSection{})
+	addFileHeaderLine(workingState.diffscussion, line)
+}
+
+func initInHunkHeaderState(workingState *parseWorkingState, line string) {
+	fileSection := findLastFile(workingState.diffscussion)
+	fileSection.Hunks = append(fileSection.Hunks, HunkSection{})
+	addHunkHeaderLine(workingState.diffscussion, line)
+}
+
+func initInHunkState(workingState *parseWorkingState, line string) {
+	newLine := newLine()
+	newLine.Text = line
+	lastHunk := findLastHunk(workingState.diffscussion)
+	lastHunk.Lines = append(lastHunk.Lines, *newLine)
+}
+
+func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
+	curThreadsLevel := len(workingState.curThreads)
+	headerLevel, err := parseHeaderLevel(line)
+	if err != nil {
+		workingState.err = err
+		return
+	}
+	if headerLevel > curThreadsLevel+1 {
+		// TODO better error
+		workingState.err = errors.New("Illegal increase of comment depth")
+		return
+	}
+
+	if headerLevel == curThreadsLevel+1 {
+		lastThread := findLastThread(workingState)
+		workingState.curThreads = append(workingState.curThreads, &lastThread.Replies)
+	} else if headerLevel < curThreadsLevel {
+		workingState.curThreads = workingState.curThreads[:headerLevel]
+	}
+
+	thread := newThread()
+	if err := parseDiffscussHeaderLine(&thread.Top, line); err != nil {
+		workingState.err = err
+		return
+	}
+	curThreadsLen := len(workingState.curThreads)
+	*workingState.curThreads[curThreadsLen-1] = append(*workingState.curThreads[curThreadsLen-1], *thread)
+}
+
+func trimDiffscussBodyPrefix(line string) string {
+	// trim all #--- and up to one space
+	trimmed := strings.TrimPrefix(line, "#-")
+	trimmed = strings.TrimLeft(trimmed, "-")
+	trimmed = strings.TrimPrefix(trimmed, " ")
+	return trimmed
+}
+
 func initInDiffscussBodyState(workingState *parseWorkingState, line string) {
+	//TODO assert that the nesting level hasn't changed?
+	lastThread := findLastThread(workingState)
+	lastThread.Top.Body = append(lastThread.Top.Body, trimDiffscussBodyPrefix(line))
 }
 
 func initInDoneState(workingState *parseWorkingState, line string) {
@@ -242,7 +252,8 @@ func continueInDiffscussHeaderState(workingState *parseWorkingState, line string
 }
 
 func continueInDiffscussBodyState(workingState *parseWorkingState, line string) {
-	// TODO
+	lastThread := findLastThread(workingState)
+	lastThread.Top.Body = append(lastThread.Top.Body, trimDiffscussBodyPrefix(line))
 }
 
 func continueInDoneState(workingState *parseWorkingState, line string) {

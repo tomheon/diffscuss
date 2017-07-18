@@ -35,7 +35,7 @@ type Comment struct {
 	Author  string
 	MadeAt  time.Time
 	Headers map[string]string
-	Body    string
+	Body    []string
 }
 
 type Thread struct {

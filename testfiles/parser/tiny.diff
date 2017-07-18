@@ -22,6 +22,9 @@ index b39fd4b..f17f59b 100644
  hi
 +this is a test
 +of the emergency broadcast system
+@@ -11,2 +13,1 @@ bye
+ hello
+- bye
 \ No newline at end of file
 diff --git a/t.jpg b/t.jpg
 index d2d8abc..212305d 100644

@@ -1,0 +1,51 @@
+# leading matter 1
+# leading matter 2
+#@ option1: value1
+#@ option2: value2
+#*
+#* author: edmund
+#* date: 2017-08-16T21:23:24-0400
+#* x-custom-header: custom value
+#* x-custom-header2: custom value 2
+#*
+#- this is a comment
+#- across two lines with one blank trailing
+#-
+#**
+#** author: edmund-reply
+#** date: 2017-08-16T21:24:25-0400
+#** x-custom-header: reply custom value
+#** x-custom-header2: reply custom value 2
+#**
+#-- this is a reply
+diff --git a/file3.txt b/file3.txt
+index 5db4c05..81212b6 100644
+--- a/file3.txt
++++ b/file3.txt
+@@ -4,6 +4,9 @@ fun
+ 
+ exciting!
+ 
++
++fiejwofwej
++
+ fun
+ 
+ somethign at the end
+diff --git a/hi.txt b/hi.txt
+index b39fd4b..f17f59b 100644
+--- a/hi.txt
++++ b/hi.txt
+@@ -8,3 +8,5 @@ hi
+ hi
+ hi
+ hi
++this is a test
++of the emergency broadcast system
+@@ -11,2 +13,1 @@ bye
+ hello
+- bye
+\ No newline at end of file
+diff --git a/t.jpg b/t.jpg
+index d2d8abc..212305d 100644
+Binary files a/t.jpg and b/t.jpg differ

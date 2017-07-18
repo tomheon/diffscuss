@@ -177,5 +177,36 @@ func TestParseWithOneDiffscussion(t *testing.T) {
 	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
 }
 
+func TestParseWithOneReply(t *testing.T) {
+	diffscussionFile, err := getTestFileReader("tiny-with-reply.diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	diffscussion, err := Parse(diffscussionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	checkNoFileOrLowerThreads(t, diffscussion)
+
+	if len(diffscussion.Threads) != 1 {
+		t.Fatalf("Expected 1 thread, got %d", len(diffscussion.Threads))
+	}
+
+	thread := diffscussion.Threads[0]
+	if len(thread.Replies) != 1 {
+		t.Fatalf("Expected 1 reply, got %d", len(thread.Replies))
+	}
+	expectedHeader := map[string]string{"x-custom-header": "custom value", "x-custom-header2": "custom value 2"}
+	expectedBody := []string{"this is a comment", "across two lines with one blank trailing", ""}
+	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
+
+	reply := thread.Replies[0].Top
+	expectedHeaderReply := map[string]string{"x-custom-header": "reply custom value", "x-custom-header2": "reply custom value 2"}
+	expectedBodyReply := []string{"this is a reply"}
+	checkComment(t, reply, "edmund-reply", "2017-08-16T21:24:25-0400", expectedHeaderReply, expectedBodyReply)
+}
+
 // TODO one deep test with diffscussion comments, then round trip tests rather
 // than specific deep tests.

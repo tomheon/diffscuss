@@ -1,0 +1,33 @@
+#*
+#* author: edmund-top
+#* date: 2017-08-16T21:23:24-0400
+#*
+#- this is a top comment
+diff --git a/file3.txt b/file3.txt
+index 5db4c05..81212b6 100644
+--- a/file3.txt
++++ b/file3.txt
+#*
+#* author: edmund-file
+#* date: 2017-08-16T21:23:25-0400
+#*
+#- this is a file comment
+@@ -4,6 +4,9 @@ fun
+#*
+#* author: edmund-hunk
+#* date: 2017-08-16T21:23:26-0400
+#*
+#- this is a hunk comment
+ exciting!
+ 
++
++fiejwofwej
+#*
+#* author: edmund-line
+#* date: 2017-08-16T21:23:27-0400
+#*
+#- this is a line comment
++
+ fun
+ 
+ somethign at the end

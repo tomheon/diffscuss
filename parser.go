@@ -2,7 +2,6 @@ package diffscuss
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -25,6 +24,7 @@ const (
 )
 
 type parseWorkingState struct {
+	lineNum  int
 	curState parseState
 	// set when we start a diffscuss thread so we know where we were when it
 	// finishes
@@ -54,6 +54,11 @@ func findLastFile(diffscussion *Diffscussion) *FileSection {
 func findLastHunk(diffscussion *Diffscussion) *HunkSection {
 	fileSection := findLastFile(diffscussion)
 	return &fileSection.Hunks[len(fileSection.Hunks)-1]
+}
+
+func findLastLine(diffscussion *Diffscussion) *Line {
+	hunkSection := findLastHunk(diffscussion)
+	return &hunkSection.Lines[len(hunkSection.Lines)-1]
 }
 
 func addFileHeaderLine(diffscussion *Diffscussion, line string) {
@@ -152,12 +157,16 @@ func initInOptionsState(workingState *parseWorkingState, line string) {
 
 func initInFileHeaderState(workingState *parseWorkingState, line string) {
 	workingState.diffscussion.Files = append(workingState.diffscussion.Files, FileSection{})
+	lastFile := findLastFile(workingState.diffscussion)
+	workingState.curThreads = []*[]Thread{&lastFile.Threads}
 	addFileHeaderLine(workingState.diffscussion, line)
 }
 
 func initInHunkHeaderState(workingState *parseWorkingState, line string) {
 	fileSection := findLastFile(workingState.diffscussion)
 	fileSection.Hunks = append(fileSection.Hunks, HunkSection{})
+	lastHunk := findLastHunk(workingState.diffscussion)
+	workingState.curThreads = []*[]Thread{&lastHunk.Threads}
 	addHunkHeaderLine(workingState.diffscussion, line)
 }
 
@@ -166,6 +175,8 @@ func initInHunkState(workingState *parseWorkingState, line string) {
 	newLine.Text = line
 	lastHunk := findLastHunk(workingState.diffscussion)
 	lastHunk.Lines = append(lastHunk.Lines, *newLine)
+	lastLine := findLastLine(workingState.diffscussion)
+	workingState.curThreads = []*[]Thread{&lastLine.Threads}
 }
 
 func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
@@ -177,7 +188,7 @@ func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
 	}
 	if headerLevel > curThreadsLevel+1 {
 		// TODO better error
-		workingState.err = errors.New("Illegal increase of comment depth")
+		workingState.err = fmt.Errorf("Illegal increase of comment depth on line %d", workingState.lineNum)
 		return
 	}
 
@@ -242,6 +253,8 @@ func continueInHunkState(workingState *parseWorkingState, line string) {
 	newLine.Text = line
 	lastHunk := findLastHunk(workingState.diffscussion)
 	lastHunk.Lines = append(lastHunk.Lines, *newLine)
+	lastLine := findLastLine(workingState.diffscussion)
+	workingState.curThreads = []*[]Thread{&lastLine.Threads}
 }
 
 func continueInDiffscussHeaderState(workingState *parseWorkingState, line string) {
@@ -383,14 +396,15 @@ func (p *parser) checkLegalTransition(parseWorkingState *parseWorkingState, line
 	legalStates := p.transitions[parseWorkingState.curState]
 
 	if !hasState(lineState, legalStates) {
-		return errors.New("bad state write better message")
+		return fmt.Errorf("Bad state transition from %d to %d on line %d", parseWorkingState.curState, lineState, parseWorkingState.lineNum)
 	}
 
 	if shouldCheckDeferredState(parseWorkingState.curState, lineState) {
 		legalStatesFromDeferred := p.transitions[parseWorkingState.deferredState]
 
-		if !hasState(lineState, legalStatesFromDeferred) {
-			return errors.New("bad state write better message")
+		if parseWorkingState.deferredState != lineState && !hasState(lineState, legalStatesFromDeferred) {
+			return fmt.Errorf("Bad deferred state transition from %d to %d on line %d", parseWorkingState.deferredState,
+				lineState, parseWorkingState.lineNum)
 		}
 	}
 
@@ -448,6 +462,7 @@ func inferState(line string) (parseState, error) {
 }
 
 func (p *parser) parseNext(line string, workingState *parseWorkingState) {
+	workingState.lineNum++
 	lineState, err := inferState(line)
 	if err != nil {
 		workingState.err = err

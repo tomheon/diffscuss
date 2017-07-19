@@ -208,5 +208,32 @@ func TestParseWithOneReply(t *testing.T) {
 	checkComment(t, reply, "edmund-reply", "2017-08-16T21:24:25-0400", expectedHeaderReply, expectedBodyReply)
 }
 
-// TODO one deep test with diffscussion comments, then round trip tests rather
-// than specific deep tests.
+func TestParseWithDiffscussionAtEveryLevel(t *testing.T) {
+	diffscussionFile, err := getTestFileReader("tiny-with-all-diffscussion-locs.diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	diffscussion, err := Parse(diffscussionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(diffscussion.Threads) != 1 {
+		t.Fatalf("Expected 1 thread, got %d", len(diffscussion.Threads))
+	}
+	emptyHeaders := make(map[string]string)
+	checkReplylessThread(t, diffscussion.Threads[0], "edmund-top", "2017-08-16T21:23:24-0400", emptyHeaders, []string{"this is a top comment"})
+	checkReplylessThread(t, diffscussion.Files[0].Threads[0], "edmund-file", "2017-08-16T21:23:25-0400", emptyHeaders, []string{"this is a file comment"})
+	checkReplylessThread(t, diffscussion.Files[0].Hunks[0].Threads[0], "edmund-hunk", "2017-08-16T21:23:26-0400", emptyHeaders,
+		[]string{"this is a hunk comment"})
+	checkReplylessThread(t, diffscussion.Files[0].Hunks[0].Lines[3].Threads[0], "edmund-line", "2017-08-16T21:23:27-0400", emptyHeaders,
+		[]string{"this is a line comment"})
+}
+
+func checkReplylessThread(t *testing.T, thread Thread, expectedAuthor string, expectedDate string, expectedHeaders map[string]string, expectedBody []string) {
+	if len(thread.Replies) != 0 {
+		t.Fatalf("Expected 0 replies, got %d", len(thread.Replies))
+	}
+	checkComment(t, thread.Top, expectedAuthor, expectedDate, expectedHeaders, expectedBody)
+}

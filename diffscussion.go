@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+type KeyValuePair struct {
+	Key string
+	Value string
+}
+
 type Line struct {
 	Text    string
 	Threads []Thread
@@ -29,7 +34,7 @@ type FileSection struct {
 type Comment struct {
 	Author  string
 	MadeAt  time.Time
-	Headers map[string]string
+	Headers []KeyValuePair
 	Body    []string
 }
 
@@ -39,7 +44,7 @@ type Thread struct {
 }
 
 func newThread() *Thread {
-	return &Thread{Top: Comment{Headers: make(map[string]string)}, Replies: make([]Thread, 0)}
+	return &Thread{Top: Comment{Headers: make([]KeyValuePair, 0)}, Replies: make([]Thread, 0)}
 }
 
 type Diffscussion struct {

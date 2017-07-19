@@ -108,6 +108,7 @@ func parseDiffscussHeaderLine(comment *Comment, line string) error {
 	trimmedLine = strings.TrimLeft(trimmedLine, " ")
 
 	if trimmedLine == "" {
+		comment.Headers = append(comment.Headers, KeyValuePair{})
 		return nil
 	}
 
@@ -127,7 +128,7 @@ func parseDiffscussHeaderLine(comment *Comment, line string) error {
 		}
 		comment.MadeAt = parsedDate
 	} else if strings.HasPrefix(key, customHeaderPrefix) {
-		comment.Headers[key] = value
+		comment.Headers = append(comment.Headers, KeyValuePair{key, value})
 	} else {
 		return fmt.Errorf("Unrecognized header in line %s", line)
 	}

@@ -23,7 +23,7 @@ var laterMadeAtTime = time.Unix(1376611800, 0)
 var latestMadeAtTime = time.Unix(1376612800, 0)
 
 func makeComment(curDepth int, maxDepth int, grist int) Comment {
-	return Comment{Author: "author", MadeAt: defaultMadeAtTime, Headers: make(map[string]string),
+	return Comment{Author: "author", MadeAt: defaultMadeAtTime, Headers: make([]KeyValuePair, 0),
 		Body: []string{fmt.Sprintf("comment %d %d %d", curDepth, maxDepth, grist)}}
 }
 
@@ -154,7 +154,7 @@ func checkNoLineThreads(t *testing.T, h HunkSection) {
 	}
 }
 
-func checkComment(t *testing.T, comment Comment, expectedAuthor string, expectedDate string, expectedHeaders map[string]string, expectedBody []string) {
+func checkComment(t *testing.T, comment Comment, expectedAuthor string, expectedDate string, expectedHeaders []KeyValuePair, expectedBody []string) {
 	if comment.Author != expectedAuthor {
 		t.Fatalf("Expected author %s, got %s", expectedAuthor, comment.Author)
 	}
@@ -174,7 +174,7 @@ func checkComment(t *testing.T, comment Comment, expectedAuthor string, expected
 	}
 }
 
-func checkReplylessThread(t *testing.T, thread Thread, expectedAuthor string, expectedDate string, expectedHeaders map[string]string, expectedBody []string) {
+func checkReplylessThread(t *testing.T, thread Thread, expectedAuthor string, expectedDate string, expectedHeaders []KeyValuePair, expectedBody []string) {
 	if len(thread.Replies) != 0 {
 		t.Fatalf("Expected 0 replies, got %d", len(thread.Replies))
 	}

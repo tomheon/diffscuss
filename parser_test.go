@@ -172,3 +172,26 @@ func TestParseOptions(t *testing.T) {
 		t.Fatalf("Expected options %s got %s", expectedOptions, diffscussion.Options)
 	}
 }
+
+func TestParseWithRepliesAtEveryLevel(t *testing.T) {
+	diffscussionFile, err := getTestFileReader("tiny-with-all-diffscussion-locs-and-replies.diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	diffscussion, err := Parse(diffscussionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(diffscussion.Threads) != 1 {
+		t.Fatalf("Expected 1 thread, got %d", len(diffscussion.Threads))
+	}
+	emptyHeaders := make(map[string]string)
+	checkReplylessThread(t, diffscussion.Threads[0], "edmund-top", "2017-08-16T21:23:24-0400", emptyHeaders, []string{"this is a top comment"})
+	checkReplylessThread(t, diffscussion.Files[0].Threads[0], "edmund-file", "2017-08-16T21:23:25-0400", emptyHeaders, []string{"this is a file comment"})
+	checkReplylessThread(t, diffscussion.Files[0].Hunks[0].Threads[0], "edmund-hunk", "2017-08-16T21:23:26-0400", emptyHeaders,
+		[]string{"this is a hunk comment"})
+	checkReplylessThread(t, diffscussion.Files[0].Hunks[0].Lines[3].Threads[0], "edmund-line", "2017-08-16T21:23:27-0400", emptyHeaders,
+		[]string{"this is a line comment"})
+}

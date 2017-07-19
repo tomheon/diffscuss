@@ -202,10 +202,9 @@ func TestParseWithOneReply(t *testing.T) {
 	expectedBody := []string{"this is a comment", "across two lines with one blank trailing", ""}
 	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
 
-	reply := thread.Replies[0].Top
 	expectedHeaderReply := map[string]string{"x-custom-header": "reply custom value", "x-custom-header2": "reply custom value 2"}
 	expectedBodyReply := []string{"this is a reply"}
-	checkComment(t, reply, "edmund-reply", "2017-08-16T21:24:25-0400", expectedHeaderReply, expectedBodyReply)
+	checkReplylessThread(t, thread.Replies[0], "edmund-reply", "2017-08-16T21:24:25-0400", expectedHeaderReply, expectedBodyReply)
 }
 
 func TestParseWithDiffscussionAtEveryLevel(t *testing.T) {

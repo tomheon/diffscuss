@@ -236,3 +236,23 @@ func checkReplylessThread(t *testing.T, thread Thread, expectedAuthor string, ex
 	}
 	checkComment(t, thread.Top, expectedAuthor, expectedDate, expectedHeaders, expectedBody)
 }
+
+func TestParseOptions(t *testing.T) {
+	diffscussionFile, err := getTestFileReader("tiny-with-options.diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	diffscussion, err := Parse(diffscussionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedOptions := map[string]string{
+		"mode": "github",
+		"custom": "hello",
+	}
+	if !reflect.DeepEqual(expectedOptions, diffscussion.Options) {
+		t.Fatalf("Expected options %s got %s", expectedOptions, diffscussion.Options)
+	}
+}

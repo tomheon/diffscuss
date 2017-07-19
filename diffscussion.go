@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-type Option struct {
-	Name  string
-	Value string
-}
-
 type Line struct {
 	Text    string
 	Threads []Thread
@@ -49,13 +44,13 @@ func newThread() *Thread {
 
 type Diffscussion struct {
 	LeadingLines []string
-	Options      []Option
+	Options      map[string]string
 	Threads      []Thread
 	Files        []FileSection
 }
 
 func NewDiffscussion() *Diffscussion {
-	return &Diffscussion{LeadingLines: make([]string, 0), Options: make([]Option, 0), Threads: make([]Thread, 0), Files: make([]FileSection, 0)}
+	return &Diffscussion{LeadingLines: make([]string, 0), Options: make(map[string]string), Threads: make([]Thread, 0), Files: make([]FileSection, 0)}
 }
 
 func FromBytes(bs []byte) (*Diffscussion, error) {

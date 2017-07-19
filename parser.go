@@ -151,8 +151,30 @@ func initInTopMatterState(workingState *parseWorkingState, line string) {
 	workingState.diffscussion.LeadingLines = append(workingState.diffscussion.LeadingLines, line)
 }
 
+var optionKeyValueRe = regexp.MustCompile("(?P<key>[^:]+): (?P<value>.*)")
+
+func parseDiffscussOptionLine(line string) (string, string) {
+	trimmedLine := strings.TrimPrefix(line, "#@")
+	trimmedLine = strings.TrimLeft(trimmedLine, " ")
+
+	if trimmedLine == "" {
+		return "", ""
+	}
+
+	optionMatch := optionKeyValueRe.FindStringSubmatch(trimmedLine)
+	if optionMatch == nil {
+		return "", ""
+	}
+
+	key, value := optionMatch[1], optionMatch[2]
+	return key, value
+}
+
 func initInOptionsState(workingState *parseWorkingState, line string) {
-	// this space inentionally left blank
+	key, value := parseDiffscussOptionLine(line)
+	if key != "" {
+		workingState.diffscussion.Options[key] = value
+	}
 }
 
 func initInFileHeaderState(workingState *parseWorkingState, line string) {
@@ -187,7 +209,6 @@ func initInDiffscussHeaderState(workingState *parseWorkingState, line string) {
 		return
 	}
 	if headerLevel > curThreadsLevel+1 {
-		// TODO better error
 		workingState.err = fmt.Errorf("Illegal increase of comment depth on line %d", workingState.lineNum)
 		return
 	}
@@ -237,7 +258,10 @@ func continueInTopMatterState(workingState *parseWorkingState, line string) {
 }
 
 func continueInOptionsState(workingState *parseWorkingState, line string) {
-	// TODO
+	key, value := parseDiffscussOptionLine(line)
+	if key != "" {
+		workingState.diffscussion.Options[key] = value
+	}
 }
 
 func continueInFileHeaderState(workingState *parseWorkingState, line string) {
@@ -463,6 +487,7 @@ func inferState(line string) (parseState, error) {
 
 func (p *parser) parseNext(line string, workingState *parseWorkingState) {
 	workingState.lineNum++
+
 	lineState, err := inferState(line)
 	if err != nil {
 		workingState.err = err
@@ -490,8 +515,6 @@ func (p *parser) parseNext(line string, workingState *parseWorkingState) {
 
 func Parse(reader io.Reader) (*Diffscussion, error) {
 	scanner := bufio.NewScanner(reader)
-
-	// todo figure out "binary files differ"
 
 	diffscussion := NewDiffscussion()
 	parseWorkingState := initialState(diffscussion)

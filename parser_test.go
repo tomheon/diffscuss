@@ -1,37 +1,9 @@
 package diffscuss
 
 import (
-	"io"
-	"os"
-	"path"
 	"reflect"
 	"testing"
 )
-
-func getTestFileReader(diffName string) (io.Reader, error) {
-	filePath := path.Join("testfiles", "parser", diffName)
-	return os.Open(filePath)
-}
-
-func checkHeader(t *testing.T, header []string, lines ...string) {
-	if !reflect.DeepEqual(lines, header) {
-		t.Fatalf("Expected header lines %s, got %s", lines, header)
-	}
-}
-
-func checkThreadlessLines(t *testing.T, lines []Line, expected ...string) {
-	justText := make([]string, len(lines))
-	for i := range lines {
-		justText[i] = lines[i].Text
-		if len(lines[i].Threads) != 0 {
-			t.Fatalf("Expected no threads, found %d", len(lines[i].Threads))
-		}
-	}
-
-	if !reflect.DeepEqual(justText, expected) {
-		t.Fatalf("Expected lines %s, got %s", expected, justText)
-	}
-}
 
 func TestParseTinyDiff(t *testing.T) {
 	diffFile, err := getTestFileReader("tiny.diff")
@@ -100,55 +72,6 @@ func TestParseTinyDiff(t *testing.T) {
 		"diff --git a/t.jpg b/t.jpg",
 		"index d2d8abc..212305d 100644",
 		"Binary files a/t.jpg and b/t.jpg differ")
-}
-
-func checkNoFileOrLowerThreads(t *testing.T, diffscussion *Diffscussion) {
-	for i := range diffscussion.Files {
-		f := diffscussion.Files[i]
-		if len(f.Threads) != 0 {
-			t.Fatalf("In file %s expected 0 threads, found %d", f.Header, len(f.Threads))
-		}
-		checkNoHunkOrLowerThreads(t, f)
-	}
-}
-
-func checkNoHunkOrLowerThreads(t *testing.T, f FileSection) {
-	for i := range f.Hunks {
-		h := f.Hunks[i]
-		if len(h.Threads) != 0 {
-			t.Fatalf("In hunk %s expected 0 threads, found %d", h.Header, len(h.Threads))
-		}
-		checkNoLineThreads(t, h)
-	}
-}
-
-func checkNoLineThreads(t *testing.T, h HunkSection) {
-	for i := range h.Lines {
-		l := h.Lines[i]
-		if len(l.Threads) != 0 {
-			t.Fatalf("In line %s expected 0 threads, found %d", l.Text, len(l.Threads))
-		}
-	}
-}
-
-func checkComment(t *testing.T, comment Comment, expectedAuthor string, expectedDate string, expectedHeaders map[string]string, expectedBody []string) {
-	if comment.Author != expectedAuthor {
-		t.Fatalf("Expected author %s, got %s", expectedAuthor, comment.Author)
-	}
-
-	date, _ := parseDiffscussDate(expectedDate)
-
-	if comment.MadeAt != date {
-		t.Fatalf("Expected made at %s, got %s", expectedDate, comment.MadeAt)
-	}
-
-	if !reflect.DeepEqual(comment.Headers, expectedHeaders) {
-		t.Fatalf("Expected header %s, got %s", expectedHeaders, comment.Headers)
-	}
-
-	if !reflect.DeepEqual(expectedBody, comment.Body) {
-		t.Fatalf("Expected body %s, got %s", expectedBody, comment.Body)
-	}
 }
 
 func TestParseWithOneDiffscussion(t *testing.T) {
@@ -230,13 +153,6 @@ func TestParseWithDiffscussionAtEveryLevel(t *testing.T) {
 		[]string{"this is a line comment"})
 }
 
-func checkReplylessThread(t *testing.T, thread Thread, expectedAuthor string, expectedDate string, expectedHeaders map[string]string, expectedBody []string) {
-	if len(thread.Replies) != 0 {
-		t.Fatalf("Expected 0 replies, got %d", len(thread.Replies))
-	}
-	checkComment(t, thread.Top, expectedAuthor, expectedDate, expectedHeaders, expectedBody)
-}
-
 func TestParseOptions(t *testing.T) {
 	diffscussionFile, err := getTestFileReader("tiny-with-options.diff")
 	if err != nil {
@@ -249,7 +165,7 @@ func TestParseOptions(t *testing.T) {
 	}
 
 	expectedOptions := map[string]string{
-		"mode": "github",
+		"mode":   "github",
 		"custom": "hello",
 	}
 	if !reflect.DeepEqual(expectedOptions, diffscussion.Options) {

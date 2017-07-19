@@ -184,14 +184,33 @@ func TestParseWithRepliesAtEveryLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(diffscussion.Threads) != 1 {
-		t.Fatalf("Expected 1 thread, got %d", len(diffscussion.Threads))
-	}
 	emptyHeaders := make(map[string]string)
-	checkReplylessThread(t, diffscussion.Threads[0], "edmund-top", "2017-08-16T21:23:24-0400", emptyHeaders, []string{"this is a top comment"})
-	checkReplylessThread(t, diffscussion.Files[0].Threads[0], "edmund-file", "2017-08-16T21:23:25-0400", emptyHeaders, []string{"this is a file comment"})
-	checkReplylessThread(t, diffscussion.Files[0].Hunks[0].Threads[0], "edmund-hunk", "2017-08-16T21:23:26-0400", emptyHeaders,
-		[]string{"this is a hunk comment"})
-	checkReplylessThread(t, diffscussion.Files[0].Hunks[0].Lines[3].Threads[0], "edmund-line", "2017-08-16T21:23:27-0400", emptyHeaders,
-		[]string{"this is a line comment"})
+
+	diffscussionThread := diffscussion.Threads[0]
+	if len(diffscussionThread.Replies) != 1 {
+		t.Fatalf("Expected 1 reply, got %d", len(diffscussionThread.Replies))
+	}
+	checkComment(t, diffscussionThread.Top, "edmund-top", "2017-08-16T21:23:24-0400", emptyHeaders, []string{"this is a top comment"})
+	checkComment(t, diffscussionThread.Replies[0].Top, "edmund-top-reply", "2017-08-16T21:24:24-0400", emptyHeaders, []string{"this is a top reply"})
+
+	fileThread := diffscussion.Files[0].Threads[0]
+	if len(fileThread.Replies) != 1 {
+		t.Fatalf("Expected 1 reply, got %d", len(fileThread.Replies))
+	}
+	checkComment(t, fileThread.Top, "edmund-file", "2017-08-16T21:23:25-0400", emptyHeaders, []string{"this is a file comment"})
+	checkComment(t, fileThread.Replies[0].Top, "edmund-file-reply", "2017-08-16T21:24:25-0400", emptyHeaders, []string{"this is a file reply"})
+
+	hunkThread := diffscussion.Files[0].Hunks[0].Threads[0]
+	if len(hunkThread.Replies) != 1 {
+		t.Fatalf("Expected 1 reply, got %d", len(hunkThread.Replies))
+	}
+	checkComment(t, hunkThread.Top, "edmund-hunk", "2017-08-16T21:23:26-0400", emptyHeaders, []string{"this is a hunk comment"})
+	checkComment(t, hunkThread.Replies[0].Top, "edmund-hunk-reply", "2017-08-16T21:24:26-0400", emptyHeaders, []string{"this is a hunk reply"})
+
+	lineThread := diffscussion.Files[0].Hunks[0].Lines[3].Threads[0]
+	if len(lineThread.Replies) != 1 {
+		t.Fatalf("Expected 1 reply, got %d", len(lineThread.Replies))
+	}
+	checkComment(t, lineThread.Top, "edmund-line", "2017-08-16T21:23:27-0400", emptyHeaders, []string{"this is a line comment"})
+	checkComment(t, lineThread.Replies[0].Top, "edmund-line-reply", "2017-08-16T21:24:27-0400", emptyHeaders, []string{"this is a line reply"})
 }

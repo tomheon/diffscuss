@@ -6,7 +6,7 @@ import (
 )
 
 type KeyValuePair struct {
-	Key string
+	Key   string
 	Value string
 }
 

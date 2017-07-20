@@ -7,3 +7,4 @@ maybe put settings at top of diffscussion?
 * extract constants for #, -, *, etc.
 * mode: github implies all hunk & file comments go to next line & also threads @ 1
 * error on empty option lines
+* enforce empty leading and trailing header lines?

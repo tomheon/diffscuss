@@ -154,26 +154,24 @@ func initInTopMatterState(workingState *parseWorkingState, line string) {
 
 var optionKeyValueRe = regexp.MustCompile("(?P<key>[^:]+): (?P<value>.*)")
 
-func parseDiffscussOptionLine(line string) (string, string) {
+func parseDiffscussOptionLine(line string) (string, string, error) {
 	trimmedLine := strings.TrimPrefix(line, "#@")
 	trimmedLine = strings.TrimLeft(trimmedLine, " ")
 
-	if trimmedLine == "" {
-		return "", ""
-	}
-
 	optionMatch := optionKeyValueRe.FindStringSubmatch(trimmedLine)
 	if optionMatch == nil {
-		return "", ""
+		return "", "", fmt.Errorf("Bad option line: %s", line)
 	}
 
 	key, value := optionMatch[1], optionMatch[2]
-	return key, value
+	return key, value, nil
 }
 
 func initInOptionsState(workingState *parseWorkingState, line string) {
-	key, value := parseDiffscussOptionLine(line)
-	if key != "" {
+	key, value, error := parseDiffscussOptionLine(line)
+	if error != nil {
+		workingState.err = error
+	} else {
 		workingState.diffscussion.Options[key] = value
 	}
 }
@@ -259,8 +257,10 @@ func continueInTopMatterState(workingState *parseWorkingState, line string) {
 }
 
 func continueInOptionsState(workingState *parseWorkingState, line string) {
-	key, value := parseDiffscussOptionLine(line)
-	if key != "" {
+	key, value, err := parseDiffscussOptionLine(line)
+	if err != nil {
+		workingState.err = err
+	} else {
 		workingState.diffscussion.Options[key] = value
 	}
 }

@@ -368,3 +368,19 @@ func FromGithubPR(repo string, pullRequestId int, client LimitedHttpClient, user
 
 	return fromFullPR(fullPR)
 }
+
+// func (fileSection *FileSection) MatchesGithubPath(path string) bool {
+
+// }
+
+// func LineNumFromGithubPos(diffscussion *Diffscussion, path string, position int) (int, error) {
+// 	linesSoFar := 0
+
+// 	for i, fileSection := range diffscussion.Files {
+// 		if fileSection.MatchesGithubPath(path) {
+
+// 		} else {
+// 			linesSoFar += fileSection.AllLineCount()
+// 		}
+// 	}
+// }

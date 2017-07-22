@@ -196,7 +196,7 @@ func createPRTestClient(t *testing.T, repo string, prId int, username string, to
 		t.Fatal(err)
 	}
 
-	matcher.RequestSpecs["https://api.github.com/repos/tomheon/scratch/pulls/1"] = []*RequestSpec{pullSpec, diffSpec, pullSpec}
+	matcher.RequestSpecs[fmt.Sprintf("https://api.github.com/repos/%s/pulls/%d", repo, prId)] = []*RequestSpec{pullSpec, diffSpec, pullSpec}
 
 	for url, specs := range reviewsSpecs {
 		matcher.RequestSpecs[url] = specs
@@ -218,7 +218,7 @@ func createPRTestClient(t *testing.T, repo string, prId int, username string, to
 func checkedFromGithubPR(t *testing.T, repo string, prId int, username string, token string, basePath string) (*Diffscussion, error) {
 	client := createPRTestClient(t, repo, prId, username, token, basePath)
 
-	diffscussion, err := FromGithubPR("tomheon/scratch", 1, client, username, token)
+	diffscussion, err := FromGithubPR(repo, prId, client, username, token)
 
 	client.Matcher.CheckCounts(t)
 
@@ -232,8 +232,30 @@ func TestSimplePull(t *testing.T) {
 	repo := "tomheon/scratch"
 	prId := 1
 
-	_, err := checkedFromGithubPR(t, repo, prId, username, token, basePath)
+	diffscussion, err := checkedFromGithubPR(t, repo, prId, username, token, basePath)
 	if err != nil {
 		t.Fatalf("Expected nil error, got %s", err)
 	}
+
+	if diffscussion == nil {
+		t.Fatal("Got nil diffscussion")
+	}
+}
+
+func TestPullWithMove(t *testing.T) {
+	username := "someuser"
+	token := "sometoken"
+	basePath := path.Join("testfiles", "pull_with_move")
+	repo := "tomheon/scratch"
+	prId := 3
+
+	diffscussion, err := checkedFromGithubPR(t, repo, prId, username, token, basePath)
+	if err != nil {
+		t.Fatalf("Expected nil error, got %s", err)
+	}
+
+	if diffscussion == nil {
+		t.Fatal("Got nil diffscussion")
+	}
+
 }

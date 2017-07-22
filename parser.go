@@ -442,11 +442,13 @@ const (
 	diffscussBodyPrefix   = "#-"
 	commentPrefix         = "#"
 
-	originalFilePrefix = "---"
-	newFilePrefix      = "+++"
-	diffCmdPrefix      = "diff"
-	indexPrefix        = "index"
-	binaryFilesPrefix  = "Binary files"
+	originalFilePrefix    = "---"
+	newFilePrefix         = "+++"
+	diffCmdPrefix         = "diff"
+	indexPrefix           = "index"
+	binaryFilesPrefix     = "Binary files"
+	renamePrefix          = "rename"
+	similarityIndexPrefix = "similarity index"
 
 	noNewlinePrefix   = "\\"
 	addedLinePrefix   = "+"
@@ -456,7 +458,7 @@ const (
 	hunkHeaderPrefix = "@"
 )
 
-func inferState(line string) (parseState, error) {
+func inferState(line string, lineNum int) (parseState, error) {
 	// there is some order dependency here, in that if line prefixes themselves
 	// share a prefix (e.g. commentPrefix and optionPrefix), the longer one
 	// should be checked first
@@ -472,7 +474,9 @@ func inferState(line string) (parseState, error) {
 		strings.HasPrefix(line, newFilePrefix) ||
 		strings.HasPrefix(line, diffCmdPrefix) ||
 		strings.HasPrefix(line, indexPrefix) ||
-		strings.HasPrefix(line, binaryFilesPrefix) {
+		strings.HasPrefix(line, binaryFilesPrefix) ||
+		strings.HasPrefix(line, renamePrefix) ||
+		strings.HasPrefix(line, similarityIndexPrefix) {
 		return inFileHeader, nil
 	} else if strings.HasPrefix(line, noNewlinePrefix) ||
 		strings.HasPrefix(line, addedLinePrefix) ||
@@ -483,13 +487,13 @@ func inferState(line string) (parseState, error) {
 		return inHunkHeader, nil
 	}
 
-	return done, fmt.Errorf("Couldn't infer state of %s", line)
+	return done, fmt.Errorf("Couldn't infer state of line %d: %s", lineNum, line)
 }
 
 func (p *parser) parseNext(line string, workingState *parseWorkingState) {
 	workingState.lineNum++
 
-	lineState, err := inferState(line)
+	lineState, err := inferState(line, workingState.lineNum)
 	if err != nil {
 		workingState.err = err
 		return

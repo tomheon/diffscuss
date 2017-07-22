@@ -59,7 +59,9 @@ func NewDiffscussion() *Diffscussion {
 }
 
 func FromBytes(bs []byte) (*Diffscussion, error) {
-	return nil, nil
 	reader := bytes.NewReader(bs)
 	return Parse(reader)
 }
+
+// func (diffscussion *Diffscussion) AddComment(comment Comment, lineNum int) error {
+// }

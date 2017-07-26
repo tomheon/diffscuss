@@ -2,6 +2,8 @@ package diffscuss
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -29,6 +31,31 @@ type FileSection struct {
 	Header  []string
 	Threads []Thread
 	Hunks   []HunkSection
+}
+
+
+func (fileSection *FileSection) OriginalPath() (string, error) {
+	for _, header := range fileSection.Header {
+		if strings.HasPrefix(header, originalFilePrefix) {
+			withoutFilePrefix := strings.TrimPrefix(header, originalFilePrefix)
+			withoutSpaces := strings.TrimLeft(withoutFilePrefix, " ")
+			return strings.TrimPrefix(withoutSpaces, "a/"), nil
+		}
+	}
+
+	return "", fmt.Errorf("Could not find original file in header for file section %s", fileSection.Header)
+}
+
+func (fileSection *FileSection) NewPath() (string, error) {
+	for _, header := range fileSection.Header {
+		if strings.HasPrefix(header, newFilePrefix) {
+			withoutFilePrefix := strings.TrimPrefix(header, newFilePrefix)
+			withoutSpaces := strings.TrimLeft(withoutFilePrefix, " ")
+			return strings.TrimPrefix(withoutSpaces, "b/"), nil
+		}
+	}
+
+	return "", fmt.Errorf("Could not find new file in header for file section %s", fileSection.Header)
 }
 
 type Comment struct {

@@ -257,5 +257,4 @@ func TestPullWithMove(t *testing.T) {
 	if diffscussion == nil {
 		t.Fatal("Got nil diffscussion")
 	}
-
 }

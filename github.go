@@ -338,6 +338,14 @@ func fromFullPR(fullPR *fullPR) (*Diffscussion, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	for _, comment := range fullPR.ReviewComments {
+		line, err := LineFromGithubPos(diffscussion, comment.Path, comment.Position)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println(line)
+	}
 	// todo assert no existing threads, as that would screw everything up
 	// todo overlay threads
 	return diffscussion, err
@@ -369,18 +377,42 @@ func FromGithubPR(repo string, pullRequestId int, client LimitedHttpClient, user
 	return fromFullPR(fullPR)
 }
 
-// func (fileSection *FileSection) MatchesGithubPath(path string) bool {
+func (fileSection *FileSection) MatchesGithubPath(path string) (bool, error) {
+	newPath, err := fileSection.NewPath()
+	if err != nil {
+		return false, err
+	}
+	return newPath == path, nil
+}
 
-// }
+func LineFromGithubPos(diffscussion *Diffscussion, path string, position int) (*Line, error) {
+	for fi := range diffscussion.Files {
+		fileSection := diffscussion.Files[fi]
+		matches, err := fileSection.MatchesGithubPath(path)
+		if err != nil {
+			return nil, err
+		}
+		if matches {
+			positionLeft := position
+			for i := range fileSection.Hunks {
+				h := fileSection.Hunks[i]
+				if i > 0 {
+					// per GH, position does not count the @@ lines of the
+					// first hunk, but does of the others
+					positionLeft -= len(h.Header)
+					if positionLeft < 1 {
+						return nil, fmt.Errorf("Could not find position %d in path %s", position, path)
+					}
+				}
 
-// func LineNumFromGithubPos(diffscussion *Diffscussion, path string, position int) (int, error) {
-// 	linesSoFar := 0
+				if len(h.Lines) >= positionLeft {
+					return &h.Lines[positionLeft - 1], nil
+				} else {
+					positionLeft -= len(h.Lines)
+				}
+			}
+		}
+	}
 
-// 	for i, fileSection := range diffscussion.Files {
-// 		if fileSection.MatchesGithubPath(path) {
-
-// 		} else {
-// 			linesSoFar += fileSection.AllLineCount()
-// 		}
-// 	}
-// }
+	return nil, fmt.Errorf("Could not find position %d in path %s", position, path)
+}

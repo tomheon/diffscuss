@@ -340,7 +340,7 @@ func fromFullPR(fullPR *fullPR) (*Diffscussion, error) {
 	}
 
 	for _, comment := range fullPR.ReviewComments {
-		line, err := LineFromGithubPos(diffscussion, comment.Path, comment.Position)
+		line, err := lineFromGithubPos(diffscussion, comment.Path, comment.Position)
 		if err != nil {
 			return nil, err
 		}
@@ -351,33 +351,7 @@ func fromFullPR(fullPR *fullPR) (*Diffscussion, error) {
 	return diffscussion, err
 }
 
-func FromGithubPR(repo string, pullRequestId int, client LimitedHttpClient, username string, token string) (*Diffscussion, error) {
-	rawPR, err := getRawPR(repo, pullRequestId, client, username, token)
-	if err != nil {
-		return nil, err
-	}
-
-	fullPR, err := getFullPR(rawPR, client, username, token)
-	if err != nil {
-		return nil, err
-	}
-
-	// If the pull request has received another commit since we started pulling
-	// from the API, our positions etc. for placing the comments in the diff
-	// can be off.  So check what the current sha is now that we've gathered
-	// the PR, and if it has changed, error out.
-	checkRawPR, err := getRawPR(repo, pullRequestId, client, username, token)
-	if err != nil {
-		return nil, err
-	}
-	if rawPR.Head.Sha != checkRawPR.Head.Sha {
-		return nil, errors.New(fmt.Sprintf("New commit pushed to PR while retrieving (%s => %s)", rawPR.Head.Sha, checkRawPR.Head.Sha))
-	}
-
-	return fromFullPR(fullPR)
-}
-
-func (fileSection *FileSection) MatchesGithubPath(path string) (bool, error) {
+func (fileSection *FileSection) matchesGithubPath(path string) (bool, error) {
 	newPath, err := fileSection.NewPath()
 	if err != nil {
 		return false, err
@@ -385,10 +359,10 @@ func (fileSection *FileSection) MatchesGithubPath(path string) (bool, error) {
 	return newPath == path, nil
 }
 
-func LineFromGithubPos(diffscussion *Diffscussion, path string, position int) (*Line, error) {
+func lineFromGithubPos(diffscussion *Diffscussion, path string, position int) (*Line, error) {
 	for fi := range diffscussion.Files {
 		fileSection := diffscussion.Files[fi]
-		matches, err := fileSection.MatchesGithubPath(path)
+		matches, err := fileSection.matchesGithubPath(path)
 		if err != nil {
 			return nil, err
 		}
@@ -415,4 +389,30 @@ func LineFromGithubPos(diffscussion *Diffscussion, path string, position int) (*
 	}
 
 	return nil, fmt.Errorf("Could not find position %d in path %s", position, path)
+}
+
+func FromGithubPR(repo string, pullRequestId int, client LimitedHttpClient, username string, token string) (*Diffscussion, error) {
+	rawPR, err := getRawPR(repo, pullRequestId, client, username, token)
+	if err != nil {
+		return nil, err
+	}
+
+	fullPR, err := getFullPR(rawPR, client, username, token)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the pull request has received another commit since we started pulling
+	// from the API, our positions etc. for placing the comments in the diff
+	// can be off.  So check what the current sha is now that we've gathered
+	// the PR, and if it has changed, error out.
+	checkRawPR, err := getRawPR(repo, pullRequestId, client, username, token)
+	if err != nil {
+		return nil, err
+	}
+	if rawPR.Head.Sha != checkRawPR.Head.Sha {
+		return nil, errors.New(fmt.Sprintf("New commit pushed to PR while retrieving (%s => %s)", rawPR.Head.Sha, checkRawPR.Head.Sha))
+	}
+
+	return fromFullPR(fullPR)
 }

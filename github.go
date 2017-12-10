@@ -333,10 +333,18 @@ func getFullPR(rawPR *rawPR, client LimitedHttpClient, username string, token st
 	return &fullPR{RepoFullName: rawPR.Head.Repo.FullName, Sha: rawPR.Head.Sha, Number: rawPR.Number, Reviews: reviews, ReviewComments: reviewComments, IssueComments: issueComments, Diff: diff}, nil
 }
 
+func threadFromComment(c *comment) (*Thread, error) {
+	thread := newThread()
+	return thread, nil
+}
+
 func fromFullPR(fullPR *fullPR) (*Diffscussion, error) {
 	diffscussion, err := FromBytes(fullPR.Diff)
 	if err != nil {
 		return nil, err
+	}
+	if diffscussion.HasAnyThreads() {
+		return nil, errors.New("Diffscussion already had threads")
 	}
 
 	for _, comment := range fullPR.ReviewComments {
@@ -344,8 +352,14 @@ func fromFullPR(fullPR *fullPR) (*Diffscussion, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(line)
+
+		newThread, err := threadFromComment(&comment)
+		if err != nil {
+			return nil, err
+		}
+		line.Threads = append(line.Threads, *newThread)
 	}
+
 	// todo assert no existing threads, as that would screw everything up
 	// todo overlay threads
 	return diffscussion, err

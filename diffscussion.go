@@ -90,5 +90,30 @@ func FromBytes(bs []byte) (*Diffscussion, error) {
 	return Parse(reader)
 }
 
+func (d *Diffscussion) HasAnyThreads() bool {
+	if len(d.Threads) != 0 {
+		return true
+	}
+
+	for _, f := range d.Files {
+		if len(f.Threads) != 0 {
+			return true
+		}
+
+		for _, h := range f.Hunks {
+			if len(h.Threads) != 0 {
+				return true
+			}
+
+			for _, l := range h.Lines {
+				if len(l.Threads) != 0 {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // func (diffscussion *Diffscussion) AddComment(comment Comment, lineNum int) error {
 // }

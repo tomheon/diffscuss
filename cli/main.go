@@ -1,6 +1,8 @@
 package main
 
+import "bytes"
 import "flag"
+import "fmt"
 import "io/ioutil"
 import "log"
 import "net/http"
@@ -24,5 +26,16 @@ func main() {
 
 	client := &http.Client{}
 	client.Timeout = time.Duration(5 * time.Second)
-	diffscuss.FromGithubPR("tomheon/scratch", 1, client, *username, token)
+	diffscussion, err := diffscuss.FromGithubPR("tomheon/scratch", 1, client, *username, token)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	buf := new(bytes.Buffer)
+	err = diffscuss.Render(diffscussion, buf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(buf.String())
 }

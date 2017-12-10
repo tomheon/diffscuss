@@ -10,13 +10,13 @@ const (
 	dateFormat = "2006-01-02T15:04:05 -0700"
 )
 
-func writeHeaderLine(line string, writer io.Writer, level int) error {
+func writeCommentLine(line string, padder string, writer io.Writer, level int) error {
 	_, err := writer.Write([]byte("#"))
 	if err != nil {
 		return err
 	}
 
-	_, err = writer.Write([]byte(strings.Repeat("*", level)))
+	_, err = writer.Write([]byte(strings.Repeat(padder, level)))
 	if err != nil {
 		return err
 	}
@@ -39,6 +39,14 @@ func writeHeaderLine(line string, writer io.Writer, level int) error {
 	return nil
 }
 
+func writeHeaderLine(line string, writer io.Writer, level int) error {
+	return writeCommentLine(line, "*", writer, level)
+}
+
+func writeBodyLine(line string, writer io.Writer, level int) error {
+	return writeCommentLine(line, "-", writer, level)
+}
+
 func RenderComment(comment Comment, writer io.Writer, level int) error {
 	err := writeHeaderLine("", writer, level)
 	if err != nil {
@@ -57,9 +65,23 @@ func RenderComment(comment Comment, writer io.Writer, level int) error {
 		return err
 	}
 
+	for _, kv := range comment.Headers {
+		err = writeHeaderLine(fmt.Sprintf("%s: %s", kv.Key, kv.Value), writer, level)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = writeHeaderLine("", writer, level)
 	if err != nil {
 		return err
+	}
+
+	for _, bodyLine := range comment.Body {
+		err = writeBodyLine(bodyLine, writer, level)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -34,7 +34,7 @@ func setAllThreadTimes(diffscussion *Diffscussion, times []time.Time) {
 
 func checkSortedThreads(t *testing.T, threads []Thread, sorted bool) {
 	if sort.IsSorted(ByMadeAt(threads)) != sorted {
-		t.Fatalf("Expected IsSorted = %s, got %s", sorted, sort.IsSorted(ByMadeAt(threads)))
+		t.Fatalf("Expected IsSorted = %t, got %t", sorted, sort.IsSorted(ByMadeAt(threads)))
 	}
 
 	for i := range threads {

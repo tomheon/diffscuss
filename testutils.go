@@ -161,8 +161,8 @@ func checkComment(t *testing.T, comment Comment, expectedAuthor string, expected
 
 	date, _ := parseDiffscussDate(expectedDate)
 
-	if comment.MadeAt != date {
-		t.Fatalf("Expected made at %s, got %s", expectedDate, comment.MadeAt)
+	if !comment.MadeAt.Equal(date) {
+		t.Fatalf("Expected made at %s, got %s", date, comment.MadeAt)
 	}
 
 	if !reflect.DeepEqual(comment.Headers, expectedHeaders) {

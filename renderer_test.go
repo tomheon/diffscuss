@@ -2,34 +2,40 @@ package diffscuss
 
 import (
 	"bytes"
+	"github.com/andreyvit/diff"
 	"testing"
 )
 
 // test these as round trips, which incidentally relies on the parser, but that's ok
 
-func TestRoundTripSimpleDiff(t *testing.T) {
-	diffFile, err := getTestFileReader("tiny.diff")
+func TestRoundTrips(t *testing.T) {
+	testFiles := []string{"tiny.diff", "tiny-with-diffscussion.diff"}
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	for _, testFile := range testFiles {
 
-	diffscussion, err := Parse(diffFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+		diffFile, err := getTestFileReader(testFile)
 
-	var buf bytes.Buffer
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	Render(diffscussion, &buf)
+		diffscussion, err := Parse(diffFile)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	actualBytes := buf.Bytes()
-	expectedBytes, err := getTestFileBytes("tiny.diff")
-	if err != nil {
-		t.Fatal(err)
-	}
+		var buf bytes.Buffer
 
-	if !bytes.Equal(actualBytes, expectedBytes) {
-		t.Fatalf("Bytes not equal %s\n%s", actualBytes, expectedBytes)
+		Render(diffscussion, &buf)
+
+		actualBytes := buf.Bytes()
+		expectedBytes, err := getTestFileBytes(testFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !bytes.Equal(actualBytes, expectedBytes) {
+			t.Fatalf("%s differed on round trip %s", testFile, diff.LineDiff(string(actualBytes), string(expectedBytes)))
+		}
 	}
 }

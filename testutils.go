@@ -3,6 +3,7 @@ package diffscuss
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
@@ -103,6 +104,11 @@ func createTestDiffscussion(params *testDiffscussionParams) *Diffscussion {
 func getTestFileReader(diffName string) (io.Reader, error) {
 	filePath := path.Join("testfiles", "parser", diffName)
 	return os.Open(filePath)
+}
+
+func getTestFileBytes(diffName string) ([]byte, error) {
+	filePath := path.Join("testfiles", "parser", diffName)
+	return ioutil.ReadFile(filePath)
 }
 
 func checkHeader(t *testing.T, header []string, lines ...string) {

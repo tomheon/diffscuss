@@ -394,7 +394,7 @@ func lineFromGithubPos(diffscussion *Diffscussion, path string, position int) (*
 				}
 
 				if len(h.Lines) >= positionLeft {
-					return &h.Lines[positionLeft - 1], nil
+					return &h.Lines[positionLeft-1], nil
 				} else {
 					positionLeft -= len(h.Lines)
 				}

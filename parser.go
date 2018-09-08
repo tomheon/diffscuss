@@ -88,10 +88,8 @@ func parseHeaderLevel(line string) (int, error) {
 	return headerDepth, nil
 }
 
-const diffscussTimeFormat = "2006-01-02T15:04:05-0700"
-
 func parseDiffscussDate(date string) (time.Time, error) {
-	return time.Parse(diffscussTimeFormat, date)
+	return time.Parse(DiffscussTimeFormat, date)
 }
 
 var headerKeyValueRe = regexp.MustCompile("(?P<key>[^:]+): (?P<value>.*)")

@@ -1,13 +1,9 @@
 package diffscuss
 
 import (
-	"io"
 	"fmt"
+	"io"
 	"strings"
-)
-
-const (
-	dateFormat = "2006-01-02T15:04:05 -0700"
 )
 
 func writeCommentLine(line string, padder string, writer io.Writer, level int) error {
@@ -59,7 +55,7 @@ func RenderComment(comment Comment, writer io.Writer, level int) error {
 		return err
 	}
 
-	madeAtLine := fmt.Sprintf("date: %s", comment.MadeAt.Format(dateFormat))
+	madeAtLine := fmt.Sprintf("date: %s", comment.MadeAt.Format(DiffscussTimeFormat))
 	err = writeHeaderLine(madeAtLine, writer, level)
 	if err != nil {
 		return err
@@ -93,7 +89,7 @@ func RenderThreads(threads []Thread, writer io.Writer, level int) error {
 		if err != nil {
 			return err
 		}
-		err = RenderThreads(t.Replies, writer, level + 1)
+		err = RenderThreads(t.Replies, writer, level+1)
 		if err != nil {
 			return err
 		}
@@ -196,5 +192,3 @@ func Render(diffscussion *Diffscussion, writer io.Writer) error {
 
 	return nil
 }
-
-

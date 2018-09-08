@@ -33,7 +33,6 @@ type FileSection struct {
 	Hunks   []HunkSection
 }
 
-
 func (fileSection *FileSection) OriginalPath() (string, error) {
 	for _, header := range fileSection.Header {
 		if strings.HasPrefix(header, originalFilePrefix) {

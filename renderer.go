@@ -17,14 +17,16 @@ func writeCommentLine(line string, padder string, writer io.Writer, level int) e
 		return err
 	}
 
-	_, err = writer.Write([]byte(" "))
-	if err != nil {
-		return err
-	}
+	if len(line) > 0 {
+		_, err = writer.Write([]byte(" "))
+		if err != nil {
+			return err
+		}
 
-	_, err = writer.Write([]byte(line))
-	if err != nil {
-		return err
+		_, err = writer.Write([]byte(line))
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = writer.Write([]byte("\n"))

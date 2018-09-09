@@ -132,6 +132,7 @@ func RenderLine(line Line, writer io.Writer) error {
 
 	return nil
 }
+
 func RenderHunk(hunk HunkSection, writer io.Writer) error {
 	err := writeRawLines(hunk.Header, writer)
 	if err != nil {

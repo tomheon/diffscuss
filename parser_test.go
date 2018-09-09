@@ -95,7 +95,7 @@ func TestParseWithOneDiffscussion(t *testing.T) {
 	if len(thread.Replies) != 0 {
 		t.Fatalf("Expected 0 replies, got %d", len(thread.Replies))
 	}
-	expectedHeader := []KeyValuePair{KeyValuePair{}, KeyValuePair{"x-custom-header", "custom value"}, KeyValuePair{"x-custom-header2", "custom value 2"}, KeyValuePair{}}
+	expectedHeader := []KeyValuePair{KeyValuePair{"x-custom-header", "custom value"}, KeyValuePair{"x-custom-header2", "custom value 2"}}
 	expectedBody := []string{"this is a comment", "across two lines with one blank trailing", ""}
 	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
 }
@@ -122,11 +122,11 @@ func TestParseWithOneReply(t *testing.T) {
 		t.Fatalf("Expected 1 reply, got %d", len(thread.Replies))
 	}
 
-	expectedHeader := []KeyValuePair{KeyValuePair{}, KeyValuePair{"x-custom-header", "custom value"}, KeyValuePair{"x-custom-header2", "custom value 2"}, KeyValuePair{}}
+	expectedHeader := []KeyValuePair{KeyValuePair{"x-custom-header", "custom value"}, KeyValuePair{"x-custom-header2", "custom value 2"}}
 	expectedBody := []string{"this is a comment", "across two lines with one blank trailing", ""}
 	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
 
-	expectedHeaderReply := []KeyValuePair{KeyValuePair{}, KeyValuePair{"x-custom-header", "reply custom value"}, KeyValuePair{"x-custom-header2", "reply custom value 2"}, KeyValuePair{}}
+	expectedHeaderReply := []KeyValuePair{KeyValuePair{"x-custom-header", "reply custom value"}, KeyValuePair{"x-custom-header2", "reply custom value 2"}}
 	expectedBodyReply := []string{"this is a reply"}
 	checkReplylessThread(t, thread.Replies[0], "edmund-reply", "2017-08-16T21:24:25-0400", expectedHeaderReply, expectedBodyReply)
 }
@@ -145,7 +145,7 @@ func TestParseWithDiffscussionAtEveryLevel(t *testing.T) {
 	if len(diffscussion.Threads) != 1 {
 		t.Fatalf("Expected 1 thread, got %d", len(diffscussion.Threads))
 	}
-	emptyHeaders := make([]KeyValuePair, 2)
+	emptyHeaders := make([]KeyValuePair, 0)
 
 	checkReplylessThread(t, diffscussion.Threads[0], "edmund-top", "2017-08-16T21:23:24-0400", emptyHeaders, []string{"this is a top comment"})
 	checkReplylessThread(t, diffscussion.Files[0].Threads[0], "edmund-file", "2017-08-16T21:23:25-0400", emptyHeaders, []string{"this is a file comment"})
@@ -186,7 +186,7 @@ func TestParseWithRepliesAtEveryLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	emptyHeaders := make([]KeyValuePair, 2)
+	emptyHeaders := make([]KeyValuePair, 0)
 
 	diffscussionThread := diffscussion.Threads[0]
 	if len(diffscussionThread.Replies) != 1 {

@@ -106,7 +106,8 @@ func parseDiffscussHeaderLine(comment *Comment, line string) error {
 	trimmedLine = strings.TrimLeft(trimmedLine, " ")
 
 	if trimmedLine == "" {
-		comment.Headers = append(comment.Headers, KeyValuePair{})
+		// we don't store blank lines in headers--we'll pad at the
+		// beginning and end ourselves
 		return nil
 	}
 

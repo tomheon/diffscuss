@@ -35,7 +35,7 @@ func TestRoundTrips(t *testing.T) {
 		}
 
 		if !bytes.Equal(actualBytes, expectedBytes) {
-			t.Fatalf("%s differed on round trip %s", testFile, diff.LineDiff(string(actualBytes), string(expectedBytes)))
+			t.Fatalf("%s differed on round trip %s", testFile, diff.LineDiff(string(expectedBytes), string(actualBytes)))
 		}
 	}
 }

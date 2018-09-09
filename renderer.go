@@ -75,7 +75,11 @@ func RenderComment(comment Comment, writer io.Writer, level int) error {
 	}
 
 	for _, kv := range comment.Headers {
-		err = writeHeaderLine(fmt.Sprintf("%s: %s", kv.Key, kv.Value), writer, level)
+		line := ""
+		if kv.Key != "" {
+			line = fmt.Sprintf("%s: %s", kv.Key, kv.Value)
+		}
+		err = writeHeaderLine(line, writer, level)
 		if err != nil {
 			return err
 		}

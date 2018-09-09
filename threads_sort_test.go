@@ -1,12 +1,13 @@
-package diffscuss
+package diffscuss_test
 
 import (
+	"diffscuss.com/diffscuss"
 	"sort"
 	"testing"
 	"time"
 )
 
-func setThreadTimes(threads []Thread, times []time.Time) {
+func setThreadTimes(threads []diffscuss.Thread, times []time.Time) {
 	for i := range threads {
 		threads[i].Top.MadeAt = times[i]
 	}
@@ -16,7 +17,7 @@ func setThreadTimes(threads []Thread, times []time.Time) {
 	}
 }
 
-func setAllThreadTimes(diffscussion *Diffscussion, times []time.Time) {
+func setAllThreadTimes(diffscussion *diffscuss.Diffscussion, times []time.Time) {
 	setThreadTimes(diffscussion.Threads, times)
 
 	for f := range diffscussion.Files {
@@ -32,9 +33,9 @@ func setAllThreadTimes(diffscussion *Diffscussion, times []time.Time) {
 	}
 }
 
-func checkSortedThreads(t *testing.T, threads []Thread, sorted bool) {
-	if sort.IsSorted(ByMadeAt(threads)) != sorted {
-		t.Fatalf("Expected IsSorted = %t, got %t", sorted, sort.IsSorted(ByMadeAt(threads)))
+func checkSortedThreads(t *testing.T, threads []diffscuss.Thread, sorted bool) {
+	if sort.IsSorted(diffscuss.ByMadeAt(threads)) != sorted {
+		t.Fatalf("Expected IsSorted = %t, got %t", sorted, sort.IsSorted(diffscuss.ByMadeAt(threads)))
 	}
 
 	for i := range threads {
@@ -44,7 +45,7 @@ func checkSortedThreads(t *testing.T, threads []Thread, sorted bool) {
 	}
 }
 
-func checkSorted(t *testing.T, diffscussion *Diffscussion, sorted bool) {
+func checkSorted(t *testing.T, diffscussion *diffscuss.Diffscussion, sorted bool) {
 	checkSortedThreads(t, diffscussion.Threads, sorted)
 
 	for f := range diffscussion.Files {

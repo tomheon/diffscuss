@@ -88,7 +88,7 @@ func parseHeaderLevel(line string) (int, error) {
 	return headerDepth, nil
 }
 
-func parseDiffscussDate(date string) (time.Time, error) {
+func ParseDiffscussDate(date string) (time.Time, error) {
 	return time.Parse(DiffscussTimeFormat, date)
 }
 
@@ -121,7 +121,7 @@ func parseDiffscussHeaderLine(comment *Comment, line string) error {
 	if key == authorHeader {
 		comment.Author = value
 	} else if key == dateHeader {
-		parsedDate, err := parseDiffscussDate(value)
+		parsedDate, err := ParseDiffscussDate(value)
 		if err != nil {
 			return err
 		}

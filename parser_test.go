@@ -1,6 +1,7 @@
-package diffscuss
+package diffscuss_test
 
 import (
+	"diffscuss.com/diffscuss"
 	"reflect"
 	"testing"
 )
@@ -11,7 +12,7 @@ func TestParseTinyDiff(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	diffscussion, err := Parse(diffFile)
+	diffscussion, err := diffscuss.Parse(diffFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +81,7 @@ func TestParseWithOneDiffscussion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	diffscussion, err := Parse(diffscussionFile)
+	diffscussion, err := diffscuss.Parse(diffscussionFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +96,7 @@ func TestParseWithOneDiffscussion(t *testing.T) {
 	if len(thread.Replies) != 0 {
 		t.Fatalf("Expected 0 replies, got %d", len(thread.Replies))
 	}
-	expectedHeader := []KeyValuePair{KeyValuePair{"x-custom-header", "custom value"}, KeyValuePair{"x-custom-header2", "custom value 2"}}
+	expectedHeader := []diffscuss.KeyValuePair{diffscuss.KeyValuePair{"x-custom-header", "custom value"}, diffscuss.KeyValuePair{"x-custom-header2", "custom value 2"}}
 	expectedBody := []string{"this is a comment", "across two lines with one blank trailing", ""}
 	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
 }
@@ -106,7 +107,7 @@ func TestParseWithOneReply(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	diffscussion, err := Parse(diffscussionFile)
+	diffscussion, err := diffscuss.Parse(diffscussionFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,11 +123,11 @@ func TestParseWithOneReply(t *testing.T) {
 		t.Fatalf("Expected 1 reply, got %d", len(thread.Replies))
 	}
 
-	expectedHeader := []KeyValuePair{KeyValuePair{"x-custom-header", "custom value"}, KeyValuePair{"x-custom-header2", "custom value 2"}}
+	expectedHeader := []diffscuss.KeyValuePair{diffscuss.KeyValuePair{"x-custom-header", "custom value"}, diffscuss.KeyValuePair{"x-custom-header2", "custom value 2"}}
 	expectedBody := []string{"this is a comment", "across two lines with one blank trailing", ""}
 	checkComment(t, thread.Top, "edmund", "2017-08-16T21:23:24-0400", expectedHeader, expectedBody)
 
-	expectedHeaderReply := []KeyValuePair{KeyValuePair{"x-custom-header", "reply custom value"}, KeyValuePair{"x-custom-header2", "reply custom value 2"}}
+	expectedHeaderReply := []diffscuss.KeyValuePair{diffscuss.KeyValuePair{"x-custom-header", "reply custom value"}, diffscuss.KeyValuePair{"x-custom-header2", "reply custom value 2"}}
 	expectedBodyReply := []string{"this is a reply"}
 	checkReplylessThread(t, thread.Replies[0], "edmund-reply", "2017-08-16T21:24:25-0400", expectedHeaderReply, expectedBodyReply)
 }
@@ -137,7 +138,7 @@ func TestParseWithDiffscussionAtEveryLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	diffscussion, err := Parse(diffscussionFile)
+	diffscussion, err := diffscuss.Parse(diffscussionFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +146,7 @@ func TestParseWithDiffscussionAtEveryLevel(t *testing.T) {
 	if len(diffscussion.Threads) != 1 {
 		t.Fatalf("Expected 1 thread, got %d", len(diffscussion.Threads))
 	}
-	emptyHeaders := make([]KeyValuePair, 0)
+	emptyHeaders := make([]diffscuss.KeyValuePair, 0)
 
 	checkReplylessThread(t, diffscussion.Threads[0], "edmund-top", "2017-08-16T21:23:24-0400", emptyHeaders, []string{"this is a top comment"})
 	checkReplylessThread(t, diffscussion.Files[0].Threads[0], "edmund-file", "2017-08-16T21:23:25-0400", emptyHeaders, []string{"this is a file comment"})
@@ -161,12 +162,12 @@ func TestParseOptions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	diffscussion, err := Parse(diffscussionFile)
+	diffscussion, err := diffscuss.Parse(diffscussionFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectedOptions := []KeyValuePair{
+	expectedOptions := []diffscuss.KeyValuePair{
 		{"mode", "github"},
 		{"custom", "hello"},
 	}
@@ -181,12 +182,12 @@ func TestParseWithRepliesAtEveryLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	diffscussion, err := Parse(diffscussionFile)
+	diffscussion, err := diffscuss.Parse(diffscussionFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	emptyHeaders := make([]KeyValuePair, 0)
+	emptyHeaders := make([]diffscuss.KeyValuePair, 0)
 
 	diffscussionThread := diffscussion.Threads[0]
 	if len(diffscussionThread.Replies) != 1 {

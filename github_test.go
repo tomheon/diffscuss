@@ -1,7 +1,8 @@
-package diffscuss
+package diffscuss_test
 
 import (
 	"bytes"
+	"diffscuss.com/diffscuss"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -215,10 +216,10 @@ func createPRTestClient(t *testing.T, repo string, prId int, username string, to
 	return client
 }
 
-func checkedFromGithubPR(t *testing.T, repo string, prId int, username string, token string, basePath string) (*Diffscussion, error) {
+func checkedFromGithubPR(t *testing.T, repo string, prId int, username string, token string, basePath string) (*diffscuss.Diffscussion, error) {
 	client := createPRTestClient(t, repo, prId, username, token, basePath)
 
-	diffscussion, err := FromGithubPR(repo, prId, client, username, token)
+	diffscussion, err := diffscuss.FromGithubPR(repo, prId, client, username, token)
 
 	client.Matcher.CheckCounts(t)
 

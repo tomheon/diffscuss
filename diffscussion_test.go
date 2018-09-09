@@ -1,4 +1,4 @@
-package diffscuss
+package diffscuss_test
 
 import (
 	"testing"

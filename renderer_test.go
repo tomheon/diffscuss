@@ -1,7 +1,8 @@
-package diffscuss
+package diffscuss_test
 
 import (
 	"bytes"
+	"diffscuss.com/diffscuss"
 	"github.com/andreyvit/diff"
 	"testing"
 )
@@ -28,14 +29,14 @@ func TestRoundTrips(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		diffscussion, err := Parse(diffFile)
+		diffscussion, err := diffscuss.Parse(diffFile)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
 
-		Render(diffscussion, &buf)
+		diffscuss.Render(diffscussion, &buf)
 
 		actualBytes := buf.Bytes()
 		expectedBytes, err := getTestFileBytes(testFile)

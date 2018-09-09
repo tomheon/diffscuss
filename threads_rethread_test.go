@@ -1,12 +1,13 @@
-package diffscuss
+package diffscuss_test
 
 import (
+	"diffscuss.com/diffscuss"
 	"math"
 	"testing"
 	"time"
 )
 
-func checkThreads(t *testing.T, threads []Thread, expectedDepth int, originalDepth int, expectedNumThreads int) {
+func checkThreads(t *testing.T, threads []diffscuss.Thread, expectedDepth int, originalDepth int, expectedNumThreads int) {
 	checkThreadsRecursive(t, threads, expectedDepth, originalDepth, expectedDepth, expectedNumThreads)
 }
 
@@ -22,7 +23,7 @@ func calculateTerminalNumThreads(originalNumThreads int, originalDepth int, newD
 	return sumExponents(originalNumThreads, newDepth, originalDepth) / int(math.Pow(float64(originalNumThreads), float64(newDepth-1)))
 }
 
-func checkThreadsRecursive(t *testing.T, threads []Thread, expectedDepth int, originalDepth int, depthLeft int, originalNumThreads int) {
+func checkThreadsRecursive(t *testing.T, threads []diffscuss.Thread, expectedDepth int, originalDepth int, depthLeft int, originalNumThreads int) {
 	if depthLeft == 1 {
 		expectedNumThreads := calculateTerminalNumThreads(originalNumThreads, originalDepth, expectedDepth)
 		if len(threads) != expectedNumThreads {
@@ -45,7 +46,7 @@ func checkThreadsRecursive(t *testing.T, threads []Thread, expectedDepth int, or
 	}
 }
 
-func checkLines(t *testing.T, lines []Line, expectedDepth int, originalDepth int, originalNumThreads int) {
+func checkLines(t *testing.T, lines []diffscuss.Line, expectedDepth int, originalDepth int, originalNumThreads int) {
 	if len(lines) != defaultNumLines {
 		t.Fatalf("Expected %d lines, found %d", defaultNumLines, len(lines))
 	}
@@ -56,7 +57,7 @@ func checkLines(t *testing.T, lines []Line, expectedDepth int, originalDepth int
 	}
 }
 
-func checkHunks(t *testing.T, hunks []HunkSection, expectedDepth int, originalDepth int, originalNumThreads int) {
+func checkHunks(t *testing.T, hunks []diffscuss.HunkSection, expectedDepth int, originalDepth int, originalNumThreads int) {
 	if len(hunks) != defaultNumHunks {
 		t.Fatalf("Expected %d hunks, found %d", defaultNumHunks, len(hunks))
 	}
@@ -67,7 +68,7 @@ func checkHunks(t *testing.T, hunks []HunkSection, expectedDepth int, originalDe
 	}
 }
 
-func checkFiles(t *testing.T, files []FileSection, expectedDepth int, originalDepth int, originalNumThreads int) {
+func checkFiles(t *testing.T, files []diffscuss.FileSection, expectedDepth int, originalDepth int, originalNumThreads int) {
 	if len(files) != defaultNumFiles {
 		t.Fatalf("Expected %d files, found %d", defaultNumFiles, len(files))
 	}
@@ -78,7 +79,7 @@ func checkFiles(t *testing.T, files []FileSection, expectedDepth int, originalDe
 	}
 }
 
-func checkAllDepths(t *testing.T, diffscussion *Diffscussion, expectedDepth int, originalDepth int, originalNumThreads int) {
+func checkAllDepths(t *testing.T, diffscussion *diffscuss.Diffscussion, expectedDepth int, originalDepth int, originalNumThreads int) {
 	checkThreads(t, diffscussion.Threads, expectedDepth, originalDepth, originalNumThreads)
 	checkFiles(t, diffscussion.Files, expectedDepth, originalDepth, originalNumThreads)
 }

@@ -6,10 +6,19 @@ import (
 	"testing"
 )
 
-// test these as round trips, which incidentally relies on the parser, but that's ok
+// test these as round trips, which incidentally relies on the parser, but that
+// feels pragmatic, as the parser should also fail if there's something wrong
+// with it (or if it hasn't, we can strengthen those tests)
 
 func TestRoundTrips(t *testing.T) {
-	testFiles := []string{"tiny.diff", "tiny-with-diffscussion.diff"}
+	testFiles := []string{
+		"tiny.diff",
+		"tiny-with-diffscussion.diff",
+		"tiny-with-reply.diff",
+		"tiny-with-all-diffscussion-locs.diff",
+		"tiny-with-all-diffscussion-locs-and-replies.diff",
+		"tiny-with-options.diff",
+	}
 
 	for _, testFile := range testFiles {
 

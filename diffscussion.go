@@ -113,6 +113,3 @@ func (d *Diffscussion) HasAnyThreads() bool {
 	}
 	return false
 }
-
-// func (diffscussion *Diffscussion) AddComment(comment Comment, lineNum int) error {
-// }

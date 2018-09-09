@@ -75,13 +75,13 @@ func newThread() *Thread {
 
 type Diffscussion struct {
 	LeadingLines []string
-	Options      map[string]string
+	Options      []KeyValuePair
 	Threads      []Thread
 	Files        []FileSection
 }
 
 func NewDiffscussion() *Diffscussion {
-	return &Diffscussion{LeadingLines: make([]string, 0), Options: make(map[string]string), Threads: make([]Thread, 0), Files: make([]FileSection, 0)}
+	return &Diffscussion{LeadingLines: make([]string, 0), Options: make([]KeyValuePair, 0), Threads: make([]Thread, 0), Files: make([]FileSection, 0)}
 }
 
 func FromBytes(bs []byte) (*Diffscussion, error) {

@@ -170,7 +170,8 @@ func initInOptionsState(workingState *parseWorkingState, line string) {
 	if error != nil {
 		workingState.err = error
 	} else {
-		workingState.diffscussion.Options[key] = value
+		kv := KeyValuePair{key, value}
+		workingState.diffscussion.Options = append(workingState.diffscussion.Options, kv)
 	}
 }
 
@@ -259,7 +260,9 @@ func continueInOptionsState(workingState *parseWorkingState, line string) {
 	if err != nil {
 		workingState.err = err
 	} else {
-		workingState.diffscussion.Options[key] = value
+
+		kv := KeyValuePair{key, value}
+		workingState.diffscussion.Options = append(workingState.diffscussion.Options, kv)
 	}
 }
 

@@ -166,9 +166,9 @@ func TestParseOptions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedOptions := map[string]string{
-		"mode":   "github",
-		"custom": "hello",
+	expectedOptions := []KeyValuePair{
+		{"mode", "github"},
+		{"custom", "hello"},
 	}
 	if !reflect.DeepEqual(expectedOptions, diffscussion.Options) {
 		t.Fatalf("Expected options %s got %s", expectedOptions, diffscussion.Options)

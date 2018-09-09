@@ -43,6 +43,17 @@ func writeBodyLine(line string, writer io.Writer, level int) error {
 	return writeCommentLine(line, "-", writer, level)
 }
 
+func RenderOptions(options []KeyValuePair, writer io.Writer) error {
+	for _, kv := range options {
+		_, err := writer.Write([]byte(fmt.Sprintf("#@ %s: %s\n", kv.Key, kv.Value)))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func RenderComment(comment Comment, writer io.Writer, level int) error {
 	err := writeHeaderLine("", writer, level)
 	if err != nil {
@@ -173,6 +184,11 @@ func writeRawLines(lines []string, writer io.Writer) error {
 
 func Render(diffscussion *Diffscussion, writer io.Writer) error {
 	err := writeRawLines(diffscussion.LeadingLines, writer)
+	if err != nil {
+		return err
+	}
+
+	err = RenderOptions(diffscussion.Options, writer)
 	if err != nil {
 		return err
 	}

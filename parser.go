@@ -34,6 +34,8 @@ type parseWorkingState struct {
 	err           error
 }
 
+type parseCallback func(curWorkingState *parseWorkingState) error
+
 func initialState(diffscussion *Diffscussion) *parseWorkingState {
 	s := &parseWorkingState{}
 	s.curState = initial
@@ -492,8 +494,16 @@ func inferState(line string, lineNum int) (parseState, error) {
 	return done, fmt.Errorf("Couldn't infer state of line %d: %s", lineNum, line)
 }
 
-func (p *parser) parseNext(line string, workingState *parseWorkingState) {
+func (p *parser) parseNext(line string, workingState *parseWorkingState, preCallbacks []parseCallback, postCallbacks []parseCallback) {
 	workingState.lineNum++
+
+	for _, callback := range preCallbacks {
+		err := callback(workingState)
+		if err != nil {
+			workingState.err = err
+			return
+		}
+	}
 
 	lineState, err := inferState(line, workingState.lineNum)
 	if err != nil {
@@ -518,9 +528,33 @@ func (p *parser) parseNext(line string, workingState *parseWorkingState) {
 		p.initStateFuncs[lineState](workingState, line)
 		workingState.curState = lineState
 	}
+
+	for _, callback := range postCallbacks {
+		err := callback(workingState)
+		if err != nil {
+			workingState.err = err
+			return
+		}
+	}
+}
+
+func callback(workingState *parseWorkingState) error {
+	lastThread := findLastThread(workingState)
+
+	thread := newThread()
+	comment := Comment{"ewj", time.Now()}
+	thread.Top = comment
+	workingState.curThreads = append(workingState.curThreads, thread)
+
+	return nil
 }
 
 func Parse(reader io.Reader) (*Diffscussion, error) {
+	postCallbacks := []parseCallback{callback}
+	return ParseWithCallbacks(reader, make([]parseCallback, 0), postCallbacks)
+}
+
+func ParseWithCallbacks(reader io.Reader, preCallbacks []parseCallback, postCallbacks []parseCallback) (*Diffscussion, error) {
 	scanner := bufio.NewScanner(reader)
 
 	diffscussion := NewDiffscussion()
@@ -529,7 +563,7 @@ func Parse(reader io.Reader) (*Diffscussion, error) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		parser.parseNext(line, parseWorkingState)
+		parser.parseNext(line, parseWorkingState, preCallbacks, postCallbacks)
 		if parseWorkingState.err != nil {
 			return nil, parseWorkingState.err
 		}

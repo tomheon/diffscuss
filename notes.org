@@ -1,0 +1,35 @@
+* Basic idea
+
+Split everything into little purpose built apps--comment insertion, finding
+spots, etc.
+
+Have all of them communicate with an application format that's an sqlite db /
+schema, so only one of them has to do parsing, and the rest get the operations
+/ expressivity of sql without all the gnarly bits.  (The parsing one will have
+to sit in front of the others in a wrapper--basically like diffscuss <command>
+will parse and then invoke diffscuss-command on the sqlite3 db and other args.
+
+Use the 'user_version' pragma for schema version.
+
+* sql to render
+
+select contents from (
+
+select
+  orig_line_no,
+  -- comment rendered, with all lines negative render_seq
+  contents
+from
+  comments assembled
+
+union
+
+select
+  orig_line_no as render_line_no,
+  0 as render_seq,
+  contents
+from
+  diff_lines
+
+) order by render_line_no, render_seq
+

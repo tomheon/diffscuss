@@ -13,6 +13,10 @@ Use the 'user_version' pragma for schema version.
 
 * sql to render
 
+make this a view (need to work out the details here)
+
+but then we can use the db to get line numbers etc. whenever and wherever we want
+
 select contents from (
 
 select
@@ -33,3 +37,8 @@ from
 
 ) order by render_line_no, render_seq
 
+* parsing
+
+can be /incredibly/ dumb about diffs
+
+just chug through diff lines undifferentiated, only need to parse threads
